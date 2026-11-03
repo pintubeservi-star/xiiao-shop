@@ -222,3 +222,50 @@ create policy "affiliate reads own payouts" on public.payouts for select to auth
 );
 -- No client insert/update/delete policies for clicks, orders, commissions, ledger, payouts or audit logs.
 -- Trusted server routes/functions must validate all transitions and write financial events idempotently.
+
+
+-- Secure profile bootstrap: user-controlled metadata may populate contact fields only,
+-- never the authorization role.
+create schema if not exists private;
+revoke all on schema private from public;
+grant usage on schema private to authenticated;
+
+create or replace function private.handle_new_user()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  insert into public.profiles (id, full_name, phone, role)
+  values (
+    new.id,
+    nullif(new.raw_user_meta_data ->> 'full_name', ''),
+    nullif(new.raw_user_meta_data ->> 'phone', ''),
+    'customer'::public.app_role
+  )
+  on conflict (id) do nothing;
+  return new;
+end;
+$$;
+revoke all on function private.handle_new_user() from public, anon, authenticated;
+
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
+after insert on auth.users
+for each row execute function private.handle_new_user();
+
+-- Explicit Data API grants: Supabase no longer exposes newly created tables by default.
+grant select on public.products to anon, authenticated;
+grant select on public.categories to anon, authenticated;
+grant select on public.store_settings to anon, authenticated;
+grant select on public.profiles, public.merchants, public.affiliate_profiles,
+  public.affiliate_links, public.affiliate_clicks, public.orders, public.order_items,
+  public.commissions, public.ledger_entries, public.payouts, public.audit_logs
+to authenticated;
+grant insert, update, delete on public.products, public.merchants,
+  public.affiliate_profiles, public.affiliate_links, public.affiliate_clicks,
+  public.orders, public.order_items, public.commissions, public.ledger_entries,
+  public.payouts, public.audit_logs
+to authenticated;
+grant update (full_name, phone, avatar_url) on public.profiles to authenticated;
