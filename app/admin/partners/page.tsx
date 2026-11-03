@@ -12,7 +12,7 @@ export default function PartnerAdmin(){
  const [apps,setApps]=useState<any[]>([]),[affiliates,setAffiliates]=useState<any[]>([]),[merchants,setMerchants]=useState<any[]>([]);
  const [commissions,setCommissions]=useState<any[]>([]),[payouts,setPayouts]=useState<any[]>([]),[returns,setReturns]=useState<any[]>([]);
  const [profiles,setProfiles]=useState<Record<string,any>>({}),[notice,setNotice]=useState(""),[busy,setBusy]=useState(false);
- const [customers,setCustomers]=useState<any[]>([]),[reviews,setReviews]=useState<any[]>([]),[coupons,setCoupons]=useState<any[]>([]),[couponDraft,setCouponDraft]=useState({code:"",discount_type:"percentage",discount_value:"10",min_subtotal_dop:"0",max_uses:"",expires_at:""}),[orderStats,setOrderStats]=useState({orders:0,revenue:0,delivered:0});
+ const [customers,setCustomers]=useState<any[]>([]),[reviews,setReviews]=useState<any[]>([]),[coupons,setCoupons]=useState<any[]>([]),[shippingZones,setShippingZones]=useState<any[]>([]),[zoneDraft,setZoneDraft]=useState({zone_name:"",match_terms:"",fee_dop:"150",eta_min_days:"1",eta_max_days:"3"}),[couponDraft,setCouponDraft]=useState({code:"",discount_type:"percentage",discount_value:"10",min_subtotal_dop:"0",max_uses:"",expires_at:""}),[orderStats,setOrderStats]=useState({orders:0,revenue:0,delivered:0});
  const [shippingFee,setShippingFee]=useState("150"),[promoText,setPromoText]=useState(""),[promoActive,setPromoActive]=useState(false),[supportPhone,setSupportPhone]=useState("");
 
  const load=useCallback(async()=>{
