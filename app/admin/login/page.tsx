@@ -17,7 +17,7 @@ export default function AdminLogin() {
       if(mode==="signup") {
         const {data,error}=await supabase.auth.signUp({email,password,options:{data:{full_name:name},emailRedirectTo:window.location.origin+"/admin"}});
         if(error) throw error;
-        setMessage(data.session ? "Cuenta creada. El administrador debe habilitar tu acceso." : "Revisa tu correo para confirmar la cuenta. Después se habilitará el acceso administrativo.");
+        setMessage(data.session ? "Cuenta creada. Confirma el correo y el acceso de propietario se habilitará automáticamente al verificarlo." : "Revisa tu correo y confirma la cuenta. Al verificar se activarán los permisos del propietario.");
       } else {
         const {error}=await supabase.auth.signInWithPassword({email,password});
         if(error) throw error;
