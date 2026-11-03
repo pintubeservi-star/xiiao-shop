@@ -26,7 +26,10 @@ export default function PartnerAdmin(){
    s.from("merchants").select("*").order("created_at",{ascending:false}),
    s.from("commissions").select("id,affiliate_id,order_item_id,amount_dop,status,eligible_at,created_at").order("created_at",{ascending:false}).limit(200),
    s.from("payouts").select("id,affiliate_id,amount_dop,method,destination,status,created_at").order("created_at",{ascending:false}).limit(200),
-   s.from("return_requests").select("id,order_id,customer_id,reason,details,status,created_at").order("created_at",{ascending:false}).limit(100)
+   s.from("return_requests").select("id,order_id,customer_id,reason,details,status,created_at").order("created_at",{ascending:false}).limit(100),
+   s.from("store_settings").select("key,value").in("key",["shipping_public","promotions_public","storefront"]),
+   s.from("profiles").select("id,full_name,phone,created_at").eq("role","customer").order("created_at",{ascending:false}).limit(500),
+   s.from("orders").select("total_dop,status").limit(1000)
   ]);
   for(const x of [a,af,m,c,po,r,st,cu,os])if(x.error)throw x.error;
   setApps(a.data||[]);setAffiliates(af.data||[]);setMerchants(m.data||[]);setCommissions(c.data||[]);setPayouts(po.data||[]);setReturns(r.data||[]);setCustomers(cu.data||[]);
