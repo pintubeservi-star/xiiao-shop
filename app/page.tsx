@@ -38,7 +38,7 @@ export default function Home() {
   const total = cartProducts.reduce((sum, p) => sum + p.price, 0);
 
   return <main className="min-h-screen bg-[#f7f7f5] pb-20 text-[#171814] md:pb-0">
-    <div className="bg-[#191a17] px-4 py-2 text-center text-[11px] font-semibold tracking-wide text-white">COMPRA FÁCIL · PAGA AL RECIBIR · ENVÍOS EN REPÚBLICA DOMINICANA</div>
+    <div className="bg-[#191a17] px-4 py-2 text-center text-[11px] font-semibold tracking-wide text-white">COMPRA FÁCIL · ENVÍOS EN REPÚBLICA DOMINICANA</div>
     <header className="sticky top-0 z-40 border-b border-black/5 bg-white/95 backdrop-blur-xl">
       <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3 md:px-6">
         <button aria-label="Abrir menú" onClick={() => setMenuOpen(!menuOpen)} className="rounded-xl p-2 hover:bg-black/5 md:hidden">{menuOpen ? <X size={21}/> : <Menu size={21}/>}</button>
@@ -67,7 +67,7 @@ export default function Home() {
 
       <section className="mt-5 grid grid-cols-3 gap-2 md:gap-3">
         <Benefit icon={<Truck size={18}/>} title="Entrega a domicilio" detail="En zonas disponibles"/>
-        <Benefit icon={<ShieldCheck size={18}/>} title="Compra segura" detail="Atención al cliente"/>
+        <Benefit icon={<ShieldCheck size={18}/>} title="Atención al cliente" detail="Atención al cliente"/>
         <Benefit icon={<RotateCcw size={18}/>} title="Compra sencilla" detail="Proceso rápido"/>
       </section>
 
