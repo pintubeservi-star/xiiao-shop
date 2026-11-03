@@ -59,5 +59,110 @@ export default function Home(){
    }finally{if(alive)setLoading(false);}
   }
   void load();
-  return (<main>diagnostic</main>);
+  return ()=>{alive=false;};
+ },[]);
+ useEffect(()=>{
+  try{
+   const params=new URLSearchParams(window.location.search);
+   const incoming=params.get("ref");
+   const code=incoming||window.localStorage.getItem("xiiao_affiliate_code")||"";
+   if(incoming)window.localStorage.setItem("xiiao_affiliate_code",incoming);
+   if(code){
+    setAffiliateCode(code);
+    let visitor=window.localStorage.getItem("xiiao_visitor_key");
+    if(!visitor){visitor=crypto.randomUUID();window.localStorage.setItem("xiiao_visitor_key",visitor);}
+    void getSupabase().functions.invoke("record-affiliate-click",{body:{code,visitor_key:visitor,landing_path:window.location.pathname}});
+   }
+  }catch{}
+ },[]);
+ async function loadReviews(id:string){
+  const {data}=await getSupabase().from("product_reviews").select("id,rating,title,body,created_at").eq("product_id",id).eq("status","published").order("created_at",{ascending:false}).limit(30);
+  setReviews(data||[]);
+ }
+ async function loadSelectedDetails(p:Product){
+  await loadReviews(p.id);
+  setReviewOrders([]);
+  setReviewOrder("");
+  const {data:{user}}=await getSupabase().auth.getUser();
+  if(!user)return;
+  const {data:orders}=await getSupabase().from("orders").select("id,order_number").eq("customer_id",user.id).eq("status","delivered");
+  const ids=(orders||[]).map(x=>x.id);
+  if(!ids.length)return;
+  const {data:items}=await getSupabase().from("order_items").select("order_id").eq("product_id",p.id).in("order_id",ids);
+  const eligible=new Set((items||[]).map(x=>x.order_id));
+  setReviewOrders((orders||[]).filter(x=>eligible.has(x.id)));
+ }
+ const filtered=useMemo(()=>{
+  let list=products.filter(p=>(category==="Todos"||p.category===category)&&(p.name+" "+(p.description||"")+" "+(p.tags||[]).join(" ")).toLowerCase().includes(search.toLowerCase())&&(!showSaved||favorites.includes(p.id)));
+  return list.sort((a,b)=>{
+   if(sort==="price_low")return a.price_dop-b.price_dop;
+   if(sort==="price_high")return b.price_dop-a.price_dop;
+   if(sort==="discount")return ((b.compare_at_price_dop||b.price_dop)-b.price_dop)-((a.compare_at_price_dop||a.price_dop)-a.price_dop);
+   if(sort==="newest")return 0;
+   return Number(Boolean(b.is_featured))-Number(Boolean(a.is_featured));
+  });
+ },[products,category,search,sort,showSaved,favorites]);
+ const priceFor=(p:Product,q:number)=>p.wholesale_price_dop&&q>=(p.wholesale_min_qty||3)?Number(p.wholesale_price_dop):Number(p.price_dop);
+ const count=cart.reduce((n,x)=>n+x.quantity,0);
+ const subtotal=cart.reduce((n,x)=>n+priceFor(x.product,x.quantity)*x.quantity,0);
+ const recentProducts=recentIds.map(id=>products.find(p=>p.id===id)).filter(Boolean) as Product[];
+ const featuredProducts=products.filter(p=>p.is_featured).slice(0,8);
+ const interestCategories=[...recentProducts,...products.filter(p=>favorites.includes(p.id))].map(p=>p.category);
+ const recommendedProducts=products.filter(p=>!recentIds.includes(p.id)&&!favorites.includes(p.id)).sort((a,b)=>{
+  const score=(p:Product)=>interestCategories.filter(x=>x===p.category).length*3+(p.is_featured?2:0)+(p.compare_at_price_dop&&p.compare_at_price_dop>p.price_dop?1:0);
+  return score(b)-score(a);
+ }).slice(0,8);
+ const videoProducts=products.filter(p=>p.video_url).slice(0,8);
+ const compareProducts=compareIds.map(id=>products.find(p=>p.id===id)).filter((p):p is Product=>Boolean(p));
+ function toggleCompare(id:string){setCompareIds(old=>old.includes(id)?old.filter(x=>x!==id):old.length>=3?old:[...old,id]);}
+ function toggleFavorite(id:string){setFavorites(old=>old.includes(id)?old.filter(x=>x!==id):[...old,id]);}
+ function viewProduct(p:Product){
+  setSelected(p);setGalleryIndex(0);
+  setRecentIds(old=>{
+   const next=[p.id,...old.filter(x=>x!==p.id)].slice(0,12);
+   try{localStorage.setItem("xiiao_recent",JSON.stringify(next));}catch{}
+   return next;
+  });
+ }
+ async function submitReview(e:any){
+  e.preventDefault();
+  if(!selected||!reviewOrder)return;
+  const {data:{user}}=await getSupabase().auth.getUser();
+  if(!user){setNotice("Inicia sesión para dejar una reseña.");return;}
+  const {error}=await getSupabase().from("product_reviews").insert({product_id:selected.id,customer_id:user.id,order_id:reviewOrder,rating:reviewRating,title:reviewTitle,body:reviewBody,status:"pending"});
+  if(error){setNotice(error.message);return;}
+  setNotice("Reseña enviada. Se publicará después de revisión.");
+  setReviewOrder("");setReviewTitle("");setReviewBody("");
+ }
+ function add(p:Product){
+  setCart(old=>{
+   const found=old.find(x=>x.product.id===p.id);
+   return found?old.map(x=>x.product.id===p.id?{...x,quantity:Math.min(x.quantity+1,p.stock)}:x):[...old,{product:p,quantity:1}];
+  });
+  setNotice("");
+ }
+ function qty(id:string,d:number){
+  setCart(old=>old.map(x=>x.product.id===id?{...x,quantity:Math.max(0,Math.min(x.product.stock,x.quantity+d))}:x).filter(x=>x.quantity>0));
+ }
+ async function placeOrder(e:React.FormEvent){
+  e.preventDefault();setBusy(true);setNotice("");
+  try{
+   const s=getSupabase();
+   const {data,error}=await s.functions.invoke("create-order",{body:{
+    customer_name:form.name,customer_phone:form.phone,
+    shipping_address:{address:form.address,sector:form.sector,reference:form.reference},
+    items:cart.map(x=>({product_id:x.product.id,quantity:x.quantity})),
+    shipping_dop:shippingFee,affiliate_code:affiliateCode||null,coupon_code:couponCode.trim().toUpperCase()||null
+   }});
+   if(error)throw error;
+   setOrder({order_number:data.order_number,total_dop:Number(data.total_dop),discount_dop:Number(data.discount_dop||0),coupon_code:data.coupon_code||null});
+   setCart([]);setCheckout(false);setCartOpen(false);
+   setForm({name:"",phone:"",address:"",sector:"",reference:""});setCouponCode("");
+   const {data:latest}=await getSupabase().from("products").select("id,name,slug,description,category,price_dop,compare_at_price_dop,stock,image_urls,tags,specifications,is_featured,video_url,wholesale_price_dop,wholesale_min_qty").eq("status","published").gt("stock",0).order("created_at",{ascending:false});
+   setProducts(latest||[]);
+  }catch(e){setNotice(e instanceof Error?e.message:"No se pudo registrar el pedido.");}
+  finally{setBusy(false);}
+ }
+return <main>diagnostic</main>;
+}
 }
