@@ -112,7 +112,9 @@ export default function Home(){
   const score=(p:Product)=>interestCategories.filter(x=>x===p.category).length*3+(p.is_featured?2:0)+(p.compare_at_price_dop&&p.compare_at_price_dop>p.price_dop?1:0);
   return score(b)-score(a);
  }).slice(0,8);
- const videoProducts=products.filter(p=>p.video_url).slice(0,8);\n const compareProducts=compareIds.map(id=>products.find(p=>p.id===id)).filter((p):p is Product=>Boolean(p));\n function toggleCompare(id:string){setCompareIds(old=>old.includes(id)?old.filter(x=>x!==id):old.length>=3?old:[...old,id]);}
+ const videoProducts=products.filter(p=>p.video_url).slice(0,8);
+ const compareProducts=compareIds.map(id=>products.find(p=>p.id===id)).filter((p):p is Product=>Boolean(p));
+ function toggleCompare(id:string){setCompareIds(old=>old.includes(id)?old.filter(x=>x!==id):old.length>=3?old:[...old,id]);}
  function toggleFavorite(id:string){setFavorites(old=>old.includes(id)?old.filter(x=>x!==id):[...old,id]);}
  function viewProduct(p:Product){
   setSelected(p);setGalleryIndex(0);
