@@ -164,5 +164,3 @@ export default function Home(){
   finally{setBusy(false);}
  }
 return <main>diagnostic</main>;
-}
-}
