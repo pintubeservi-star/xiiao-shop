@@ -29,7 +29,8 @@ export default function AccountPage(){
   }else{const {error}=await s.auth.signInWithPassword({email:form.email,password:form.password});if(error)throw error;await load();}
   }catch(e){setNotice(e instanceof Error?e.message:"No se pudo completar el acceso.");}finally{setBusy(false);}
  }
- async function cancelOrder(id:string){if(!window.confirm("¿Seguro que deseas cancelar este pedido? Solo se pueden cancelar pedidos pendientes o confirmados."))return;setBusy(true);try{const {error}=await getSupabase().rpc("cancel_own_order",{p_order_id:id});if(error)throw error;setNotice("Pedido cancelado. El inventario fue actualizado.");await load();}catch(e){setNotice(e instanceof Error?e.message:"No se pudo cancelar el pedido.");}finally{setBusy(false);}}\n async function submitReturn(e:React.FormEvent){
+ async function cancelOrder(id:string){if(!window.confirm("¿Seguro que deseas cancelar este pedido? Solo se pueden cancelar pedidos pendientes o confirmados."))return;setBusy(true);try{const {error}=await getSupabase().rpc("cancel_own_order",{p_order_id:id});if(error)throw error;setNotice("Pedido cancelado. El inventario fue actualizado.");await load();}catch(e){setNotice(e instanceof Error?e.message:"No se pudo cancelar el pedido.");}finally{setBusy(false);}}
+ async function submitReturn(e:React.FormEvent){
   e.preventDefault();if(!user)return;setBusy(true);
   try{const {error}=await getSupabase().from("return_requests").insert({order_id:request.order_id,customer_id:user.id,reason:request.reason,details:request.details});if(error)throw error;setNotice("Solicitud enviada. Nuestro equipo la revisará.");setRequest({order_id:"",reason:"Producto defectuoso",details:""});await load();}
   catch(e){setNotice(e instanceof Error?e.message:"No se pudo enviar la solicitud.");}finally{setBusy(false);}
