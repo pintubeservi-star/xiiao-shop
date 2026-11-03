@@ -23,7 +23,9 @@ export default function Home(){
  const priceFor=(p:Product,q:number)=>p.wholesale_price_dop&&q>=(p.wholesale_min_qty||3)?Number(p.wholesale_price_dop):Number(p.price_dop);
  const count=cart.reduce((n,x)=>n+x.quantity,0),subtotal=cart.reduce((n,x)=>n+priceFor(x.product,x.quantity)*x.quantity,0);
  const recentProducts=recentIds.map(id=>products.find(p=>p.id===id)).filter(Boolean) as Product[];
- const featuredProducts=products.filter(p=>p.is_featured).slice(0,8);\n const interests=[...recentProducts,...products.filter(p=>favorites.includes(p.id))].map(p=>p.category);\n const recommendedProducts=products.filter(p=>!recentIds.includes(p.id)&&!favorites.includes(p.id)).sort((a,b)=>interests.filter(x=>x===b.category).length-interests.filter(x=>x===a.category).length).slice(0,8);
+ const featuredProducts=products.filter(p=>p.is_featured).slice(0,8);
+ const interests=[...recentProducts,...products.filter(p=>favorites.includes(p.id))].map(p=>p.category);
+ const recommendedProducts=products.filter(p=>!recentIds.includes(p.id)&&!favorites.includes(p.id)).sort((a,b)=>interests.filter(x=>x===b.category).length-interests.filter(x=>x===a.category).length).slice(0,8);
  const videoProducts=products.filter(p=>p.video_url).slice(0,8);
  const compareProducts=compareIds.map(id=>products.find(p=>p.id===id)).filter(Boolean) as Product[];
  function toggleFavorite(id:string){setFavorites(old=>old.includes(id)?old.filter(x=>x!==id):[...old,id]);}
