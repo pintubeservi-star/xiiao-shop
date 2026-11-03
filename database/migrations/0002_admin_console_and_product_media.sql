@@ -19,82 +19,87 @@ create table if not exists public.store_settings (
   updated_at timestamptz not null default now()
 );
 
-create or replace function public.is_admin()
+create schema if not exists private;
+revoke all on schema private from public;
+grant usage on schema private to authenticated;
+
+create or replace function private.is_admin()
 returns boolean
 language sql
 stable
 security definer
-set search_path = public
-as $$
-  select exists (
-    select 1 from public.profiles
-    where id = auth.uid() and role = 'admin'
-  );
-$$;
+set search_path = ''
+as $
+  select (select auth.uid()) is not null
+     and exists (
+       select 1 from public.profiles
+       where id = (select auth.uid()) and role = 'admin'
+     );
+$;
 
-revoke all on function public.is_admin() from public;
-grant execute on function public.is_admin() to authenticated;
+revoke all on function private.is_admin() from public, anon;
+grant execute on function private.is_admin() to authenticated;
 
 -- Admin-only management policies. Public product reads remain limited to published items.
 drop policy if exists "admin manages products" on public.products;
 create policy "admin manages products" on public.products
 for all to authenticated
-using (public.is_admin())
-with check (public.is_admin());
+using (private.is_admin())
+with check (private.is_admin());
 
 drop policy if exists "admin manages categories" on public.categories;
 alter table public.categories enable row level security;
 create policy "public reads active categories" on public.categories
 for select to anon, authenticated using (is_active = true);
 create policy "admin manages categories" on public.categories
-for all to authenticated using (public.is_admin()) with check (public.is_admin());
+for all to authenticated using (private.is_admin()) with check (private.is_admin());
 
 drop policy if exists "admin reads all profiles" on public.profiles;
 create policy "admin reads all profiles" on public.profiles
-for select to authenticated using (public.is_admin());
+for select to authenticated using (private.is_admin());
 
 drop policy if exists "admin manages merchants" on public.merchants;
 create policy "admin manages merchants" on public.merchants
-for all to authenticated using (public.is_admin()) with check (public.is_admin());
+for all to authenticated using (private.is_admin()) with check (private.is_admin());
 
 drop policy if exists "admin manages affiliates" on public.affiliate_profiles;
 create policy "admin manages affiliates" on public.affiliate_profiles
-for all to authenticated using (public.is_admin()) with check (public.is_admin());
+for all to authenticated using (private.is_admin()) with check (private.is_admin());
 
 drop policy if exists "admin manages orders" on public.orders;
 create policy "admin manages orders" on public.orders
-for all to authenticated using (public.is_admin()) with check (public.is_admin());
+for all to authenticated using (private.is_admin()) with check (private.is_admin());
 
 drop policy if exists "admin manages order items" on public.order_items;
 create policy "admin manages order items" on public.order_items
-for all to authenticated using (public.is_admin()) with check (public.is_admin());
+for all to authenticated using (private.is_admin()) with check (private.is_admin());
 
 drop policy if exists "admin manages commissions" on public.commissions;
 create policy "admin manages commissions" on public.commissions
-for all to authenticated using (public.is_admin()) with check (public.is_admin());
+for all to authenticated using (private.is_admin()) with check (private.is_admin());
 
 drop policy if exists "admin manages payouts" on public.payouts;
 create policy "admin manages payouts" on public.payouts
-for all to authenticated using (public.is_admin()) with check (public.is_admin());
+for all to authenticated using (private.is_admin()) with check (private.is_admin());
 
 drop policy if exists "admin reads audit logs" on public.audit_logs;
 create policy "admin reads audit logs" on public.audit_logs
-for select to authenticated using (public.is_admin());
+for select to authenticated using (private.is_admin());
 
 drop policy if exists "admin reads all affiliate links" on public.affiliate_links;
 create policy "admin reads all affiliate links" on public.affiliate_links
-for select to authenticated using (public.is_admin());
+for select to authenticated using (private.is_admin());
 
 drop policy if exists "admin reads all ledger entries" on public.ledger_entries;
 create policy "admin reads all ledger entries" on public.ledger_entries
-for select to authenticated using (public.is_admin());
+for select to authenticated using (private.is_admin());
 
 drop policy if exists "admin manages store settings" on public.store_settings;
 alter table public.store_settings enable row level security;
 create policy "public reads public store settings" on public.store_settings
 for select to anon, authenticated using (key in ('storefront','shipping_public','promotions_public'));
 create policy "admin manages store settings" on public.store_settings
-for all to authenticated using (public.is_admin()) with check (public.is_admin());
+for all to authenticated using (private.is_admin()) with check (private.is_admin());
 
 -- Public product photos; only authenticated administrators can upload or remove files.
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
@@ -107,15 +112,22 @@ create policy "public reads product images" on storage.objects
 for select to anon, authenticated using (bucket_id = 'product-images');
 drop policy if exists "admin uploads product images" on storage.objects;
 create policy "admin uploads product images" on storage.objects
-for insert to authenticated with check (bucket_id = 'product-images' and public.is_admin());
+for insert to authenticated with check (bucket_id = 'product-images' and private.is_admin());
 drop policy if exists "admin updates product images" on storage.objects;
 create policy "admin updates product images" on storage.objects
-for update to authenticated using (bucket_id = 'product-images' and public.is_admin())
-with check (bucket_id = 'product-images' and public.is_admin());
+for update to authenticated using (bucket_id = 'product-images' and private.is_admin())
+with check (bucket_id = 'product-images' and private.is_admin());
 drop policy if exists "admin deletes product images" on storage.objects;
 create policy "admin deletes product images" on storage.objects
-for delete to authenticated using (bucket_id = 'product-images' and public.is_admin());
+for delete to authenticated using (bucket_id = 'product-images' and private.is_admin());
 
 create index if not exists categories_active_order_idx on public.categories(is_active, sort_order);
 create trigger categories_updated_at before update on public.categories
 for each row execute function public.set_updated_at();
+
+
+-- Explicit Data API grants for tables created after the October 2026 default change.
+grant select on public.categories to anon, authenticated;
+grant insert, update, delete on public.categories to authenticated;
+grant select on public.store_settings to anon, authenticated;
+grant insert, update, delete on public.store_settings to authenticated;
