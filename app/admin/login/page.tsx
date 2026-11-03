@@ -5,7 +5,7 @@ import { getSupabase } from "@/lib/supabase/client";
 
 export default function AdminLogin() {
   const [mode,setMode]=useState<"login"|"signup">("login");
-  const [email,setEmail]=useState("seoxiiao@gmail.com");
+  const [email,setEmail]=useState("pintubeservi@gmail.com");
   const [password,setPassword]=useState("");
   const [name,setName]=useState("");
   const [message,setMessage]=useState("");
@@ -37,6 +37,6 @@ export default function AdminLogin() {
       <button disabled={busy} className="w-full rounded-xl bg-[#191a17] py-3 font-bold text-white disabled:opacity-50">{busy?"Procesando…":mode==="login"?"Entrar al panel":"Crear cuenta"}</button>
     </form>
     {message&&<p className="mt-4 rounded-xl bg-gray-50 p-3 text-sm">{message}</p>}
-    <p className="mt-6 text-xs leading-5 text-gray-400">El registro no concede permisos administrativos automáticamente. Solo una cuenta autorizada puede acceder al panel.</p>
+    <p className="mt-6 text-xs leading-5 text-gray-400">El acceso de propietario se activa únicamente para el correo principal después de verificarlo.</p>
   </section></main>;
 }
