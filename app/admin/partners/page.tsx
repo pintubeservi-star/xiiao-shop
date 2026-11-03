@@ -1,0 +1,80 @@
+"use client";
+import {useCallback,useEffect,useState} from "react";
+import Link from "next/link";
+import {getSupabase} from "@/lib/supabase/client";
+
+const money=(n:number)=>"RD$ "+Number(n||0).toLocaleString("es-DO");
+const statusLabel=(s:string)=>({pending:"Pendiente",approved:"Aprobada",rejected:"Rechazada",active:"Activo",suspended:"Suspendido",pending_validation:"En validación",available:"Disponible",paid:"Pagada",requested:"Solicitado",under_review:"En revisión",received:"Recibido"} as Record<string,string>)[s]||s;
+
+export default function PartnerAdmin(){
+ const [ready,setReady]=useState(false),[allowed,setAllowed]=useState(false),[email,setEmail]=useState("");
+ const [tab,setTab]=useState<"applications"|"affiliates"|"merchants"|"commissions"|"payouts"|"returns">("applications");
+ const [apps,setApps]=useState<any[]>([]),[affiliates,setAffiliates]=useState<any[]>([]),[merchants,setMerchants]=useState<any[]>([]);
+ const [commissions,setCommissions]=useState<any[]>([]),[payouts,setPayouts]=useState<any[]>([]),[returns,setReturns]=useState<any[]>([]);
+ const [profiles,setProfiles]=useState<Record<string,any>>({}),[notice,setNotice]=useState(""),[busy,setBusy]=useState(false);
+
+ const load=useCallback(async()=>{
+  const s=getSupabase();const {data:{user}}=await s.auth.getUser();
+  if(!user){location.href="/admin/login";return;}
+  setEmail(user.email||"");const {data:p}=await s.from("profiles").select("role").eq("id",user.id).maybeSingle();
+  if(p?.role!=="admin"){setReady(true);return;}setAllowed(true);
+  const [a,af,m,c,po,r]=await Promise.all([
+   s.from("partner_applications").select("*").order("created_at",{ascending:false}),
+   s.from("affiliate_profiles").select("*").order("created_at",{ascending:false}),
+   s.from("merchants").select("*").order("created_at",{ascending:false}),
+   s.from("commissions").select("id,affiliate_id,order_item_id,amount_dop,status,eligible_at,created_at").order("created_at",{ascending:false}).limit(200),
+   s.from("payouts").select("id,affiliate_id,amount_dop,method,destination,status,created_at").order("created_at",{ascending:false}).limit(200),
+   s.from("return_requests").select("id,order_id,customer_id,reason,details,status,created_at").order("created_at",{ascending:false}).limit(100)
+  ]);
+  for(const x of [a,af,m,c,po,r])if(x.error)throw x.error;
+  setApps(a.data||[]);setAffiliates(af.data||[]);setMerchants(m.data||[]);setCommissions(c.data||[]);setPayouts(po.data||[]);setReturns(r.data||[]);
+  const ids=[...(a.data||[]).map((x:any)=>x.user_id),...(af.data||[]).map((x:any)=>x.user_id),...(m.data||[]).map((x:any)=>x.owner_id),...(r.data||[]).map((x:any)=>x.customer_id)].filter(Boolean);
+  if(ids.length){const {data:ps}=await s.from("profiles").select("id,full_name,phone").in("id",Array.from(new Set(ids)));const map:Record<string,any>={};(ps||[]).forEach((x:any)=>map[x.id]=x);setProfiles(map);}
+  setReady(true);
+ },[]);
+
+ useEffect(()=>{void load().catch(e=>{setNotice(e instanceof Error?e.message:"Error cargando operaciones");setReady(true);});},[load]);
+
+ async function reviewApplication(id:string,decision:"approved"|"rejected"){
+  setBusy(true);try{const {error}=await getSupabase().rpc("admin_review_partner_application",{p_application_id:id,p_decision:decision,p_note:null});if(error)throw error;setNotice(decision==="approved"?"Solicitud aprobada y acceso activado.":"Solicitud rechazada.");await load();}
+  catch(e){setNotice(e instanceof Error?e.message:"No se pudo procesar.");}finally{setBusy(false);}
+ }
+ async function releaseCommissions(){
+  const eligible=commissions.filter(c=>c.status==="pending_validation"&&c.eligible_at&&new Date(c.eligible_at)<=new Date()).map(c=>c.id);
+  if(!eligible.length){setNotice("No hay comisiones que hayan cumplido el plazo de validación.");return;}
+  setBusy(true);try{const {data,error}=await getSupabase().rpc("admin_release_commissions",{p_commission_ids:eligible});if(error)throw error;setNotice("Comisiones liberadas: "+data);await load();}
+  catch(e){setNotice(e instanceof Error?e.message:"No se pudieron liberar comisiones.");}finally{setBusy(false);}
+ }
+ async function reviewPayout(id:string,decision:"paid"|"rejected"){
+  if(decision==="paid"&&!window.confirm("Confirma que ya realizaste la transferencia al afiliado."))return;
+  setBusy(true);try{const {error}=await getSupabase().rpc("admin_review_payout",{p_payout_id:id,p_decision:decision});if(error)throw error;setNotice(decision==="paid"?"Retiro marcado como pagado.":"Retiro rechazado y saldo devuelto.");await load();}
+  catch(e){setNotice(e instanceof Error?e.message:"No se pudo procesar el retiro.");}finally{setBusy(false);}
+ }
+ async function updateReturn(id:string,status:string){
+  setBusy(true);try{const {data:{user}}=await getSupabase().auth.getUser();const {error}=await getSupabase().from("return_requests").update({status,reviewed_by:user?.id,reviewed_at:new Date().toISOString()}).eq("id",id);if(error)throw error;setNotice("Solicitud de devolución actualizada.");await load();}
+  catch(e){setNotice(e instanceof Error?e.message:"No se pudo actualizar.");}finally{setBusy(false);}
+ }
+ async function setPartnerStatus(table:"merchants"|"affiliate_profiles",id:string,status:string){
+  setBusy(true);try{const {error}=await getSupabase().from(table).update({status}).eq("id",id);if(error)throw error;setNotice("Estado actualizado.");await load();}
+  catch(e){setNotice(e instanceof Error?e.message:"No se pudo actualizar.");}finally{setBusy(false);}
+ }
+
+ if(!ready)return <main className="grid min-h-screen place-items-center">Cargando operaciones…</main>;
+ if(!allowed)return <main className="min-h-screen bg-[#f5f6f1] p-6"><div className="mx-auto mt-20 max-w-lg rounded-3xl bg-white p-8"><h1 className="text-2xl font-black">Acceso restringido</h1><p className="mt-3 text-sm text-gray-500">Esta área requiere permisos de administrador.</p><Link href="/admin/login" className="mt-4 inline-block underline">Ir al acceso</Link></div></main>;
+
+ const tabs=[["applications","Solicitudes"],["affiliates","Afiliados"],["merchants","Comercios"],["commissions","Comisiones"],["payouts","Retiros"],["returns","Devoluciones"]] as const;
+ return <main className="min-h-screen bg-[#f5f6f1] text-[#191a17]">
+  <header className="flex flex-wrap items-center justify-between gap-3 border-b bg-white px-5 py-4"><Link href="/admin" className="text-lg font-black">XiiAO Shop / Administración</Link><div className="flex items-center gap-3 text-xs text-black/50">{email}<button onClick={()=>void load()} className="rounded-full border px-3 py-2">Actualizar</button></div></header>
+  <div className="mx-auto max-w-7xl p-4 md:p-8"><p className="text-xs font-bold uppercase tracking-widest text-gray-500">Operaciones y socios</p><h1 className="mt-1 text-3xl font-black">Centro de socios y finanzas</h1>
+   {notice&&<p className="mt-5 rounded-xl bg-white p-3 text-sm">{notice}</p>}
+   <div className="my-6 flex gap-2 overflow-x-auto pb-2">{tabs.map(([id,label])=><button key={id} onClick={()=>setTab(id)} className={tab===id?"shrink-0 rounded-full bg-black px-4 py-2 text-sm font-bold text-white":"shrink-0 rounded-full border bg-white px-4 py-2 text-sm"}>{label}</button>)}</div>
+   {tab==="applications"&&<section className="space-y-3">{apps.length===0&&<Empty>No hay solicitudes todavía.</Empty>}{apps.map(a=><article key={a.id} className="rounded-2xl bg-white p-5"><div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-xs font-bold uppercase tracking-widest text-black/40">{a.application_type==="affiliate"?"Creador / afiliado":"Comercio"}</p><h2 className="mt-1 text-lg font-black">{a.display_name}</h2><p className="text-sm text-black/55">{profiles[a.user_id]?.full_name||"Usuario"} · {a.phone} · {a.social_url||"Sin enlace"}</p><p className="mt-1 text-xs text-black/40">{new Date(a.created_at).toLocaleString("es-DO")}</p></div><span className="rounded-full bg-gray-100 px-3 py-1 text-xs">{statusLabel(a.status)}</span></div>{a.description&&<p className="mt-3 text-sm text-black/60">{a.description}</p>}{a.status==="pending"&&<div className="mt-4 flex gap-2"><button disabled={busy} onClick={()=>reviewApplication(a.id,"approved")} className="rounded-xl bg-black px-4 py-2 text-sm font-bold text-white">Aprobar</button><button disabled={busy} onClick={()=>reviewApplication(a.id,"rejected")} className="rounded-xl border px-4 py-2 text-sm">Rechazar</button></div>}</article>)}</section>}
+   {tab==="affiliates"&&<section className="space-y-3">{affiliates.map(a=><article key={a.id} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-white p-5"><div><b>{profiles[a.user_id]?.full_name||a.public_code}</b><p className="text-xs text-black/45">{a.public_code} · {profiles[a.user_id]?.phone||"Sin teléfono"}</p></div><div className="flex items-center gap-2"><span className="text-xs">{statusLabel(a.status)}</span><select value={a.status} onChange={e=>setPartnerStatus("affiliate_profiles",a.id,e.target.value)} className="rounded-lg border p-2 text-xs"><option value="active">Activo</option><option value="suspended">Suspendido</option><option value="pending">Pendiente</option></select></div></article>)}{!affiliates.length&&<Empty>No hay afiliados registrados.</Empty>}</section>}
+   {tab==="merchants"&&<section className="space-y-3">{merchants.map(m=><article key={m.id} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-white p-5"><div><b>{m.store_name}</b><p className="text-xs text-black/45">{profiles[m.owner_id]?.full_name||"Propietario"} · {profiles[m.owner_id]?.phone||"Sin teléfono"}</p><p className="text-xs text-black/40">{m.slug}</p></div><select value={m.status} onChange={e=>setPartnerStatus("merchants",m.id,e.target.value)} className="rounded-lg border p-2 text-xs"><option value="active">Activo</option><option value="pending">Pendiente</option><option value="suspended">Suspendido</option></select></article>)}{!merchants.length&&<Empty>No hay comercios registrados.</Empty>}</section>}
+   {tab==="commissions"&&<section className="space-y-3"><div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-white p-5"><div><h2 className="font-black">Liberación de comisiones</h2><p className="text-xs text-black/45">Solo se liberan cuando el pedido fue entregado, el pago confirmado y terminó el plazo de validación de 7 días.</p></div><button disabled={busy} onClick={releaseCommissions} className="rounded-xl bg-black px-4 py-3 text-sm font-bold text-white">Liberar elegibles</button></div>{commissions.map(c=><article key={c.id} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-white p-4"><div><b>{money(c.amount_dop)}</b><p className="text-xs text-black/45">Afiliado {c.affiliate_id.slice(0,8)} · {c.eligible_at?new Date(c.eligible_at).toLocaleDateString("es-DO"):"Sin fecha"}</p></div><span className="rounded-full bg-gray-100 px-3 py-1 text-xs">{statusLabel(c.status)}</span></article>)}{!commissions.length&&<Empty>No hay comisiones registradas.</Empty>}</section>}
+   {tab==="payouts"&&<section className="space-y-3">{payouts.map(p=><article key={p.id} className="rounded-2xl bg-white p-5"><div className="flex flex-wrap items-start justify-between gap-3"><div><b className="text-lg">{money(p.amount_dop)}</b><p className="text-xs text-black/45">Afiliado {p.affiliate_id.slice(0,8)} · {p.method==="bank_transfer"?"Transferencia":"Billetera móvil"}</p><p className="mt-2 text-xs text-black/55">{JSON.stringify(p.destination)}</p><p className="text-xs text-black/40">{new Date(p.created_at).toLocaleString("es-DO")}</p></div><span className="rounded-full bg-gray-100 px-3 py-1 text-xs">{statusLabel(p.status)}</span></div>{["requested","under_review","approved"].includes(p.status)&&<div className="mt-4 flex gap-2"><button disabled={busy} onClick={()=>reviewPayout(p.id,"paid")} className="rounded-xl bg-black px-4 py-2 text-sm font-bold text-white">Confirmar pago realizado</button><button disabled={busy} onClick={()=>reviewPayout(p.id,"rejected")} className="rounded-xl border px-4 py-2 text-sm">Rechazar y devolver saldo</button></div>}</article>)}{!payouts.length&&<Empty>No hay solicitudes de retiro.</Empty>}</section>}
+   {tab==="returns"&&<section className="space-y-3">{returns.map(r=><article key={r.id} className="rounded-2xl bg-white p-5"><div className="flex flex-wrap justify-between gap-3"><div><b>Solicitud de devolución</b><p className="text-xs text-black/45">Cliente: {profiles[r.customer_id]?.full_name||"Cliente"} · Pedido: {r.order_id.slice(0,8)}</p><p className="mt-2 text-sm">{r.reason}</p>{r.details&&<p className="text-sm text-black/50">{r.details}</p>}</div><span className="rounded-full bg-gray-100 px-3 py-1 text-xs">{statusLabel(r.status)}</span></div>{r.status==="requested"&&<div className="mt-4 flex gap-2"><button onClick={()=>updateReturn(r.id,"approved")} className="rounded-xl bg-black px-4 py-2 text-sm font-bold text-white">Aprobar devolución</button><button onClick={()=>updateReturn(r.id,"rejected")} className="rounded-xl border px-4 py-2 text-sm">Rechazar</button></div>}{r.status==="approved"&&<button onClick={()=>updateReturn(r.id,"received")} className="mt-4 rounded-xl border px-4 py-2 text-sm">Confirmar recepción</button>}</article>)}{!returns.length&&<Empty>No hay solicitudes de devolución.</Empty>}</section>}
+  </div>
+ </main>;
+}
+function Empty({children}:{children:React.ReactNode}){return <div className="rounded-2xl bg-white p-8 text-sm text-black/45">{children}</div>}
