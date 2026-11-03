@@ -257,7 +257,6 @@ for each row execute function private.handle_new_user();
 
 -- Explicit Data API grants: Supabase no longer exposes newly created tables by default.
 grant select on public.products to anon, authenticated;
-grant select on public.categories to anon, authenticated;
 grant select on public.store_settings to anon, authenticated;
 grant select on public.profiles, public.merchants, public.affiliate_profiles,
   public.affiliate_links, public.affiliate_clicks, public.orders, public.order_items,
