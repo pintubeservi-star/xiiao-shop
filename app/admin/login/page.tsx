@@ -15,7 +15,7 @@ export default function AdminLogin() {
     try {
       const supabase=getSupabase();
       if(mode==="signup") {
-        const {data,error}=await supabase.auth.signUp({email,password,options:{data:{full_name:name},emailRedirectTo:window.location.origin+"/admin"}});
+        const {data,error}=await supabase.auth.signUp({email,password,options:{data:{full_name:name}}});
         if(error) throw error;
         setMessage(data.session ? "Cuenta creada. Confirma el correo y el acceso de propietario se habilitará automáticamente al verificarlo." : "Revisa tu correo y confirma la cuenta. Al verificar se activarán los permisos del propietario.");
       } else {
