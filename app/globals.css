@@ -1,0 +1,10 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root { color-scheme: light; }
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: #f7f7f3; color: #111; font-family: Arial, Helvetica, sans-serif; }
+button, input { font: inherit; }
+::selection { background: #c8f169; color: #111; }
