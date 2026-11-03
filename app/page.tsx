@@ -8,7 +8,7 @@ type Line={product:Product;quantity:number};
 const money=(n:number)=>"RD$ "+Number(n).toLocaleString("es-DO");
 export default function Home(){
  const [products,setProducts]=useState<Product[]>([]),[categories,setCategories]=useState<string[]>([]);
- const [category,setCategory]=useState("Todos"),[search,setSearch]=useState(""),[sort,setSort]=useState("featured"),[showSaved,setShowSaved]=useState(false),[favorites,setFavorites]=useState<string[]>([]),[recentIds,setRecentIds]=useState<string[]>([]),[selected,setSelected]=useState<Product|null>(null),[galleryIndex,setGalleryIndex]=useState(0),[reviews,setReviews]=useState<any[]>([]),[ratingSummary,setRatingSummary]=useState<Record<string,{avg:number;count:number}>>({}),[reviewOrders,setReviewOrders]=useState<any[]>([]),[reviewOrder,setReviewOrder]=useState(""),[reviewRating,setReviewRating]=useState(5),[reviewTitle,setReviewTitle]=useState(""),[reviewBody,setReviewBody]=useState(""),[compareIds,setCompareIds]=useState<string[]>([]),[compareOpen,setCompareOpen]=useState(false);
+ const [category,setCategory]=useState("Todos"),[search,setSearch]=useState(""),[sort,setSort]=useState("featured"),[showSaved,setShowSaved]=useState(false),[favorites,setFavorites]=useState<string[]>([]),[recentIds,setRecentIds]=useState<string[]>([]),[selected,setSelected]=useState<Product|null>(null),[galleryIndex,setGalleryIndex]=useState(0),[reviews,setReviews]=useState<any[]>([]),[ratingSummary,setRatingSummary]=useState<any>({}),[reviewOrders,setReviewOrders]=useState<any[]>([]),[reviewOrder,setReviewOrder]=useState(""),[reviewRating,setReviewRating]=useState(5),[reviewTitle,setReviewTitle]=useState(""),[reviewBody,setReviewBody]=useState(""),[compareIds,setCompareIds]=useState<string[]>([]),[compareOpen,setCompareOpen]=useState(false);
  const [cart,setCart]=useState<Line[]>([]),[cartOpen,setCartOpen]=useState(false),[checkout,setCheckout]=useState(false);
  const [loading,setLoading]=useState(true),[notice,setNotice]=useState(""),[busy,setBusy]=useState(false);
  const [order,setOrder]=useState<{order_number:number;total_dop:number;discount_dop?:number;coupon_code?:string|null}|null>(null);
@@ -105,7 +105,7 @@ export default function Home(){
  const priceFor=(p:Product,q:number)=>p.wholesale_price_dop&&q>=(p.wholesale_min_qty||3)?Number(p.wholesale_price_dop):Number(p.price_dop);
  const count=cart.reduce((n,x)=>n+x.quantity,0);
  const subtotal=cart.reduce((n,x)=>n+priceFor(x.product,x.quantity)*x.quantity,0);
- const recentProducts=recentIds.map(id=>products.find(p=>p.id===id)).filter((p):p is Product=>Boolean(p));
+ const recentProducts=recentIds.map(id=>products.find(p=>p.id===id)).filter(Boolean) as Product[];
  const featuredProducts=products.filter(p=>p.is_featured).slice(0,8);
  const interestCategories=[...recentProducts,...products.filter(p=>favorites.includes(p.id))].map(p=>p.category);
  const recommendedProducts=products.filter(p=>!recentIds.includes(p.id)&&!favorites.includes(p.id)).sort((a,b)=>{
@@ -124,7 +124,7 @@ export default function Home(){
    return next;
   });
  }
- async function submitReview(e:React.FormEvent){
+ async function submitReview(e:any){
   e.preventDefault();
   if(!selected||!reviewOrder)return;
   const {data:{user}}=await getSupabase().auth.getUser();
