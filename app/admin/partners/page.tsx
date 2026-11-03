@@ -11,7 +11,9 @@ export default function PartnerAdmin(){
  const [tab,setTab]=useState<"overview"|"applications"|"affiliates"|"merchants"|"commissions"|"payouts"|"returns"|"customers"|"settings">("overview");
  const [apps,setApps]=useState<any[]>([]),[affiliates,setAffiliates]=useState<any[]>([]),[merchants,setMerchants]=useState<any[]>([]);
  const [commissions,setCommissions]=useState<any[]>([]),[payouts,setPayouts]=useState<any[]>([]),[returns,setReturns]=useState<any[]>([]);
- const [profiles,setProfiles]=useState<Record<string,any>>({}),[notice,setNotice]=useState(""),[busy,setBusy]=useState(false);\n const [customers,setCustomers]=useState<any[]>([]),[orderStats,setOrderStats]=useState({orders:0,revenue:0,delivered:0});\n const [shippingFee,setShippingFee]=useState("150"),[promoText,setPromoText]=useState(""),[promoActive,setPromoActive]=useState(false),[supportPhone,setSupportPhone]=useState("");
+ const [profiles,setProfiles]=useState<Record<string,any>>({}),[notice,setNotice]=useState(""),[busy,setBusy]=useState(false);
+ const [customers,setCustomers]=useState<any[]>([]),[orderStats,setOrderStats]=useState({orders:0,revenue:0,delivered:0});
+ const [shippingFee,setShippingFee]=useState("150"),[promoText,setPromoText]=useState(""),[promoActive,setPromoActive]=useState(false),[supportPhone,setSupportPhone]=useState("");
 
  const load=useCallback(async()=>{
   const s=getSupabase();const {data:{user}}=await s.auth.getUser();
@@ -27,7 +29,9 @@ export default function PartnerAdmin(){
    s.from("return_requests").select("id,order_id,customer_id,reason,details,status,created_at").order("created_at",{ascending:false}).limit(100)
   ]);
   for(const x of [a,af,m,c,po,r,st,cu,os])if(x.error)throw x.error;
-  setApps(a.data||[]);setAffiliates(af.data||[]);setMerchants(m.data||[]);setCommissions(c.data||[]);setPayouts(po.data||[]);setReturns(r.data||[]);setCustomers(cu.data||[]);\n  const settingMap:Record<string,any>={};(st.data||[]).forEach((x:any)=>settingMap[x.key]=x.value||{});setShippingFee(String(settingMap.shipping_public?.default_shipping_dop??150));setPromoText(settingMap.promotions_public?.banner_text||"");setPromoActive(Boolean(settingMap.promotions_public?.active));setSupportPhone(settingMap.storefront?.support_phone||"");\n  const orderRows=os.data||[];setOrderStats({orders:orderRows.length,revenue:orderRows.filter((x:any)=>x.status==="delivered").reduce((n:number,x:any)=>n+Number(x.total_dop),0),delivered:orderRows.filter((x:any)=>x.status==="delivered").length});
+  setApps(a.data||[]);setAffiliates(af.data||[]);setMerchants(m.data||[]);setCommissions(c.data||[]);setPayouts(po.data||[]);setReturns(r.data||[]);setCustomers(cu.data||[]);
+  const settingMap:Record<string,any>={};(st.data||[]).forEach((x:any)=>settingMap[x.key]=x.value||{});setShippingFee(String(settingMap.shipping_public?.default_shipping_dop??150));setPromoText(settingMap.promotions_public?.banner_text||"");setPromoActive(Boolean(settingMap.promotions_public?.active));setSupportPhone(settingMap.storefront?.support_phone||"");
+  const orderRows=os.data||[];setOrderStats({orders:orderRows.length,revenue:orderRows.filter((x:any)=>x.status==="delivered").reduce((n:number,x:any)=>n+Number(x.total_dop),0),delivered:orderRows.filter((x:any)=>x.status==="delivered").length});
   const ids=[...(a.data||[]).map((x:any)=>x.user_id),...(af.data||[]).map((x:any)=>x.user_id),...(m.data||[]).map((x:any)=>x.owner_id),...(r.data||[]).map((x:any)=>x.customer_id)].filter(Boolean);
   if(ids.length){const {data:ps}=await s.from("profiles").select("id,full_name,phone").in("id",Array.from(new Set(ids)));const map:Record<string,any>={};(ps||[]).forEach((x:any)=>map[x.id]=x);setProfiles(map);}
   setReady(true);
@@ -81,4 +85,5 @@ export default function PartnerAdmin(){
   </div>
  </main>;
 }
-function Empty({children}:{children:React.ReactNode}){return <div className="rounded-2xl bg-white p-8 text-sm text-black/45">{children}</div>}\nfunction Stat({label,value}:{label:string;value:string}){return <div className="rounded-2xl bg-white p-5"><p className="text-xs font-bold uppercase tracking-widest text-black/40">{label}</p><p className="mt-2 text-2xl font-black">{value}</p></div>}
+function Empty({children}:{children:React.ReactNode}){return <div className="rounded-2xl bg-white p-8 text-sm text-black/45">{children}</div>}
+function Stat({label,value}:{label:string;value:string}){return <div className="rounded-2xl bg-white p-5"><p className="text-xs font-bold uppercase tracking-widest text-black/40">{label}</p><p className="mt-2 text-2xl font-black">{value}</p></div>}
