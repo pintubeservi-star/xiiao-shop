@@ -21,9 +21,9 @@ export default function PartnerPortal({kind}:{kind:Kind}) {
  const [profile,setProfile]=useState<any>(null);
  const [products,setProducts]=useState<Product[]>([]);
  const [links,setLinks]=useState<LinkRow[]>([]);
- const [commissions,setCommissions]=useState<any[]>([]);
+ const [commissions,setCommissions]=useState<any[]>([]),[payouts,setPayouts]=useState<any[]>([]);
  const [balance,setBalance]=useState(0);
- const [draft,setDraft]=useState({name:"",description:"",category:"General",price:"",stock:"0"});
+ const [draft,setDraft]=useState({name:"",description:"",category:"General",price:"",stock:"0",image:""});
  const [payout,setPayout]=useState({amount:"",method:"bank_transfer",holder:"",account:"",bank:""});
  const [showPayout,setShowPayout]=useState(false);
 
@@ -37,7 +37,7 @@ export default function PartnerPortal({kind}:{kind:Kind}) {
    if(affiliate){
     const {data:a}=await s.from("affiliate_profiles").select("*").eq("user_id",u.id).maybeSingle();setProfile(a||null);
     if(a){
-     const [l,c,led,p]=await Promise.all([
+     const [l,c,led,p,po]=await Promise.all([
       s.from("affiliate_links").select("id,code,product_id,products(name)").eq("affiliate_id",a.id).order("created_at",{ascending:false}),
       s.from("commissions").select("id,amount_dop,status,created_at").eq("affiliate_id",a.id).order("created_at",{ascending:false}).limit(100),
       s.from("ledger_entries").select("amount_dop,entry_type").eq("affiliate_id",a.id),
@@ -54,7 +54,7 @@ export default function PartnerPortal({kind}:{kind:Kind}) {
   setLoading(false);
  },[kind,affiliate]);
 
- useEffect(()=>{void load();const {data:{subscription}}=getSupabase().auth.onAuthStateChange(()=>{void load();});return()=>subscription.unsubscribe();},[load]);
+ useEffect(()=>{void load();},[load]);
 
  async function authenticate(e:React.FormEvent){
   e.preventDefault();setBusy(true);setNotice("");
@@ -80,8 +80,8 @@ export default function PartnerPortal({kind}:{kind:Kind}) {
 
  async function createProduct(e:React.FormEvent){
   e.preventDefault();if(!profile)return;setBusy(true);try{
-   const {error}=await getSupabase().from("products").insert({merchant_id:profile.id,created_by:user?.id,name:draft.name.trim(),slug:draft.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/(^-|-$)/g,"")+"-"+crypto.randomUUID().slice(0,5),description:draft.description,category:draft.category,price_dop:Number(draft.price),stock:Number(draft.stock),image_urls:[],status:"draft",commission_type:"percentage",commission_value:0});
-   if(error)throw error;setDraft({name:"",description:"",category:"General",price:"",stock:"0"});setNotice("Producto guardado como borrador. El equipo de XiiAO revisará su publicación.");await load();
+   const {error}=await getSupabase().from("products").insert({merchant_id:profile.id,created_by:user?.id,name:draft.name.trim(),slug:draft.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/(^-|-$)/g,"")+"-"+crypto.randomUUID().slice(0,5),description:draft.description,category:draft.category,price_dop:Number(draft.price),stock:Number(draft.stock),image_urls:draft.image.trim()?[draft.image.trim()]:[],status:"draft",commission_type:"percentage",commission_value:0});
+   if(error)throw error;setDraft({name:"",description:"",category:"General",price:"",stock:"0",image:""});setNotice("Producto guardado como borrador. El equipo de XiiAO revisará su publicación.");await load();
   }catch(e){setNotice(e instanceof Error?e.message:"No se pudo guardar el producto.");}finally{setBusy(false);}
  }
 
@@ -132,7 +132,7 @@ export default function PartnerPortal({kind}:{kind:Kind}) {
     </div>
    :<div className="mt-8 grid gap-6 lg:grid-cols-[1fr_380px]">
     <section className="rounded-3xl bg-white p-6"><h2 className="text-xl font-black">Tus productos</h2>{products.map(p=><div key={p.id} className="flex items-center justify-between border-b py-3"><div><b className="text-sm">{p.name}</b><p className="text-xs text-black/45">{money(p.price_dop)} · Stock {p.stock} · {p.status}</p></div><span className="text-xs">{p.status==="published"?"Publicado":"En revisión"}</span></div>)}</section>
-    <form onSubmit={createProduct} className="h-fit space-y-3 rounded-3xl bg-white p-6"><h2 className="text-xl font-black">Agregar producto</h2><label className="block text-sm font-semibold">Nombre<input required value={draft.name} onChange={e=>setDraft(d=>({...d,name:e.target.value}))} className={input}/></label><label className="block text-sm font-semibold">Descripción<textarea value={draft.description} onChange={e=>setDraft(d=>({...d,description:e.target.value}))} className={input}/></label><div className="grid grid-cols-2 gap-3"><label className="text-sm font-semibold">Precio RD$<input required type="number" min="1" value={draft.price} onChange={e=>setDraft(d=>({...d,price:e.target.value}))} className={input}/></label><label className="text-sm font-semibold">Inventario<input required type="number" min="0" value={draft.stock} onChange={e=>setDraft(d=>({...d,stock:e.target.value}))} className={input}/></label></div><button disabled={busy} className="w-full rounded-xl bg-black py-3 text-sm font-bold text-white">Guardar borrador</button></form>
+    <form onSubmit={createProduct} className="h-fit space-y-3 rounded-3xl bg-white p-6"><h2 className="text-xl font-black">Agregar producto</h2><label className="block text-sm font-semibold">Nombre<input required value={draft.name} onChange={e=>setDraft(d=>({...d,name:e.target.value}))} className={input}/></label><label className="block text-sm font-semibold">Descripción<textarea value={draft.description} onChange={e=>setDraft(d=>({...d,description:e.target.value}))} className={input}/></label><label className="block text-sm font-semibold">URL de fotografía<input type="url" value={draft.image} onChange={e=>setDraft(d=>({...d,image:e.target.value}))} placeholder="https://..." className={input}/></label><div className="grid grid-cols-2 gap-3"><label className="text-sm font-semibold">Precio RD$<input required type="number" min="1" value={draft.price} onChange={e=>setDraft(d=>({...d,price:e.target.value}))} className={input}/></label><label className="text-sm font-semibold">Inventario<input required type="number" min="0" value={draft.stock} onChange={e=>setDraft(d=>({...d,stock:e.target.value}))} className={input}/></label></div><button disabled={busy} className="w-full rounded-xl bg-black py-3 text-sm font-bold text-white">Guardar borrador</button></form>
    </div>}
    {user&&<button onClick={logout} className="mt-8 text-xs underline text-black/45">Cerrar sesión</button>}
   </section>
