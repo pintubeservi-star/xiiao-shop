@@ -3,10 +3,10 @@ import {useEffect,useRef,useState} from "react";
 import {LocateFixed,Navigation} from "lucide-react";
 declare global {interface Window{L?:any}}
 type Point={lat:number|null;lng:number|null};
-type Props={driver?:Point|null;pickup?:Point|null;destination?:Point|null;className?:string};
+type Props={driver?:Point|null;pickup?:Point|null;destination?:Point|null;routeToDestination?:boolean;className?:string};
 const center={lat:19.0527,lng:-70.1494};
-export default function CotuiGoLiveMap({driver,pickup,destination,className=""}:Props){
- const host=useRef<HTMLDivElement>(null),map=useRef<any>(null),driverMarker=useRef<any>(null),pickupMarker=useRef<any>(null),destMarker=useRef<any>(null),route=useRef<any>(null);
+export default function CotuiGoLiveMap({driver,pickup,destination,routeToDestination=false,className=""}:Props){
+ const host=useRef<HTMLDivElement>(null),map=useRef<any>(null),driverMarker=useRef<any>(null),pickupMarker=useRef<any>(null),destMarker=useRef<any>(null),route=useRef<any>(null),lastRouteAt=useRef(0);\n const [nextInstruction,setNextInstruction]=useState("");
  const [ready,setReady]=useState(false);
  const points=[driver,pickup,destination].filter((p):p is Point=>!!p&&p.lat!=null&&p.lng!=null);
  useEffect(()=>{
@@ -30,5 +30,5 @@ export default function CotuiGoLiveMap({driver,pickup,destination,className=""}:
   }
   if(points.length)m.fitBounds(L.latLngBounds(points.map(p=>[p.lat,p.lng])).pad(.22),{maxZoom:16});
  },[ready,driver?.lat,driver?.lng,pickup?.lat,pickup?.lng,destination?.lat,destination?.lng]);
- return <div className={`relative h-full min-h-[280px] w-full overflow-hidden rounded-3xl bg-[#edf2eb] ${className}`}><div ref={host} className="absolute inset-0"/><div className="pointer-events-none absolute left-3 top-3 z-[400] rounded-xl border border-white/80 bg-white/95 px-3 py-2 text-xs font-extrabold text-slate-800 shadow"><Navigation size={13} className="mr-1 inline text-lime-700"/> Cotuí Go · Mapa en vivo</div><button onClick={()=>{if(driver?.lat!=null&&driver.lng!=null)map.current?.setView([driver.lat,driver.lng],17);}} className="absolute right-3 top-3 z-[400] grid h-10 w-10 place-items-center rounded-xl bg-white shadow"><LocateFixed size={17}/></button></div>;
+ return <div className={`relative h-full min-h-[280px] w-full overflow-hidden rounded-3xl bg-[#edf2eb] ${className}`}><div ref={host} className="absolute inset-0"/><div className="pointer-events-none absolute left-3 top-3 z-[400] rounded-xl border border-white/80 bg-white/95 px-3 py-2 text-xs font-extrabold text-slate-800 shadow"><Navigation size={13} className="mr-1 inline text-lime-700"/> Cotuí Go · Mapa en vivo</div><button onClick={()=>{if(driver?.lat!=null&&driver.lng!=null)map.current?.setView([driver.lat,driver.lng],17);}} className="absolute right-3 top-3 z-[400] grid h-10 w-10 place-items-center rounded-xl bg-white shadow"><LocateFixed size={17}/></button>{nextInstruction&&<div className="absolute bottom-3 left-3 z-[400] max-w-[75%] rounded-xl border border-white bg-white/95 px-3 py-2 text-[11px] font-extrabold text-slate-800 shadow-lg">Siguiente indicación: {nextInstruction}</div>}</div>;
 }
