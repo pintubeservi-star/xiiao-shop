@@ -21,7 +21,7 @@ export default function AdminLogin() {
       } else {
         const {error}=await supabase.auth.signInWithPassword({email,password});
         if(error) throw error;
-        window.location.href="/admin";
+        window.location.href="/admin/movilidad";
       }
     } catch(err) { setMessage(err instanceof Error?err.message:"No se pudo completar la solicitud."); }
     finally { setBusy(false); }
