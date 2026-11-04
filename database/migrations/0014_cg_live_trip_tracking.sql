@@ -17,7 +17,7 @@ begin
     'kind','ride','id',r.id,'status',r.status,'pickup_address',r.pickup_address,
     'destination_address',r.destination_address,'pickup_lat',r.pickup_lat,'pickup_lng',r.pickup_lng,
     'destination_lat',r.destination_lat,'destination_lng',r.destination_lng,
-    'driver_name',d.full_name,'driver_phone',d.phone,'driver_lat',d.current_lat,
+    'driver_name',d.full_name,'driver_lat',d.current_lat,
     'driver_lng',d.current_lng,'last_location_at',d.last_location_at
   ) into v_result
   from public.cg_ride_requests r left join public.cg_driver_profiles d on d.id=r.driver_id
