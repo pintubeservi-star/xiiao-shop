@@ -9,7 +9,7 @@ const cotui={lat:19.0527,lng:-70.1494};
 
 export default function CotuiGoMap({onPick,initial=cotui}:Props){
  const host=useRef<HTMLDivElement>(null), map=useRef<any>(null), marker=useRef<any>(null), layers=useRef<any>({}), onPickRef=useRef(onPick);
- const [ready,setReady]=useState(false),[style,setStyle]=useState<"street"|"light">("light"),[locating,setLocating]=useState(false);
+ const [ready,setReady]=useState(false),[style,setStyle]=useState<"street"|"light">("light"),[locating,setLocating]=useState(false);\n useEffect(()=>{onPickRef.current=onPick;},[onPick]);
  useEffect(()=>{
   let cancelled=false;
   const addCss=()=>{if(!document.querySelector('link[data-cg-leaflet]')){const link=document.createElement("link");link.rel="stylesheet";link.href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";link.dataset.cgLeaflet="1";document.head.appendChild(link);}};
