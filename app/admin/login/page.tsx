@@ -27,8 +27,8 @@ export default function AdminLogin() {
     finally { setBusy(false); }
   }
   return <main className="min-h-screen bg-[#f5f6f1] flex items-center justify-center p-5"><section className="w-full max-w-md rounded-3xl bg-white p-8 shadow-xl shadow-black/5">
-    <Link href="/" className="text-sm text-gray-500">← Volver a la tienda</Link>
-    <div className="mt-6 mb-7"><div className="grid h-12 w-12 place-items-center rounded-2xl bg-[#c8f169] text-xl font-black">X</div><h1 className="mt-4 text-2xl font-black">XiiAO Shop</h1><p className="mt-1 text-sm text-gray-500">Acceso seguro al centro de administración</p></div>
+    <Link href="/" className="text-sm text-gray-500">← Volver a Cotuí Go</Link>
+    <div className="mt-6 mb-7"><div className="grid h-12 w-12 place-items-center rounded-2xl bg-lime-400 text-xl font-black">G</div><h1 className="mt-4 text-2xl font-black">Cotuí Go</h1><p className="mt-1 text-sm text-gray-500">Acceso seguro al centro de administración</p></div>
     <div className="mb-5 grid grid-cols-2 rounded-xl bg-gray-100 p-1"><button onClick={()=>setMode("login")} className={mode==="login"?"rounded-lg bg-white py-2 text-sm font-bold shadow":"py-2 text-sm text-gray-500"}>Iniciar sesión</button><button onClick={()=>setMode("signup")} className={mode==="signup"?"rounded-lg bg-white py-2 text-sm font-bold shadow":"py-2 text-sm text-gray-500"}>Crear cuenta</button></div>
     <form onSubmit={submit} className="space-y-4">
       {mode==="signup"&&<label className="block text-sm font-semibold">Nombre<input required value={name} onChange={e=>setName(e.target.value)} className="mt-1 w-full rounded-xl border p-3 font-normal"/></label>}
