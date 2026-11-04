@@ -13,7 +13,7 @@ export default function CotuiGoLiveMap({driver,pickup,destination,routeToDestina
  useEffect(()=>{
   let cancelled=false;
   const css=()=>{if(!document.querySelector('link[data-cg-live-css]')){const l=document.createElement("link");l.rel="stylesheet";l.href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";l.dataset.cgLiveCss="1";document.head.appendChild(l);}};
-  const setup=()=>{if(cancelled||!host.current||!window.L||map.current)return;const L=window.L;const m=L.map(host.current,{zoomControl:false,scrollWheelZoom:true}).setView([center.lat,center.lng],14);L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",{maxZoom:20,attribution:'&copy; OpenStreetMap &copy; CARTO'}).addTo(m);L.control.zoom({position:"bottomright"}).addTo(m);map.current=m;setReady(true);setTimeout(()=>m.invalidateSize(),180);};
+  const setup=()=>{if(cancelled||!host.current||!window.L||map.current)return;const L=window.L;const m=L.map(host.current,{zoomControl:false,scrollWheelZoom:true}).setView([center.lat,center.lng],14);L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:'&copy; OpenStreetMap contributors'}).addTo(m);L.control.zoom({position:"bottomright"}).addTo(m);map.current=m;setReady(true);setTimeout(()=>m.invalidateSize(),180);};
   css();if(window.L)setup();else{const existing=document.querySelector('script[data-cg-live-js]');if(existing)existing.addEventListener("load",setup);else{const s=document.createElement("script");s.src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";s.async=true;s.dataset.cgLiveJs="1";s.onload=setup;document.body.appendChild(s);}}
   return()=>{cancelled=true;if(map.current){map.current.remove();map.current=null;}};
  },[]);
