@@ -2,7 +2,11 @@
 alter table public.cg_ride_requests
   add column if not exists tracking_token text not null default encode(gen_random_bytes(24), 'hex');
 alter table public.cg_delivery_requests
-  add column if not exists tracking_token text not null default encode(gen_random_bytes(24), 'hex');
+  add column if not exists tracking_token text not null default encode(gen_random_bytes(24), 'hex'),
+  add column if not exists pickup_lat double precision,
+  add column if not exists pickup_lng double precision,
+  add column if not exists destination_lat double precision,
+  add column if not exists destination_lng double precision;
 
 create or replace function public.cg_get_public_trip(p_token text)
 returns jsonb language plpgsql security definer set search_path = '' as $$
@@ -21,7 +25,8 @@ begin
   if v_result is not null then return v_result; end if;
   select jsonb_build_object(
     'kind','delivery','id',r.id,'status',r.status,'pickup_address',r.pickup_address,
-    'destination_address',r.delivery_address,'driver_name',d.full_name,'driver_phone',d.phone,
+    'destination_address',r.delivery_address,'pickup_lat',r.pickup_lat,'pickup_lng',r.pickup_lng,
+    'destination_lat',r.destination_lat,'destination_lng',r.destination_lng,'driver_name',d.full_name,'driver_phone',d.phone,
     'driver_lat',d.current_lat,'driver_lng',d.current_lng,'last_location_at',d.last_location_at,
     'tracking_code',r.tracking_code
   ) into v_result
