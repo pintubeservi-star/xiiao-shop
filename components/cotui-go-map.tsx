@@ -8,7 +8,7 @@ type Props={onPick?:(point:Point)=>void; initial?:Point };
 const cotui={lat:19.0527,lng:-70.1494};
 
 export default function CotuiGoMap({onPick,initial=cotui}:Props){
- const host=useRef<HTMLDivElement>(null), map=useRef<any>(null), marker=useRef<any>(null), layers=useRef<any>({});
+ const host=useRef<HTMLDivElement>(null), map=useRef<any>(null), marker=useRef<any>(null), layers=useRef<any>({}), onPickRef=useRef(onPick);
  const [ready,setReady]=useState(false),[style,setStyle]=useState<"street"|"light">("light"),[locating,setLocating]=useState(false);
  useEffect(()=>{
   let cancelled=false;
@@ -23,8 +23,8 @@ export default function CotuiGoMap({onPick,initial=cotui}:Props){
    L.control.zoom({position:"bottomright"}).addTo(m);
    const pin=L.divIcon({className:"cg-map-pin-wrap",html:'<div class="cg-map-pin"><span></span></div>',iconSize:[34,42],iconAnchor:[17,38]});
    marker.current=L.marker([initial.lat,initial.lng],{icon:pin,draggable:true}).addTo(m);
-   marker.current.on("dragend",()=>{const p=marker.current.getLatLng();onPick?.({lat:p.lat,lng:p.lng});});
-   m.on("click",(e:any)=>{marker.current.setLatLng(e.latlng);onPick?.({lat:e.latlng.lat,lng:e.latlng.lng});});
+   marker.current.on("dragend",()=>{const p=marker.current.getLatLng();onPickRef.current?.({lat:p.lat,lng:p.lng});});
+   m.on("click",(e:any)=>{marker.current.setLatLng(e.latlng);onPickRef.current?.({lat:e.latlng.lat,lng:e.latlng.lng});});
    map.current=m;setReady(true);setTimeout(()=>m.invalidateSize(),250);
   };
   addCss();
@@ -37,7 +37,7 @@ export default function CotuiGoMap({onPick,initial=cotui}:Props){
  },[]);
  useEffect(()=>{if(map.current&&marker.current){map.current.setView([initial.lat,initial.lng],16);marker.current.setLatLng([initial.lat,initial.lng]);}},[initial.lat,initial.lng]);
  useEffect(()=>{if(!map.current)return;const L=window.L;Object.values(layers.current).forEach((layer:any)=>map.current.removeLayer(layer));layers.current[style].addTo(map.current);},[style,ready]);
- const locate=()=>{if(!navigator.geolocation)return;setLocating(true);navigator.geolocation.getCurrentPosition(pos=>{const p={lat:pos.coords.latitude,lng:pos.coords.longitude};map.current?.setView([p.lat,p.lng],17);marker.current?.setLatLng([p.lat,p.lng]);onPick?.(p);setLocating(false);},()=>setLocating(false),{enableHighAccuracy:true,timeout:12000});};
+ const locate=()=>{if(!navigator.geolocation)return;setLocating(true);navigator.geolocation.getCurrentPosition(pos=>{const p={lat:pos.coords.latitude,lng:pos.coords.longitude};map.current?.setView([p.lat,p.lng],17);marker.current?.setLatLng([p.lat,p.lng]);onPickRef.current?.(p);setLocating(false);},()=>setLocating(false),{enableHighAccuracy:true,timeout:12000});};
  return <div className="relative h-full min-h-[330px] w-full overflow-hidden rounded-[26px] bg-[#e9efe9]">
   <div ref={host} className="absolute inset-0 z-0"/>
   <style jsx global>{`.cg-map-pin-wrap{background:transparent;border:0}.cg-map-pin{width:30px;height:30px;border-radius:50% 50% 50% 0;background:#a3e635;border:4px solid white;transform:rotate(-45deg);box-shadow:0 5px 18px #10251d55;display:grid;place-items:center}.cg-map-pin span{width:8px;height:8px;background:#14251d;border-radius:50%;transform:rotate(45deg)}.leaflet-control-zoom{border:0!important;box-shadow:0 3px 14px #10251d22!important;border-radius:12px!important;overflow:hidden}.leaflet-control-zoom a{color:#14251d!important;width:34px!important;height:34px!important;line-height:34px!important}`}</style>
