@@ -9,7 +9,7 @@ const cotui={lat:19.0527,lng:-70.1494};
 
 export default function CotuiGoMap({onPick,initial=cotui}:Props){
  const host=useRef<HTMLDivElement>(null), map=useRef<any>(null), marker=useRef<any>(null), layers=useRef<any>({});
- const [ready,setReady]=useState(false),[style,setStyle]=useState<"street"|"light">("street"),[locating,setLocating]=useState(false);
+ const [ready,setReady]=useState(false),[style,setStyle]=useState<"street"|"light">("light"),[locating,setLocating]=useState(false);
  useEffect(()=>{
   let cancelled=false;
   const addCss=()=>{if(!document.querySelector('link[data-cg-leaflet]')){const link=document.createElement("link");link.rel="stylesheet";link.href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";link.dataset.cgLeaflet="1";document.head.appendChild(link);}};
@@ -19,7 +19,7 @@ export default function CotuiGoMap({onPick,initial=cotui}:Props){
    const m=L.map(host.current,{zoomControl:false,scrollWheelZoom:true}).setView([initial.lat,initial.lng],15);
    layers.current.street=L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:20,attribution:'&copy; OpenStreetMap'});
    layers.current.light=L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",{maxZoom:20,attribution:'&copy; OpenStreetMap &copy; CARTO'});
-   layers.current.street.addTo(m);
+   layers.current.light.addTo(m);
    L.control.zoom({position:"bottomright"}).addTo(m);
    const pin=L.divIcon({className:"cg-map-pin-wrap",html:'<div class="cg-map-pin"><span></span></div>',iconSize:[34,42],iconAnchor:[17,38]});
    marker.current=L.marker([initial.lat,initial.lng],{icon:pin,draggable:true}).addTo(m);
