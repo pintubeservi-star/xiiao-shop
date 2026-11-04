@@ -3,13 +3,13 @@ import "./globals.css";
 import { PwaRegister } from "@/components/pwa-register";
 
 export const metadata: Metadata = {
-  title: "XiiAO Shop | Compra, comparte y gana",
-  description: "Descubre productos, comparte lo que te gusta y gana comisiones por tus recomendaciones.",
-  applicationName: "XiiAO Shop",
+  title: "Cotuí Go | Viajes, taxis y delivery",
+  description: "Solicita viajes, envía paquetes y reserva rutas en Cotuí con Cotuí Go.",
+  applicationName: "Cotuí Go",
   manifest: "/manifest.json",
-  appleWebApp: { capable: true, statusBarStyle: "default", title: "XiiAO Shop" }
+  appleWebApp: { capable: true, statusBarStyle: "default", title: "Cotuí Go" }
 };
-export const viewport: Viewport = { themeColor: "#c8f169", width: "device-width", initialScale: 1 };
+export const viewport: Viewport = { themeColor: "#14251d", width: "device-width", initialScale: 1 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return <html lang="es"><body><PwaRegister />{children}</body></html>;
