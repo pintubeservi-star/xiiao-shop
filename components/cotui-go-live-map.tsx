@@ -6,7 +6,8 @@ type Point={lat:number|null;lng:number|null};
 type Props={driver?:Point|null;pickup?:Point|null;destination?:Point|null;className?:string};
 const center={lat:19.0527,lng:-70.1494};
 export default function CotuiGoLiveMap({driver,pickup,destination,className=""}:Props){
- const host=useRef<HTMLDivElement>(null),map=useRef<any>(null),driverMarker=useRef<any>(null),pickupMarker=useRef<any>(null),destMarker=useRef<any>(null),route=useRef<any>(null);\n const [ready,setReady]=useState(false);
+ const host=useRef<HTMLDivElement>(null),map=useRef<any>(null),driverMarker=useRef<any>(null),pickupMarker=useRef<any>(null),destMarker=useRef<any>(null),route=useRef<any>(null);
+ const [ready,setReady]=useState(false);
  const points=[driver,pickup,destination].filter((p):p is Point=>!!p&&p.lat!=null&&p.lng!=null);
  useEffect(()=>{
   let cancelled=false;
