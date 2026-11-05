@@ -122,3 +122,48 @@ end;
 $$;
 revoke all on function public.cg_admin_update_pricing_settings(numeric,numeric,numeric,numeric,numeric,numeric,numeric) from public, anon;
 grant execute on function public.cg_admin_update_pricing_settings(numeric,numeric,numeric,numeric,numeric,numeric,numeric) to authenticated;
+
+-- Prefer actual OpenStreetMap OSRM road distance when available; retain a safe estimate fallback.
+create or replace function public.cg_quote_fare(
+ p_service text, p_pickup_lat double precision, p_pickup_lng double precision,
+ p_destination_lat double precision, p_destination_lng double precision, p_route_distance_km numeric
+) returns jsonb language plpgsql stable security invoker set search_path=public
+as $$
+declare cfg public.cg_pricing_settings%rowtype; straight_km numeric; road_km numeric;
+ base numeric; per_km numeric; minimum numeric; fare numeric; commission numeric; payout numeric;
+begin
+ if p_service not in ('moto','package') then raise exception 'Tipo de servicio no válido'; end if;
+ if p_pickup_lat is null or p_pickup_lng is null or p_destination_lat is null or p_destination_lng is null then
+  raise exception 'Selecciona recogida y destino para calcular la tarifa'; end if;
+ select * into cfg from public.cg_pricing_settings where id=true;
+ straight_km:=6371*2*asin(sqrt(power(sin(radians(p_destination_lat-p_pickup_lat)/2),2)+cos(radians(p_pickup_lat))*cos(radians(p_destination_lat))*power(sin(radians(p_destination_lng-p_pickup_lng)/2),2)));
+ if p_route_distance_km is not null and p_route_distance_km>0 then
+  road_km:=greatest(0.5,straight_km*0.9,least(p_route_distance_km,greatest(straight_km*3,1)));
+ else road_km:=greatest(0.5,straight_km*cfg.route_multiplier); end if;
+ if p_service='moto' then base:=cfg.moto_base_dop;per_km:=cfg.moto_per_km_dop;minimum:=cfg.moto_minimum_dop;
+ else base:=cfg.package_base_dop;per_km:=cfg.package_per_km_dop;minimum:=cfg.package_minimum_dop; end if;
+ fare:=greatest(minimum,ceil(base+road_km*per_km)); commission:=round(fare*cfg.platform_commission_pct/100,2); payout:=fare-commission;
+ return jsonb_build_object('service',p_service,'distance_km',round(road_km,2),'fare_dop',fare,'commission_pct',cfg.platform_commission_pct,'commission_dop',commission,'driver_payout_dop',payout,'currency','DOP','distance_method',case when p_route_distance_km is null then 'estimated_straight_line_adjustment' else 'openstreetmap_osrm_route' end);
+end; $$;
+grant execute on function public.cg_quote_fare(text,double precision,double precision,double precision,double precision,numeric) to anon,authenticated;
+create or replace function public.cg_quote_fare(p_service text,p_pickup_lat double precision,p_pickup_lng double precision,p_destination_lat double precision,p_destination_lng double precision)
+returns jsonb language sql stable security invoker set search_path=public
+as $$ select public.cg_quote_fare(p_service,p_pickup_lat,p_pickup_lng,p_destination_lat,p_destination_lng,null::numeric) $$;
+create or replace function public.cg_set_request_fare_breakdown()
+returns trigger language plpgsql security definer set search_path=public
+as $$
+declare q jsonb; service_kind text;
+begin
+ service_kind:=case when tg_table_name='cg_ride_requests' then 'moto' else 'package' end;
+ if new.pickup_lat is not null and new.pickup_lng is not null and new.destination_lat is not null and new.destination_lng is not null then
+  q:=public.cg_quote_fare(service_kind,new.pickup_lat,new.pickup_lng,new.destination_lat,new.destination_lng,new.distance_km);
+  new.distance_km:=(q->>'distance_km')::numeric;
+  if tg_table_name='cg_ride_requests' then new.estimated_fare_dop:=(q->>'fare_dop')::numeric;
+  else new.estimated_fee_dop:=(q->>'fare_dop')::numeric; end if;
+  new.commission_rate_pct:=(q->>'commission_pct')::numeric;
+  new.platform_commission_dop:=(q->>'commission_dop')::numeric;
+  new.driver_payout_dop:=(q->>'driver_payout_dop')::numeric;
+ end if;
+ return new;
+end; $$;
+revoke all on function public.cg_set_request_fare_breakdown() from public,anon,authenticated;
