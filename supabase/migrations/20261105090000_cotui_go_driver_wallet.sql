@@ -1,5 +1,5 @@
 -- Cotuí Go: conductor wallet, manual top-ups and commission reservations.
--- Apply only to the isolated Supabase development branch first.
+-- Cotuí Go wallet migration. Applies to the existing Cotuí Go Supabase project.
 
 create table if not exists public.cg_driver_wallets (
   driver_id uuid primary key references public.cg_driver_profiles(id) on delete cascade,
@@ -119,7 +119,7 @@ begin
   select * into v_wallet from public.cg_driver_wallets where driver_id=p_driver_id for update;
   if v_wallet.driver_id is null then raise exception 'El conductor no tiene billetera activa.'; end if;
   if v_wallet.available_balance_dop < 100 then raise exception 'Tu balance debe ser de al menos RD$100 para aceptar servicios. Recarga tu billetera.'; end if;
-  if v_wallet.available_balance_dop < p_commission then raise exception 'Balance insuficiente para reservar la comisión de este servicio.'; end if;
+  if v_wallet.available_balance_dop - p_commission < 100 then raise exception 'Debes conservar al menos RD$100 disponibles después de reservar la comisión. Recarga tu billetera.'; end if;
   update public.cg_driver_wallets set available_balance_dop=available_balance_dop-p_commission,
     reserved_balance_dop=reserved_balance_dop+p_commission,updated_at=now() where driver_id=p_driver_id;
   insert into public.cg_wallet_ledger(driver_id,entry_type,available_delta_dop,reserved_delta_dop,reference_type,reference_id,description,created_by)
