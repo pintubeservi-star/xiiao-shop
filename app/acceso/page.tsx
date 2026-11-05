@@ -1,0 +1,39 @@
+"use client";
+import {useEffect,useState} from "react";
+import {useRouter} from "next/navigation";
+import Link from "next/link";
+import {getSupabase} from "@/lib/supabase/client";
+import {ArrowLeft,ArrowRight,LockKeyhole,Mail,Phone,UserRound} from "lucide-react";
+const field="w-full rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm outline-none transition focus:border-lime-500 focus:ring-4 focus:ring-lime-100";
+export default function AccessPage(){
+ const router=useRouter();
+ const [mode,setMode]=useState<"login"|"register"|"reset">("login");
+ const [form,setForm]=useState({name:"",phone:"",email:"",password:""});
+ const [busy,setBusy]=useState(false),[notice,setNotice]=useState("");
+ useEffect(()=>{let live=true;getSupabase().auth.getUser().then(({data})=>{if(live&&data.user)router.replace("/");});return()=>{live=false;};},[router]);
+ async function submit(e:React.FormEvent){e.preventDefault();setBusy(true);setNotice("");try{
+  const s=getSupabase();
+  if(mode==="register"){
+   if(form.password.length<8)throw new Error("La contraseña debe tener al menos 8 caracteres.");
+   const {data,error}=await s.auth.signUp({email:form.email.trim().toLowerCase(),password:form.password,options:{data:{full_name:form.name.trim(),phone:form.phone.trim()},emailRedirectTo:window.location.origin+"/"}});
+   if(error)throw error;
+   if(data.session){router.replace("/");router.refresh();}else setNotice("Cuenta creada. Revisa tu correo y confirma la dirección para activar tu acceso. Después podrás solicitar viajes y envíos.");
+  }else if(mode==="login"){
+   const {error}=await s.auth.signInWithPassword({email:form.email.trim().toLowerCase(),password:form.password});if(error)throw error;router.replace("/");router.refresh();
+  }else{
+   const {error}=await s.auth.resetPasswordForEmail(form.email.trim().toLowerCase(),{redirectTo:window.location.origin+"/acceso"});if(error)throw error;setNotice("Si el correo está registrado, recibirás un enlace para restablecer tu contraseña.");
+  }
+ }catch(e){setNotice(e instanceof Error?e.message:"No se pudo completar la operación. Inténtalo nuevamente.");}finally{setBusy(false);}}
+ return <main className="min-h-screen bg-[#f4f6f3] px-4 py-8 text-slate-900"><div className="mx-auto grid min-h-[85vh] max-w-5xl overflow-hidden rounded-[32px] bg-white shadow-[0_25px_80px_rgba(15,35,25,.12)] md:grid-cols-[.9fr_1.1fr]">
+ <section className="flex flex-col justify-between bg-[#14251d] p-7 text-white sm:p-10"><div><Link href="/" className="inline-flex items-center gap-2 text-sm font-bold text-white/70"><ArrowLeft size={16}/> Volver a Cotuí Go</Link><div className="mt-16 inline-grid h-14 w-14 place-items-center rounded-2xl bg-lime-400 text-[#14251d]"><LockKeyhole size={26}/></div><p className="mt-7 text-[10px] font-black uppercase tracking-[.24em] text-lime-300">Cotuí Go</p><h1 className="mt-2 text-4xl font-black leading-tight">Tu ciudad.<br/>Tu cuenta.<br/><span className="text-lime-300">Tu camino.</span></h1><p className="mt-5 max-w-sm text-sm leading-6 text-white/65">Guarda tus datos una sola vez. Solicita viajes y envíos sin volver a escribir tu nombre y teléfono.</p></div><p className="mt-12 text-[10px] font-semibold tracking-wider text-white/35">MOVILIDAD Y ENTREGAS LOCALES · COTUÍ</p></section>
+ <section className="flex items-center justify-center p-5 sm:p-10"><div className="w-full max-w-md"><p className="text-[10px] font-black uppercase tracking-[.2em] text-lime-700">Acceso de clientes</p><h2 className="mt-2 text-3xl font-black">{mode==="register"?"Crea tu cuenta":mode==="reset"?"Recupera tu acceso":"Bienvenido de nuevo"}</h2><p className="mt-2 text-sm text-slate-500">{mode==="register"?"Regístrate una vez y solicita servicios más rápido.":mode==="reset"?"Te enviaremos un enlace para cambiar tu contraseña.":"Entra para pedir tu moto o enviar un paquete."}</p>
+ <div className="mt-7 flex rounded-xl bg-slate-100 p-1">{(["login","register"] as const).map(v=><button key={v} type="button" onClick={()=>{setMode(v);setNotice("");}} className={mode===v?"flex-1 rounded-lg bg-white px-3 py-2.5 text-xs font-extrabold shadow-sm":"flex-1 rounded-lg px-3 py-2.5 text-xs font-bold text-slate-500"}>{v==="login"?"Iniciar sesión":"Crear cuenta"}</button>)}</div>
+ <form onSubmit={submit} className="mt-6 space-y-3">{mode==="register"&&<><label className="block"><span className="mb-1.5 block text-xs font-bold text-slate-600">Nombre y apellido</span><span className="relative block"><UserRound className="absolute left-3.5 top-3.5 text-slate-400" size={17}/><input required autoComplete="name" className={field+" pl-11"} placeholder="Tu nombre completo" value={form.name} onChange={e=>setForm(v=>({...v,name:e.target.value}))}/></span></label><label className="block"><span className="mb-1.5 block text-xs font-bold text-slate-600">Teléfono</span><span className="relative block"><Phone className="absolute left-3.5 top-3.5 text-slate-400" size={17}/><input required type="tel" autoComplete="tel" className={field+" pl-11"} placeholder="809 000 0000" value={form.phone} onChange={e=>setForm(v=>({...v,phone:e.target.value}))}/></span></label></>}
+ <label className="block"><span className="mb-1.5 block text-xs font-bold text-slate-600">Correo electrónico</span><span className="relative block"><Mail className="absolute left-3.5 top-3.5 text-slate-400" size={17}/><input required type="email" autoComplete="email" className={field+" pl-11"} placeholder="tucorreo@ejemplo.com" value={form.email} onChange={e=>setForm(v=>({...v,email:e.target.value}))}/></span></label>
+ {mode!=="reset"&&<label className="block"><span className="mb-1.5 block text-xs font-bold text-slate-600">Contraseña</span><span className="relative block"><LockKeyhole className="absolute left-3.5 top-3.5 text-slate-400" size={17}/><input required minLength={8} type="password" autoComplete={mode==="register"?"new-password":"current-password"} className={field+" pl-11"} placeholder="Mínimo 8 caracteres" value={form.password} onChange={e=>setForm(v=>({...v,password:e.target.value}))}/></span></label>}
+ {mode==="login"&&<button type="button" onClick={()=>{setMode("reset");setNotice("");}} className="text-xs font-bold text-lime-800 underline underline-offset-4">¿Olvidaste tu contraseña?</button>}
+ <button disabled={busy} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#14251d] px-5 py-4 text-sm font-extrabold text-white transition hover:bg-lime-800 disabled:opacity-50">{busy?"Procesando…":mode==="register"?"Crear mi cuenta":mode==="reset"?"Enviar enlace de recuperación":"Entrar a Cotuí Go"}<ArrowRight size={16}/></button></form>
+ {notice&&<p role="status" className="mt-4 rounded-xl border border-lime-200 bg-lime-50 p-3 text-sm leading-5 text-lime-900">{notice}</p>}
+ {mode==="reset"&&<button onClick={()=>{setMode("login");setNotice("");}} className="mt-4 text-xs font-bold text-slate-500 underline">Volver al inicio de sesión</button>}
+ <p className="mt-6 text-center text-[11px] leading-5 text-slate-400">Al crear tu cuenta, tus datos se guardan de forma segura para agilizar futuras solicitudes.</p></div></section></div></main>;
+}
