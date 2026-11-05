@@ -110,7 +110,7 @@ export default function TrackingPage() {
             </div>
           </header>
           <div className="mx-auto max-w-5xl p-3 sm:p-6">
-            <section className="mb-4 rounded-3xl bg-[#14251d] p-5 text-white">
+            {!completed && <section className="mb-4 rounded-3xl bg-[#14251d] p-5 text-white">
               <div className="flex items-center gap-2 text-lime-300">
                 {trip.kind === "ride" ? <Bike size={19} /> : <Package size={19} />}
                 <span className="text-[10px] font-black uppercase tracking-[.2em]">
@@ -121,9 +121,9 @@ export default function TrackingPage() {
               <p className="mt-1 text-xs text-white/65">
                 {active ? "La ubicación del conductor se actualiza automáticamente mientras el servicio está activo." : "Este servicio ya finalizó."}
               </p>
-            </section>
+            </section>}
             {completed && <section className="mb-4 rounded-3xl border border-lime-200 bg-white p-7 text-center shadow-sm"><div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-lime-100 text-lime-800"><ShieldCheck size={28}/></div><h2 className="mt-4 text-2xl font-black text-[#14251d]">{trip.kind==="ride"?"¡Gracias por viajar con nosotros!":"¡Gracias por confiar tu envío a Cotuí Go!"}</h2><p className="mt-2 text-sm text-slate-500">Cotuí Go agradece tu preferencia. Esperamos acompañarte nuevamente.</p></section>}
-            <div className="relative -mx-3 -mt-2 h-[62vh] min-h-[430px] overflow-hidden bg-[#e9eee8] sm:mx-0 sm:rounded-[30px] sm:border sm:border-white sm:shadow-lg">
+            {!completed && <div className="relative -mx-3 -mt-2 h-[62vh] min-h-[430px] overflow-hidden bg-[#e9eee8] sm:mx-0 sm:rounded-[30px] sm:border sm:border-white sm:shadow-lg">
               <CotuiGoLiveMap
                 driver={active ? { lat: trip.driver_lat, lng: trip.driver_lng } : null}
                 pickup={active && !["in_progress", "picked_up", "on_the_way"].includes(trip.status) ? { lat: trip.pickup_lat, lng: trip.pickup_lng } : null}
@@ -135,8 +135,8 @@ export default function TrackingPage() {
                 <h2 className="mt-1 text-xl font-black text-slate-900">{labels[trip.status] || trip.status}</h2>
                 <p className="mt-1 text-xs text-slate-500">{trip.driver_name || "Buscando conductor"}</p>
               </div>
-            </div>
-            <aside className="mt-4 space-y-3">
+            </div>}
+            {!completed && <aside className="mt-4 space-y-3">
               <div className="rounded-3xl border border-slate-200 bg-white p-5">
                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Conductor asignado</p>
                 <h2 className="mt-2 text-lg font-black">{trip.driver_name || "Esperando asignación"}</h2>
@@ -158,10 +158,10 @@ export default function TrackingPage() {
                   <Navigation size={15} /> Abrir ruta en Google Maps
                 </a>
               )}
-            </aside>
-            <p className="mt-5 flex items-center justify-center gap-2 text-[10px] text-slate-400">
+            </aside>}
+            {!completed && <p className="mt-5 flex items-center justify-center gap-2 text-[10px] text-slate-400">
               <Clock3 size={13} /> Cotuí Go · Ubicación compartida durante el servicio
-            </p>
+            </p>}
           </div>
         </>
       )}
