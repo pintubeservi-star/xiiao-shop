@@ -78,6 +78,7 @@ export default function TrackingPage() {
   }, [token, load]);
 
   const active = trip ? !["completed", "delivered", "cancelled"].includes(trip.status) : false;
+  const completed = trip ? ["completed", "delivered"].includes(trip.status) : false;
   const navUrl = trip && trip.driver_lat != null && trip.driver_lng != null
     ? `https://www.google.com/maps/dir/?api=1&origin=${trip.driver_lat},${trip.driver_lng}&destination=${encodeURIComponent(trip.destination_address || trip.pickup_address)}&travelmode=driving`
     : null;
