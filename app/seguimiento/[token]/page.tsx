@@ -121,6 +121,7 @@ export default function TrackingPage() {
                 {active ? "La ubicación del conductor se actualiza automáticamente mientras el servicio está activo." : "Este servicio ya finalizó."}
               </p>
             </section>
+            {completed && <section className="mb-4 rounded-3xl border border-lime-200 bg-white p-7 text-center shadow-sm"><div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-lime-100 text-lime-800"><ShieldCheck size={28}/></div><h2 className="mt-4 text-2xl font-black text-[#14251d]">{trip.kind==="ride"?"¡Gracias por viajar con nosotros!":"¡Gracias por confiar tu envío a Cotuí Go!"}</h2><p className="mt-2 text-sm text-slate-500">Cotuí Go agradece tu preferencia. Esperamos acompañarte nuevamente.</p></section>}
             <div className="relative -mx-3 -mt-2 h-[62vh] min-h-[430px] overflow-hidden bg-[#e9eee8] sm:mx-0 sm:rounded-[30px] sm:border sm:border-white sm:shadow-lg">
               <CotuiGoLiveMap
                 driver={active ? { lat: trip.driver_lat, lng: trip.driver_lng } : null}
@@ -148,9 +149,9 @@ export default function TrackingPage() {
                 <p className="mt-4 text-xs"><b>Destino</b><br />{trip.destination_address}</p>
                 {trip.tracking_code && <p className="mt-4 text-xs font-bold text-lime-700">Código: {trip.tracking_code}</p>}
               </div>
-              <div className="rounded-2xl bg-lime-50 p-4 text-xs text-lime-900">
+              {active && <div className="rounded-2xl bg-lime-50 p-4 text-xs text-lime-900">
                 <ShieldCheck size={16} className="mr-1 inline" /> Este enlace permite consultar únicamente este servicio.
-              </div>
+              </div>}
               {navUrl && (
                 <a href={navUrl} target="_blank" rel="noreferrer" className="flex items-center justify-center gap-2 rounded-xl bg-white p-3 text-xs font-bold shadow-sm">
                   <Navigation size={15} /> Abrir ruta en Google Maps
