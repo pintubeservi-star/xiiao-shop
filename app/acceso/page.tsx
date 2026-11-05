@@ -15,7 +15,7 @@ export default function AccessPage(){
   const s=getSupabase();
   if(mode==="register"){
    if(form.password.length<8)throw new Error("La contraseña debe tener al menos 8 caracteres.");
-   const {data,error}=await s.auth.signUp({email:form.email.trim().toLowerCase(),password:form.password,options:{data:{full_name:form.name.trim(),phone:form.phone.trim()},emailRedirectTo:window.location.origin+"/"}});
+   const {data,error}=await s.auth.signUp({email:form.email.trim().toLowerCase(),password:form.password,options:{data:{full_name:form.name.trim(),phone:form.phone.trim()}}});
    if(error)throw error;
    if(data.session){router.replace("/");router.refresh();}else setNotice("Cuenta creada. Revisa tu correo y confirma la dirección para activar tu acceso. Después podrás solicitar viajes y envíos.");
   }else if(mode==="login"){
