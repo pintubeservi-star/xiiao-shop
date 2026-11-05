@@ -1,0 +1,31 @@
+{
+  "id": "/cotui-go-cliente",
+  "name": "Cotuí Go · Clientes",
+  "short_name": "Cotuí Go",
+  "description": "Solicita viajes y envía paquetes en Cotuí.",
+  "start_url": "/?app=cliente",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f4f6f3",
+  "theme_color": "#14251d",
+  "lang": "es",
+  "icons": [
+    {
+      "src": "/icon-client.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Pedir una moto",
+      "url": "/?app=cliente"
+    },
+    {
+      "name": "Mi cuenta",
+      "url": "/mi-cuenta"
+    }
+  ]
+}
