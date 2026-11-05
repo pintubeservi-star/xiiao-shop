@@ -95,3 +95,30 @@ drop trigger if exists cg_ride_price_breakdown on public.cg_ride_requests;
 create trigger cg_ride_price_breakdown before insert or update of pickup_lat,pickup_lng,destination_lat,destination_lng on public.cg_ride_requests for each row execute function public.cg_set_request_fare_breakdown();
 drop trigger if exists cg_delivery_price_breakdown on public.cg_delivery_requests;
 create trigger cg_delivery_price_breakdown before insert or update of pickup_lat,pickup_lng,destination_lat,destination_lng on public.cg_delivery_requests for each row execute function public.cg_set_request_fare_breakdown();
+
+create or replace function public.cg_get_pricing_settings()
+returns jsonb language sql stable security invoker set search_path=public
+as $$
+ select to_jsonb(p) - 'id' from public.cg_pricing_settings p where id=true
+$$;
+grant execute on function public.cg_get_pricing_settings() to anon, authenticated;
+
+create or replace function public.cg_admin_update_pricing_settings(
+ p_moto_base numeric, p_moto_per_km numeric, p_moto_min numeric,
+ p_package_base numeric, p_package_per_km numeric, p_package_min numeric,
+ p_commission numeric
+) returns jsonb language plpgsql security definer set search_path=public
+as $$
+declare outrow public.cg_pricing_settings%rowtype;
+begin
+ if not public.cg_is_admin() then raise exception 'No autorizado'; end if;
+ if least(p_moto_base,p_moto_per_km,p_moto_min,p_package_base,p_package_per_km,p_package_min) < 0
+   or p_commission < 0 or p_commission > 40 then raise exception 'Valores de tarifa no válidos'; end if;
+ update public.cg_pricing_settings set moto_base_dop=p_moto_base,moto_per_km_dop=p_moto_per_km,moto_minimum_dop=p_moto_min,
+ package_base_dop=p_package_base,package_per_km_dop=p_package_per_km,package_minimum_dop=p_package_min,
+ platform_commission_pct=p_commission,updated_at=now() where id=true returning * into outrow;
+ return to_jsonb(outrow)-'id';
+end;
+$$;
+revoke all on function public.cg_admin_update_pricing_settings(numeric,numeric,numeric,numeric,numeric,numeric,numeric) from public, anon;
+grant execute on function public.cg_admin_update_pricing_settings(numeric,numeric,numeric,numeric,numeric,numeric,numeric) to authenticated;
