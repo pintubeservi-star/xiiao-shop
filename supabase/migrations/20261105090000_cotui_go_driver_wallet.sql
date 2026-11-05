@@ -201,6 +201,10 @@ begin
   return jsonb_build_object('id',v_delivery.id,'status',v_delivery.status,'commission_reserved_dop',v_commission);
 end; $$;
 
+revoke all on function public.cg_driver_request_wallet_topup(numeric,text,text,text) from public,anon;
+revoke all on function public.cg_admin_review_wallet_topup(uuid,boolean,text) from public,anon;
+revoke all on function public.cg_driver_accept_ride(uuid) from public,anon;
+revoke all on function public.cg_driver_accept_delivery(uuid) from public,anon;
 grant execute on function public.cg_driver_request_wallet_topup(numeric,text,text,text) to authenticated;
 grant execute on function public.cg_admin_review_wallet_topup(uuid,boolean,text) to authenticated;
 grant execute on function public.cg_driver_accept_ride(uuid) to authenticated;
