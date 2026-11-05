@@ -3,7 +3,8 @@ import {useCallback,useEffect,useState} from "react";
 import {getSupabase} from "@/lib/supabase/client";
 import {WalletCards,RefreshCw,CheckCircle2,XCircle,Clock3} from "lucide-react";
 type Wallet={driver_id:string;available_balance_dop:number;reserved_balance_dop:number};
-type Topup={id:string;driver_id:string;amount_dop:number;payment_method:string;payment_reference:string|null;driver_note:string|null;status:string;created_at:string};\ntype Entry={id:string;driver_id:string;entry_type:string;available_delta_dop:number;reserved_delta_dop:number;description:string;created_at:string};
+type Topup={id:string;driver_id:string;amount_dop:number;payment_method:string;payment_reference:string|null;driver_note:string|null;status:string;created_at:string};
+type Entry={id:string;driver_id:string;entry_type:string;available_delta_dop:number;reserved_delta_dop:number;description:string;created_at:string};
 type Driver={id:string;full_name:string;phone:string};
 const money=(n:number)=>"RD$ "+Number(n||0).toLocaleString("es-DO",{minimumFractionDigits:2,maximumFractionDigits:2});
 export default function AdminWallet(){
