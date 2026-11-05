@@ -30,7 +30,26 @@ export default function DriverWallet(){
   const deliveries=(d.data||[]).map((x:any)=>{const gross=Number(x.agreed_fee_dop??x.estimated_fee_dop??0);const commission=Number(x.platform_commission_dop??(gross*Number(x.commission_rate_pct??15)/100));return {id:x.id,kind:"Paquete" as const,created_at:x.created_at,gross,commission,net:Number(x.driver_payout_dop??(gross-commission))};});
   setEarnings([...rides,...deliveries].sort((a,b)=>b.created_at.localeCompare(a.created_at)));
  },[]);
- useEffect(()=>{load().catch(e=>setNotice(e.message||"No se pudo cargar tu billetera."));},[load]);
+ useEffect(()=>{
+  let active=true;let channel:any=null;
+  const report=(e:any)=>setNotice(e instanceof Error?e.message:"No se pudo actualizar tu billetera.");
+  void load().catch(report);
+  const connect=async()=>{
+   const s=getSupabase();const {data:{user}}=await s.auth.getUser();if(!user)return;
+   const {data:driver,error}=await s.from("cg_driver_profiles").select("id").eq("user_id",user.id).single();
+   if(error)throw error;if(!active||!driver)return;
+   channel=s.channel("cg-driver-earnings-"+driver.id)
+    .on("postgres_changes",{event:"UPDATE",schema:"public",table:"cg_ride_requests",filter:"driver_id=eq."+driver.id},()=>{void load().catch(report);})
+    .on("postgres_changes",{event:"UPDATE",schema:"public",table:"cg_delivery_requests",filter:"courier_id=eq."+driver.id},()=>{void load().catch(report);})
+    .on("postgres_changes",{event:"UPDATE",schema:"public",table:"cg_driver_wallets",filter:"driver_id=eq."+driver.id},()=>{void load().catch(report);})
+    .on("postgres_changes",{event:"INSERT",schema:"public",table:"cg_wallet_ledger",filter:"driver_id=eq."+driver.id},()=>{void load().catch(report);})
+    .on("postgres_changes",{event:"UPDATE",schema:"public",table:"cg_wallet_topups",filter:"driver_id=eq."+driver.id},()=>{void load().catch(report);})
+    .subscribe();
+  };
+  void connect().catch(report);
+  const poll=window.setInterval(()=>{void load().catch(report);},20000);
+  return()=>{active=false;window.clearInterval(poll);if(channel)void getSupabase().removeChannel(channel);};
+ },[load]);
  async function requestTopup(e:React.FormEvent){e.preventDefault();setBusy(true);setNotice("");try{const {error}=await getSupabase().rpc("cg_driver_request_wallet_topup",{p_amount:Number(amount),p_payment_method:method,p_payment_reference:reference||null,p_driver_note:note||null});if(error)throw error;setNotice("Solicitud enviada. Administración verificará el pago antes de acreditar tu balance.");setReference("");setNote("");await load();}catch(e){setNotice(e instanceof Error?e.message:"No se pudo solicitar la recarga.");}finally{setBusy(false)}}
  return <section className="mb-6 overflow-hidden rounded-[26px] border border-slate-200 bg-white shadow-sm">
   <div className="bg-[#14251d] p-5 text-white sm:p-6"><div className="flex items-center justify-between"><div><p className="text-[10px] font-black uppercase tracking-[.2em] text-lime-300">Tu billetera Cotuí Go</p><h2 className="mt-2 text-3xl font-black">{money(wallet?.available_balance_dop||0)}</h2><p className="mt-1 text-xs text-white/60">Balance disponible</p></div><span className="grid h-12 w-12 place-items-center rounded-2xl bg-white/10 text-lime-300"><WalletCards size={25}/></span></div>
