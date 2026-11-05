@@ -1,0 +1,27 @@
+{
+  "id": "/cotui-go-administracion",
+  "name": "Cotuí Go · Administración",
+  "short_name": "Cotuí Admin",
+  "description": "Centro de operaciones de Cotuí Go.",
+  "start_url": "/admin/movilidad?app=admin",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0b1420",
+  "theme_color": "#0b1420",
+  "lang": "es",
+  "icons": [
+    {
+      "src": "/icon-admin.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Centro de operaciones",
+      "url": "/admin/movilidad?app=admin"
+    }
+  ]
+}
