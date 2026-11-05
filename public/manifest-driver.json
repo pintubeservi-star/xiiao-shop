@@ -1,0 +1,27 @@
+{
+  "id": "/cotui-go-conductores",
+  "name": "Cotuí Go · Conductores",
+  "short_name": "Cotuí Driver",
+  "description": "Recibe viajes y administra tus servicios en Cotuí.",
+  "start_url": "/conductores?app=conductor",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#101f18",
+  "theme_color": "#14251d",
+  "lang": "es",
+  "icons": [
+    {
+      "src": "/icon-driver.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Abrir servicios",
+      "url": "/conductores?app=conductor"
+    }
+  ]
+}
