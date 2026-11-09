@@ -7,7 +7,7 @@ const SUPPORT="8492865774";
 export default function CgSafetyDock(){
  const path=usePathname();
  const role=path==="/conductores"?"driver":"customer";
- const [open,setOpen]=useState(false),[kind,setKind]=useState<"unsafe"|"support">("unsafe"),[details,setDetails]=useState(""),[busy,setBusy]=useState(false),[notice,setNotice]=useState("");
+ const [open,setOpen]=useState(false),[kind,setKind]=useState<"unsafe"|"support">("unsafe"),[details,setDetails]=useState(""),[busy,setBusy]=useState(false),[notice,setNotice]=useState(""),[human,setHuman]=useState(false);
  if(path.startsWith("/admin")||path.startsWith("/acceso")||path.startsWith("/seguimiento"))return null;
  async function report(){
   setBusy(true);setNotice("");
@@ -30,13 +30,14 @@ export default function CgSafetyDock(){
   <section className="mx-auto w-full max-w-md rounded-t-3xl bg-white p-5 text-slate-900 shadow-2xl sm:rounded-3xl">
    <div className="flex items-center justify-between"><div><p className="text-[10px] font-black uppercase tracking-widest text-emerald-700">Cotuí Go · Protección</p><h2 className="mt-1 text-xl font-black">¿Necesitas ayuda?</h2></div><button onClick={()=>setOpen(false)} aria-label="Cerrar"><X/></button></div>
    <p className="mt-2 text-xs leading-5 text-slate-600">Si hay peligro inmediato, llama al 911. Para una situación dentro del servicio, avisa a administración.</p>
-   <button onClick={()=>{setKind("unsafe");setNotice("");}} className={"mt-4 w-full rounded-xl border p-3 text-left text-sm font-bold "+(kind==="unsafe"?"border-amber-400 bg-amber-50":"border-slate-200")}> <ShieldAlert className="mr-2 inline" size={17}/> No me siento seguro/a</button>
-   <button onClick={()=>{setKind("support");setNotice("");}} className={"mt-2 w-full rounded-xl border p-3 text-left text-sm font-bold "+(kind==="support"?"border-emerald-400 bg-emerald-50":"border-slate-200")}><MessageCircle className="mr-2 inline" size={17}/> Necesito soporte</button>
+   <button onClick={()=>{setKind("unsafe");setHuman(false);setNotice("");}} className={"mt-4 w-full rounded-xl border p-3 text-left text-sm font-bold "+(kind==="unsafe"?"border-amber-400 bg-amber-50":"border-slate-200")}> <ShieldAlert className="mr-2 inline" size={17}/> No me siento seguro/a</button>
+   <button onClick={()=>{setKind("support");setHuman(false);setNotice("");}} className={"mt-2 w-full rounded-xl border p-3 text-left text-sm font-bold "+(kind==="support"?"border-emerald-400 bg-emerald-50":"border-slate-200")}><MessageCircle className="mr-2 inline" size={17}/> Necesito soporte</button>
    <textarea value={details} onChange={e=>setDetails(e.target.value)} rows={3} placeholder="Cuéntanos brevemente qué sucede (opcional)" className="mt-3 w-full rounded-xl border border-slate-200 p-3 text-sm"/>
    <button disabled={busy} onClick={report} className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[#14251d] p-3 text-sm font-black text-white disabled:opacity-50"><Send size={16}/>{busy?"Enviando…":"Avisar a administración"}</button>
-   <a href={wa} target="_blank" rel="noreferrer" className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm font-bold text-emerald-800"><MessageCircle size={16}/> Contactar soporte por WhatsApp</a>
+   {kind==="support"&&!human&&<button type="button" onClick={()=>setHuman(true)} className="mt-2 w-full rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm font-bold text-emerald-800">No pude resolverlo, necesito ayuda humana</button>}
+   {human&&<a href={wa} target="_blank" rel="noreferrer" className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm font-bold text-emerald-800"><MessageCircle size={16}/> Continuar por WhatsApp</a>}
    {notice&&<p role="status" className="mt-3 rounded-xl bg-slate-50 p-3 text-xs font-semibold">{notice}</p>}
-   <p className="mt-3 text-[10px] leading-4 text-slate-400">WhatsApp se ofrece como alternativa de soporte humano. No sustituye al 911 en emergencias.</p>
+   <p className="mt-3 text-[10px] leading-4 text-slate-400">WhatsApp solo aparece cuando solicitas atención humana. No sustituye al 911 en emergencias.</p>
   </section>
  </div>}
  </>;
