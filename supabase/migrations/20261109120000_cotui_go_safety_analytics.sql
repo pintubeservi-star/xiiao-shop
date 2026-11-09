@@ -61,7 +61,7 @@ as $$
 declare v_driver uuid; v_user uuid; v_count integer;
 begin
  if old.status is distinct from new.status and new.status='cancelled' then
-  v_driver:=case when tg_table_name='cg_ride_requests' then new.driver_id else new.courier_id end;
+  v_driver:=coalesce((to_jsonb(new)->>'driver_id')::uuid,(to_jsonb(new)->>'courier_id')::uuid);
   if v_driver is not null then
    select user_id into v_user from public.cg_driver_profiles where id=v_driver;
    if v_user is null or auth.uid() is distinct from v_user then return new; end if;
