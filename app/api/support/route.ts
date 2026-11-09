@@ -17,7 +17,7 @@ export async function POST(req:NextRequest){
   if(!messages.length||messages.some((m:any)=>!["user","assistant"].includes(m?.role)||typeof m.content!=="string"||m.content.length>1200))return NextResponse.json({error:"Mensaje no válido."},{status:400});
   const gatewayKey=process.env.AI_GATEWAY_API_KEY||process.env.VERCEL_OIDC_TOKEN;
   if(!gatewayKey)return NextResponse.json({error:"El asistente IA necesita activar la conexión segura de AI Gateway en Vercel."},{status:503});
-  const response=await fetch("https://ai-gateway.vercel.sh/v1/chat/completions",{method:"POST",headers:{"Authorization":"Bearer "+gatewayKey,"Content-Type":"application/json"},body:JSON.stringify({model:process.env.AI_GATEWAY_MODEL||"openai/gpt-6-sol-fast",messages:[{role:"system",content:systemPrompt},...messages],temperature:0.2,max_tokens:450,response_format:{type:"json_object"}}),signal:AbortSignal.timeout(20000)});
+  const response=await fetch("https://ai-gateway.vercel.sh/v1/chat/completions",{method:"POST",headers:{"Authorization":"Bearer "+gatewayKey,"Content-Type":"application/json"},body:JSON.stringify({model:process.env.AI_GATEWAY_MODEL||"alibaba/qwen3.7-flash",messages:[{role:"system",content:systemPrompt},...messages],temperature:0.2,max_tokens:450,response_format:{type:"json_object"}}),signal:AbortSignal.timeout(20000)});
   if(!response.ok){await response.text();return NextResponse.json({error:response.status===402?"El servicio IA necesita saldo o presupuesto disponible.":response.status===401?"La conexión IA de Vercel necesita autorización.":"El asistente no está disponible en este momento."},{status:502});}
   const data=await response.json();
   const raw=data?.choices?.[0]?.message?.content;
