@@ -64,6 +64,7 @@ begin
   v_driver:=case when tg_table_name='cg_ride_requests' then new.driver_id else new.courier_id end;
   if v_driver is not null then
    select user_id into v_user from public.cg_driver_profiles where id=v_driver;
+   if v_user is null or auth.uid() is distinct from v_user then return new; end if;
    insert into public.cg_activity_events(user_id,event_name,role,path,metadata)
    values(v_user,'driver_cancelled_service','driver',null,jsonb_build_object('service_table',tg_table_name,'service_id',new.id));
    select count(*) into v_count from public.cg_activity_events
@@ -111,3 +112,38 @@ revoke all on function public.cg_log_cancelled_service() from public,anon,authen
 grant select,insert on public.cg_activity_events to anon,authenticated;
 grant select,insert,update on public.cg_safety_reports to authenticated;
 grant select,update on public.cg_driver_risk_alerts to authenticated;
+
+create table if not exists public.cg_customer_verifications (
+ user_id uuid primary key references auth.users(id) on delete cascade,
+ selfie_path text not null,
+ status text not null default 'pending' check (status in ('pending','approved','rejected')),
+ submitted_at timestamptz not null default now(),
+ reviewed_at timestamptz,
+ reviewed_by uuid,
+ admin_note text
+);
+alter table public.cg_customer_verifications enable row level security;
+drop policy if exists cg_customer_verification_read_own on public.cg_customer_verifications;
+create policy cg_customer_verification_read_own on public.cg_customer_verifications for select to authenticated
+ using (user_id=(select auth.uid()) or public.cg_is_admin());
+drop policy if exists cg_customer_verification_insert_own on public.cg_customer_verifications;
+create policy cg_customer_verification_insert_own on public.cg_customer_verifications for insert to authenticated
+ with check (user_id=(select auth.uid()) and status='pending');
+drop policy if exists cg_customer_verification_update_own on public.cg_customer_verifications;
+create policy cg_customer_verification_update_own on public.cg_customer_verifications for update to authenticated
+ using (user_id=(select auth.uid()) and status in ('pending','rejected'))
+ with check (user_id=(select auth.uid()) and status='pending');
+drop policy if exists cg_customer_verification_admin_update on public.cg_customer_verifications;
+create policy cg_customer_verification_admin_update on public.cg_customer_verifications for update to authenticated
+ using (public.cg_is_admin()) with check (public.cg_is_admin());
+grant select,insert,update on public.cg_customer_verifications to authenticated;
+
+insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types)
+values('cg-customer-verification','cg-customer-verification',false,5242880,array['image/jpeg','image/png','image/webp'])
+on conflict (id) do update set public=false,file_size_limit=5242880,allowed_mime_types=array['image/jpeg','image/png','image/webp'];
+drop policy if exists cg_customer_selfie_upload on storage.objects;
+create policy cg_customer_selfie_upload on storage.objects for insert to authenticated
+ with check (bucket_id='cg-customer-verification' and (storage.foldername(name))[1]=(select auth.uid())::text);
+drop policy if exists cg_customer_selfie_read on storage.objects;
+create policy cg_customer_selfie_read on storage.objects for select to authenticated
+ using (bucket_id='cg-customer-verification' and ((storage.foldername(name))[1]=(select auth.uid())::text or public.cg_is_admin()));
