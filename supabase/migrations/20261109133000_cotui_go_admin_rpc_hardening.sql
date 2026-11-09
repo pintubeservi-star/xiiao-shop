@@ -1,0 +1,1 @@
+revoke all on function public.cg_is_admin() from public,anon; grant execute on function public.cg_is_admin() to authenticated;
