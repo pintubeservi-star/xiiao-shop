@@ -15,7 +15,7 @@ export async function POST(req:NextRequest){
   if(profileError||profile?.role!=="admin")return NextResponse.json({error:"Solo administración puede solicitar este análisis."},{status:403});
   const [metrics,alerts,reports,events]=await Promise.all([
    s.rpc("cg_admin_platform_metrics"),
-   s.from("cg_driver_risk_alerts").select("driver_id,alert_type,severity,evidence_count,status,created_at").order("created_at",{ascending:false}).limit(40),
+   s.from("cg_driver_risk_alerts").select("alert_type,severity,evidence_count,status,created_at").order("created_at",{ascending:false}).limit(40),
    s.from("cg_safety_reports").select("reporter_role,report_type,status,created_at").order("created_at",{ascending:false}).limit(40),
    s.from("cg_activity_events").select("event_name,role,created_at").gte("created_at",new Date(Date.now()-7*86400000).toISOString()).order("created_at",{ascending:false}).limit(500)
   ]);
