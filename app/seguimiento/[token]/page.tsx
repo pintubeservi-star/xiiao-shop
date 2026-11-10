@@ -51,31 +51,26 @@ export default function TrackingPage() {
   }, [token]);
 
   useEffect(() => {
-    let mounted = true;
-    load()
-      .catch((e) => {
-        if (mounted) setError(e.message || "No se pudo cargar el seguimiento.");
-      })
-      .finally(() => {
-        if (mounted) setLoading(false);
-      });
-
-    const supabase = getSupabase();
-    const channel = supabase
-      .channel("trip:" + token, { config: { private: false } })
-      .on("broadcast", { event: "driver_location" }, ({ payload }) => {
-        setTrip((current) => current ? ({ ...current, ...payload } as Trip) : current);
-      })
-      .on("broadcast", { event: "trip_status" }, ({ payload }) => {
-        setTrip((current) => current ? ({ ...current, ...payload } as Trip) : current);
-      })
-      .subscribe();
-
-    return () => {
-      mounted = false;
-      supabase.removeChannel(channel);
+    let mounted = true, firstLoad = true, inFlight = false;
+    const refresh = async () => {
+      if (inFlight || !mounted) return;
+      inFlight = true;
+      try {
+        const { data, error: requestError } = await getSupabase().rpc("cg_get_public_trip", { p_token: token });
+        if (requestError) throw requestError;
+        if (!data) throw new Error("No encontramos este servicio. Verifica el enlace de seguimiento.");
+        if (mounted) { setTrip(data as Trip); setError(""); firstLoad = false; setLoading(false); }
+      } catch (e) {
+        if (mounted && firstLoad) { setError(e instanceof Error ? e.message : "No se pudo cargar el seguimiento."); setLoading(false); }
+      } finally { inFlight = false; }
     };
-  }, [token, load]);
+    void refresh();
+    const timer = window.setInterval(() => { if (document.visibilityState === "visible") void refresh(); }, 2000);
+    const onFocus = () => void refresh();
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onFocus);
+    return () => { mounted = false; window.clearInterval(timer); window.removeEventListener("focus", onFocus); document.removeEventListener("visibilitychange", onFocus); };
+  }, [token]);
 
   const active = trip ? !["completed", "delivered", "cancelled"].includes(trip.status) : false;
   const completed = trip ? ["completed", "delivered"].includes(trip.status) : false;
