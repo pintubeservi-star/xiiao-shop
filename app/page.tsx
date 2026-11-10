@@ -17,7 +17,7 @@ export default function Home(){
  const logoTapCount=useRef(0);
  const logoTapTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
  const [service,setService]=useState<"moto"|"package">("moto");
- const [detailsOpen,setDetailsOpen]=useState(false),[menuOpen,setMenuOpen]=useState(false),[darkMode,setDarkMode]=useState(true);
+ const [detailsOpen,setDetailsOpen]=useState(false),[menuOpen,setMenuOpen]=useState(false),[darkMode,setDarkMode]=useState(false);
  const [authUser,setAuthUser]=useState<any>(null),[profile,setProfile]=useState<{full_name:string|null;phone:string|null}|null>(null),[authReady,setAuthReady]=useState(false);
  const [busy,setBusy]=useState(false),[message,setMessage]=useState(""),[trackingUrl,setTrackingUrl]=useState(""),[pickupPin,setPickupPin]=useState(""),[locating,setLocating]=useState(false);
  const [quote,setQuote]=useState<{distance_km:number;fare_dop:number;commission_pct:number;commission_dop:number;driver_payout_dop:number}|null>(null),[quoting,setQuoting]=useState(false);
@@ -63,10 +63,6 @@ export default function Home(){
    <Link href="/" onClick={handleLogoTap} className="rounded-full bg-[#171717]/95 px-4 py-2.5 text-sm font-black tracking-tight text-white shadow-xl ring-1 ring-white/10">Cotuí <span className="text-lime-400">Go</span></Link>
    <button type="button" aria-label="Cambiar tema" onClick={()=>setDarkMode(v=>!v)} className="grid h-12 w-12 place-items-center rounded-full bg-[#171717] text-white shadow-xl ring-1 ring-white/10">{darkMode?<Sun size={20}/>:<Moon size={20}/>}</button>
   </header>
-  <div className="pointer-events-none absolute left-1/2 top-[27%] z-[500] -translate-x-1/2">
-   <div className="rounded-2xl bg-[#171717] px-4 py-3 shadow-2xl ring-1 ring-white/10"><p className="text-[11px] font-bold text-white/55">Punto de recogida</p><p className="mt-1 max-w-[250px] truncate text-sm font-black text-white">{(service==="moto"?ride.pickup:parcel.pickup)||"Selecciona dónde te recogemos"}</p></div>
-   <div className="mx-auto grid h-14 w-14 -translate-y-1 place-items-center rounded-2xl border-[3px] border-[#171717] bg-white text-[#171717] shadow-xl"><MapPin size={26}/></div>
-  </div>
   <div className="cg-customer-sheet absolute inset-x-0 bottom-0 z-[650] max-h-[66svh] overflow-y-auto rounded-t-[30px] bg-[#191919] px-4 pb-[max(18px,env(safe-area-inset-bottom))] pt-3 shadow-[0_-12px_50px_rgba(0,0,0,.42)] sm:left-1/2 sm:max-w-2xl sm:-translate-x-1/2 sm:rounded-t-[30px]">
    <div className="mx-auto mb-3 h-1.5 w-14 rounded-full bg-white/25"/>
    <div className="mb-3 flex items-center justify-between"><p className="text-xs font-black uppercase tracking-widest text-white/55">Solicita tu servicio</p><span className="rounded-full bg-lime-400/15 px-3 py-1.5 text-[10px] font-black text-lime-300">Cotuí · Disponible</span></div>
