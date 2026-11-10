@@ -35,7 +35,7 @@ export default function CotuiGoMap({onPick,initial=cotui,theme="light"}:Props){
     addLayer("light","https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png?key="+CARTO_KEY);
     addLayer("dark","https://basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}.png?key="+CARTO_KEY);
     layers.current[theme].addTo(m);
-    L.control.zoom({position:"bottomright"}).addTo(m);
+    L.control.zoom({position:"topleft"}).addTo(m);
     const pin=L.divIcon({className:"cg-map-pin-wrap",html:'<div class="cg-map-pin"><span></span></div>',iconSize:[34,42],iconAnchor:[17,38]});
     const markerInstance=L.marker([initial.lat,initial.lng],{icon:pin,draggable:true}).addTo(m);
     marker.current=markerInstance;
