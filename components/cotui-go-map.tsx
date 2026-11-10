@@ -6,6 +6,7 @@ type Point={lat:number;lng:number};
 type Props={onPick?:(point:Point)=>void;initial?:Point;theme?:"dark"|"light"};
 const cotui={lat:19.0527,lng:-70.1494};
 const mapStyleUrl=(dark=false)=>dark?"https://tiles.openfreemap.org/styles/dark":"https://tiles.openfreemap.org/styles/positron";
+const fallbackStyle={version:8,sources:{"cg-osm-fallback":{type:"raster",tiles:["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],tileSize:256,attribution:"© OpenStreetMap contributors"}},layers:[{id:"cg-osm-fallback-layer",type:"raster",source:"cg-osm-fallback"}]};
 export default function CotuiGoMap({onPick,initial=cotui,theme="light"}:Props){
  const host=useRef<HTMLDivElement>(null),map=useRef<any>(null),marker=useRef<any>(null),onPickRef=useRef(onPick),themeRef=useRef(theme),fallbackUsed=useRef(false);
  const [ready,setReady]=useState(false),[style,setStyle]=useState<"dark"|"light">(theme),[locating,setLocating]=useState(false),[locationMessage,setLocationMessage]=useState(""),[mapError,setMapError]=useState("");
@@ -24,13 +25,14 @@ export default function CotuiGoMap({onPick,initial=cotui,theme="light"}:Props){
     mk.on("dragend",()=>{const p=mk.getLngLat();onPickRef.current?.({lat:p.lat,lng:p.lng});});
     m.on("click",(e:any)=>{mk.setLngLat(e.lngLat);onPickRef.current?.({lat:e.lngLat.lat,lng:e.lngLat.lng});});
     m.on("error",()=>{if(!fallbackUsed.current&&!cancelled){fallbackUsed.current=true;setMapError("No se pudo cargar una parte del mapa. Comprueba tu conexión.");}});
-    m.on("load",()=>{if(!cancelled){setReady(true);setMapError("");requestAnimationFrame(()=>m.resize());}});
+    m.on("style.load",()=>{if(!cancelled){setReady(true);setMapError("");requestAnimationFrame(()=>m.resize());}});
+    const fallbackTimer=window.setTimeout(()=>{if(!cancelled&&!m.isStyleLoaded()&&!fallbackUsed.current){fallbackUsed.current=true;setMapError("Activando mapa alternativo…");m.setStyle(fallbackStyle as any);}},10000);
     const observer=new ResizeObserver(()=>{if(!cancelled)m.resize();});observer.observe(host.current);
     map.current=m;marker.current=mk;
    }catch(error){if(!cancelled)setMapError(error instanceof Error?error.message:"No se pudo iniciar el mapa.");}
   };
   void init();
-  return()=>{cancelled=true;if(map.current){map.current.remove();map.current=null;}marker.current=null;};
+  return()=>{cancelled=true;window.clearTimeout(fallbackTimer);if(map.current){map.current.remove();map.current=null;}marker.current=null;};
  },[]);
  useEffect(()=>{if(!map.current)return;map.current.setStyle(mapStyleUrl(style==="dark"));},[style]);
  useEffect(()=>{if(map.current&&marker.current){map.current.easeTo({center:[initial.lng,initial.lat],zoom:16,duration:450});marker.current.setLngLat([initial.lng,initial.lat]);}},[initial.lat,initial.lng]);
