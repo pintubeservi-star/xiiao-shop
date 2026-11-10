@@ -15,7 +15,11 @@ export default function DriverWallet(){
  const todayKey=new Date().toLocaleDateString("en-CA");
  const todayEarned=earnings.filter(x=>new Date(x.created_at).toLocaleDateString("en-CA")===todayKey).reduce((sum,x)=>sum+x.net,0);
  const totalEarned=earnings.reduce((sum,x)=>sum+x.net,0);
- const totalCash=earnings.reduce((sum,x)=>sum+x.gross,0);\n const commissionsPaid=entries.filter(x=>x.entry_type==="commission_captured").reduce((sum,x)=>sum+Math.abs(Number(x.reserved_delta_dop||0)),0);\n const approvedTopups=topups.filter(x=>x.status==="approved").reduce((sum,x)=>sum+Number(x.amount_dop||0),0);\n const ledgerLabel=(type:string)=>({topup_credit:"Recarga aprobada",commission_reserved:"Comisión reservada",commission_captured:"Comisión cobrada",commission_released:"Comisión liberada"} as Record<string,string>)[type]||type.replace(/_/g," ");\n const signed=(n:number)=>`${n>0?"+":""}${money(n)}`;
+ const totalCash=earnings.reduce((sum,x)=>sum+x.gross,0);
+ const commissionsPaid=entries.filter(x=>x.entry_type==="commission_captured").reduce((sum,x)=>sum+Math.abs(Number(x.reserved_delta_dop||0)),0);
+ const approvedTopups=topups.filter(x=>x.status==="approved").reduce((sum,x)=>sum+Number(x.amount_dop||0),0);
+ const ledgerLabel=(type:string)=>({topup_credit:"Recarga aprobada",commission_reserved:"Comisión reservada",commission_captured:"Comisión cobrada",commission_released:"Comisión liberada"} as Record<string,string>)[type]||type.replace(/_/g," ");
+ const signed=(n:number)=>`${n>0?"+":""}${money(n)}`;
  const load=useCallback(async()=>{const s=getSupabase();const {data:{user}}=await s.auth.getUser();if(!user)return;
   const {data:driver,error:driverError}=await s.from("cg_driver_profiles").select("id").eq("user_id",user.id).single();if(driverError)throw driverError;
   const [w,l,t,r,d]=await Promise.all([
@@ -62,7 +66,9 @@ export default function DriverWallet(){
     <div className="rounded-xl bg-emerald-50 p-3"><p className="text-[9px] font-bold uppercase text-emerald-800/70">Ganaste hoy</p><b className="mt-1 block text-lg text-emerald-900">{money(todayEarned)}</b></div>
     <div className="rounded-xl bg-slate-50 p-3"><p className="text-[9px] font-bold uppercase text-slate-500">Ganancia neta · últimos 100</p><b className="mt-1 block text-lg">{money(totalEarned)}</b></div>
     <div className="rounded-xl bg-slate-50 p-3"><p className="text-[9px] font-bold uppercase text-slate-500">Servicios listos</p><b className="mt-1 block text-lg">{earnings.length}</b></div>
-    <div className="rounded-xl bg-slate-50 p-3"><p className="text-[9px] font-bold uppercase text-slate-500">Efectivo cobrado · últimos 100</p><b className="mt-1 block text-lg">{money(totalCash)}</b></div>\n    <div className="rounded-xl bg-amber-50 p-3"><p className="text-[9px] font-bold uppercase text-amber-800">Comisiones cobradas</p><b className="mt-1 block text-lg text-amber-900">{money(commissionsPaid)}</b></div>\n    <div className="rounded-xl bg-slate-50 p-3"><p className="text-[9px] font-bold uppercase text-slate-500">Recargas aprobadas</p><b className="mt-1 block text-lg">{money(approvedTopups)}</b></div>
+    <div className="rounded-xl bg-slate-50 p-3"><p className="text-[9px] font-bold uppercase text-slate-500">Efectivo cobrado · últimos 100</p><b className="mt-1 block text-lg">{money(totalCash)}</b></div>
+    <div className="rounded-xl bg-amber-50 p-3"><p className="text-[9px] font-bold uppercase text-amber-800">Comisiones cobradas</p><b className="mt-1 block text-lg text-amber-900">{money(commissionsPaid)}</b></div>
+    <div className="rounded-xl bg-slate-50 p-3"><p className="text-[9px] font-bold uppercase text-slate-500">Recargas aprobadas</p><b className="mt-1 block text-lg">{money(approvedTopups)}</b></div>
    </div>
    <div className="mt-3 rounded-xl border border-slate-200 p-3 text-[11px] leading-5 text-slate-600">El efectivo del servicio lo recibes directamente del cliente. La ganancia confirmada muestra tu parte después de la comisión de Cotuí Go; esa comisión se descuenta de tu billetera al completar el servicio.</div>
    <div className="mt-4"><h4 className="mb-2 flex items-center gap-2 text-sm font-black"><History size={16}/> Historial de ganancias</h4>
