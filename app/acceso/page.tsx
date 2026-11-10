@@ -1,54 +1,229 @@
 "use client";
-import {useEffect,useState} from "react";
-import {useRouter} from "next/navigation";
-import Link from "next/link";
-import {getSupabase} from "@/lib/supabase/client";
-import {ArrowLeft,ArrowRight,LockKeyhole,Mail,Phone,UserRound} from "lucide-react";
-const field="w-full rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm outline-none transition focus:border-lime-500 focus:ring-4 focus:ring-lime-100";
-export default function AccessPage(){
- const router=useRouter();
- const [mode,setMode]=useState<"login"|"register"|"reset">("login");
- const [form,setForm]=useState({name:"",phone:"",email:"",password:""});
- const [busy,setBusy]=useState(false),[notice,setNotice]=useState("");
- const [phoneMode,setPhoneMode]=useState(true),[otpSent,setOtpSent]=useState(false),[otp,setOtp]=useState("");
- useEffect(()=>{let live=true;getSupabase().auth.getUser().then(({data})=>{if(live&&data.user)router.replace("/");});return()=>{live=false;};},[router]);
- async function signInWithGoogle(){setBusy(true);setNotice("");try{const {error}=await getSupabase().auth.signInWithOAuth({provider:"google",options:{redirectTo:window.location.origin+"/acceso",queryParams:{prompt:"select_account"}}});if(error)throw error;}catch(e){const message=e instanceof Error?e.message:"No se pudo iniciar con Google.";setNotice(/provider is not enabled|unsupported provider|not enabled/i.test(message)?"Google todavía no está habilitado en el proveedor de autenticación de este proyecto. El botón ya está preparado, pero Supabase necesita las credenciales OAuth de Google para completar el acceso.":message);}finally{setBusy(false)}}
- async function sendPhoneCode(e:React.FormEvent){e.preventDefault();setBusy(true);setNotice("");try{const raw=form.phone.trim();const digits=raw.replace(/\D/g,"");const phone=raw.startsWith("+")?"+"+digits:digits.length===10?"+1"+digits:digits.length===11&&digits.startsWith("1")?"+"+digits:"";if(!/^\+1\d{10}$/.test(phone))throw new Error("Escribe tu número dominicano de 10 dígitos, por ejemplo 809 555 1234.");if(mode==="register"&&!form.name.trim())throw new Error("Escribe tu nombre completo para crear la cuenta.");const {error}=await getSupabase().auth.signInWithOtp({phone,options:{shouldCreateUser:mode==="register",data:{full_name:form.name.trim(),phone}}});if(error){const msg=error.message||"";if(/sms|provider|phone|disabled|not configured|rate limit/i.test(msg))throw new Error("No se pudo enviar el SMS. El acceso telefónico requiere habilitar Phone Auth y configurar un proveedor SMS en Supabase. Detalle: "+msg);throw error;}setForm(v=>({...v,phone}));setOtpSent(true);setNotice("Código solicitado. Revisa tus mensajes SMS e introduce los 6 dígitos.");}catch(e){setNotice(e instanceof Error?e.message:"No se pudo enviar el código SMS.");}finally{setBusy(false)}}
- async function verifyPhoneCode(e:React.FormEvent){e.preventDefault();setBusy(true);setNotice("");try{const {data,error}=await getSupabase().auth.verifyOtp({phone:form.phone,token:otp.trim(),type:"sms"});if(error)throw error;if(data.user){const s=getSupabase();const name= data.user.user_metadata?.full_name||form.name.trim()||null;const {error:profileError}=await s.from("profiles").upsert({id:data.user.id,full_name:name,phone:form.phone},{onConflict:"id"});if(profileError)throw profileError;}router.replace("/");router.refresh();}catch(e){setNotice(e instanceof Error?e.message:"El código no es válido o ha expirado.");}finally{setBusy(false)}}
- async function submit(e:React.FormEvent){e.preventDefault();setBusy(true);setNotice("");try{
-  const s=getSupabase();
-  if(mode==="register"){
-   if(form.password.length<8)throw new Error("La contraseña debe tener al menos 8 caracteres.");
-   const {data,error}=await s.auth.signUp({email:form.email.trim().toLowerCase(),password:form.password,options:{data:{full_name:form.name.trim(),phone:form.phone.trim()}}});
-   if(error)throw error;
-   if(data.session){router.replace("/");router.refresh();}else setNotice("Cuenta creada. Revisa tu correo y confirma la dirección para activar tu acceso. Después podrás solicitar viajes y envíos.");
-  }else if(mode==="login"){
-   const {error}=await s.auth.signInWithPassword({email:form.email.trim().toLowerCase(),password:form.password});if(error)throw error;router.replace("/");router.refresh();
-  }else{
-   const {error}=await s.auth.resetPasswordForEmail(form.email.trim().toLowerCase(),{redirectTo:window.location.origin+"/acceso"});if(error)throw error;setNotice("Si el correo está registrado, recibirás un enlace para restablecer tu contraseña.");
-  }
- }catch(e){setNotice(e instanceof Error?e.message:"No se pudo completar la operación. Inténtalo nuevamente.");}finally{setBusy(false);}}
- return <main className="min-h-screen bg-[#f4f6f3] px-4 py-8 text-slate-900"><div className="mx-auto grid min-h-[85vh] max-w-5xl overflow-hidden rounded-[32px] bg-white shadow-[0_25px_80px_rgba(15,35,25,.12)] md:grid-cols-[.9fr_1.1fr]">
- <section className="flex flex-col justify-between bg-[#14251d] p-7 text-white sm:p-10"><div><Link href="/" className="inline-flex items-center gap-2 text-sm font-bold text-white/70"><ArrowLeft size={16}/> Volver a Cotuí Go</Link><div className="mt-16 inline-grid h-14 w-14 place-items-center rounded-2xl bg-lime-400 text-[#14251d]"><LockKeyhole size={26}/></div><p className="mt-7 text-[10px] font-black uppercase tracking-[.24em] text-lime-300">Cotuí Go</p><h1 className="mt-2 text-4xl font-black leading-tight">Tu ciudad.<br/>Tu cuenta.<br/><span className="text-lime-300">Tu camino.</span></h1><p className="mt-5 max-w-sm text-sm leading-6 text-white/65">Guarda tus datos una sola vez. Solicita viajes y envíos sin volver a escribir tu nombre y teléfono.</p></div><p className="mt-12 text-[10px] font-semibold tracking-wider text-white/35">MOVILIDAD Y ENTREGAS LOCALES · COTUÍ</p></section>
- <section className="flex items-center justify-center p-5 sm:p-10"><div className="w-full max-w-md"><p className="text-[10px] font-black uppercase tracking-[.2em] text-lime-700">Acceso de clientes</p><h2 className="mt-2 text-3xl font-black">{mode==="register"?"Crea tu cuenta":mode==="reset"?"Recupera tu acceso":"Bienvenido de nuevo"}</h2><p className="mt-2 text-sm text-slate-500">{mode==="register"?"Regístrate una vez y solicita servicios más rápido.":mode==="reset"?"Te enviaremos un enlace para cambiar tu contraseña.":"Entra para pedir tu moto o enviar un paquete."}</p>
- <div className="mt-7 flex rounded-xl bg-slate-100 p-1">{(["login","register"] as const).map(v=><button key={v} type="button" onClick={()=>{setMode(v);setNotice("");}} className={mode===v?"flex-1 rounded-lg bg-white px-3 py-2.5 text-xs font-extrabold shadow-sm":"flex-1 rounded-lg px-3 py-2.5 text-xs font-bold text-slate-500"}>{v==="login"?"Iniciar sesión":"Crear cuenta"}</button>)}</div>
- {!phoneMode&&<form onSubmit={submit} className="mt-6 space-y-3">{mode==="register"&&<><label className="block"><span className="mb-1.5 block text-xs font-bold text-slate-600">Nombre y apellido</span><span className="relative block"><UserRound className="absolute left-3.5 top-3.5 text-slate-400" size={17}/><input required autoComplete="name" className={field+" pl-11"} placeholder="Tu nombre completo" value={form.name} onChange={e=>setForm(v=>({...v,name:e.target.value}))}/></span></label><label className="block"><span className="mb-1.5 block text-xs font-bold text-slate-600">Teléfono</span><span className="relative block"><Phone className="absolute left-3.5 top-3.5 text-slate-400" size={17}/><input required type="tel" autoComplete="tel" className={field+" pl-11"} placeholder="809 000 0000" value={form.phone} onChange={e=>setForm(v=>({...v,phone:e.target.value}))}/></span></label></>}
- <label className="block"><span className="mb-1.5 block text-xs font-bold text-slate-600">Correo electrónico</span><span className="relative block"><Mail className="absolute left-3.5 top-3.5 text-slate-400" size={17}/><input required type="email" autoComplete="email" className={field+" pl-11"} placeholder="tucorreo@ejemplo.com" value={form.email} onChange={e=>setForm(v=>({...v,email:e.target.value}))}/></span></label>
- {mode!=="reset"&&<label className="block"><span className="mb-1.5 block text-xs font-bold text-slate-600">Contraseña</span><span className="relative block"><LockKeyhole className="absolute left-3.5 top-3.5 text-slate-400" size={17}/><input required minLength={8} type="password" autoComplete={mode==="register"?"new-password":"current-password"} className={field+" pl-11"} placeholder="Mínimo 8 caracteres" value={form.password} onChange={e=>setForm(v=>({...v,password:e.target.value}))}/></span></label>}
- {mode==="login"&&<button type="button" onClick={()=>{setMode("reset");setNotice("");}} className="text-xs font-bold text-lime-800 underline underline-offset-4">¿Olvidaste tu contraseña?</button>}
- <button disabled={busy} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#14251d] px-5 py-4 text-sm font-extrabold text-white transition hover:bg-lime-800 disabled:opacity-50">{busy?"Procesando…":mode==="register"?"Crear mi cuenta":mode==="reset"?"Enviar enlace de recuperación":"Entrar a Cotuí Go"}<ArrowRight size={16}/></button></form>}
 
- <button type="button" onClick={signInWithGoogle} disabled={busy} className="mt-6 flex w-full items-center justify-center gap-3 rounded-xl border border-slate-300 bg-white px-5 py-4 text-sm font-extrabold text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:opacity-50"><svg aria-hidden="true" viewBox="0 0 48 48" className="h-5 w-5"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.01 13.22l7.98 6.19C11.88 13.72 17.42 9.5 24 9.5Z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.74 7.18l7.26 5.64c4.24-3.91 7.52-9.69 7.52-17.29Z"/><path fill="#FBBC05" d="M9.99 28.59A14.4 14.4 0 0 1 9.2 24c0-1.59.27-3.12.76-4.59l-7.98-6.19A23.9 23.9 0 0 0 0 24c0 3.87.93 7.52 2.57 10.78l7.42-6.19Z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.9-5.8l-7.26-5.64c-2.01 1.35-4.59 2.14-8.64 2.14-6.58 0-12.12-4.22-14.01-10.09l-7.42 6.19C6.51 42.62 14.62 48 24 48Z"/></svg>Continuar con Google</button>
- <div className="my-5 flex items-center gap-3"><span className="h-px flex-1 bg-slate-200"/><span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">o con tu teléfono</span><span className="h-px flex-1 bg-slate-200"/></div>
- {!phoneMode?<button type="button" onClick={()=>{setPhoneMode(true);setOtpSent(false);setNotice("");}} className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white p-3.5 text-sm font-bold text-slate-800"><Phone size={17}/> Continuar con número de teléfono</button>:<form onSubmit={otpSent?verifyPhoneCode:sendPhoneCode} className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
- <div><b className="text-sm">{otpSent?"Confirma tu número":"Acceso por SMS"}</b><p className="mt-1 text-[11px] leading-5 text-slate-500">Recibirás un código de un solo uso en tu teléfono.</p></div>
- {mode==="register"&&!otpSent&&<label className="block text-xs font-bold text-slate-600">Nombre y apellido<input required value={form.name} onChange={e=>setForm(v=>({...v,name:e.target.value}))} className={field+" mt-1"} placeholder="Tu nombre completo"/></label>}
- <label className="block text-xs font-bold text-slate-600">Número de teléfono<input required type="tel" autoComplete="tel" value={form.phone} onChange={e=>setForm(v=>({...v,phone:e.target.value}))} disabled={otpSent} className={field+" mt-1"} placeholder="809 000 0000"/></label>
- {otpSent&&<label className="block text-xs font-bold text-slate-600">Código SMS<input required inputMode="numeric" autoComplete="one-time-code" maxLength={6} value={otp} onChange={e=>setOtp(e.target.value.replace(/\D/g,"").slice(0,6))} className={field+" mt-1"} placeholder="123456"/></label>}
- <button disabled={busy} className="w-full rounded-xl bg-[#14251d] p-3.5 text-sm font-black text-white disabled:opacity-50">{busy?"Procesando…":otpSent?"Verificar e iniciar sesión":"Enviar código SMS"}</button>
- <button type="button" onClick={()=>{setPhoneMode(false);setOtpSent(false);setOtp("");setNotice("");}} className="w-full text-xs font-bold text-slate-500 underline">Usar correo electrónico en su lugar</button>
- </form>}
- {notice&&<p role="status" className="mt-4 rounded-xl border border-lime-200 bg-lime-50 p-3 text-sm leading-5 text-lime-900">{notice}</p>}
- {mode==="reset"&&<button onClick={()=>{setMode("login");setNotice("");}} className="mt-4 text-xs font-bold text-slate-500 underline">Volver al inicio de sesión</button>}
- <p className="mt-6 text-center text-[11px] leading-5 text-slate-400">Al crear tu cuenta, tus datos se guardan de forma segura para agilizar futuras solicitudes.</p></div></section></div></main>;
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { getSupabase } from "@/lib/supabase/client";
+import {
+  ArrowLeft, ArrowRight, Bike, Package, ShieldCheck, Mail,
+  LockKeyhole, UserRound, Phone, MapPin, Eye, EyeOff
+} from "lucide-react";
+
+const field = "w-full rounded-2xl border border-[#dce5df] bg-white px-4 py-3.5 text-[14px] text-[#172820] outline-none transition placeholder:text-[#9aa9a0] focus:border-[#16845b] focus:ring-4 focus:ring-[#16845b]/10";
+
+export default function AccessPage() {
+  const router = useRouter();
+  const [mode, setMode] = useState<"login" | "register" | "reset">("login");
+  const [form, setForm] = useState({ name: "", phone: "", email: "", password: "" });
+  const [busy, setBusy] = useState(false);
+  const [notice, setNotice] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+
+  useEffect(() => {
+    let live = true;
+    getSupabase().auth.getUser().then(({ data }) => {
+      if (live && data.user) router.replace("/");
+    });
+    return () => { live = false; };
+  }, [router]);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    setNotice("");
+    try {
+      const s = getSupabase();
+      if (mode === "register") {
+        if (form.password.length < 8) throw new Error("La contraseña debe tener al menos 8 caracteres.");
+        const { data, error } = await s.auth.signUp({
+          email: form.email.trim().toLowerCase(),
+          password: form.password,
+          options: { data: { full_name: form.name.trim(), phone: form.phone.trim() } }
+        });
+        if (error) throw error;
+        if (data.session) {
+          router.replace("/");
+          router.refresh();
+        } else {
+          setNotice("Tu cuenta fue creada. Revisa tu correo y confirma la dirección para activar el acceso a Cotuí Go.");
+        }
+      } else if (mode === "login") {
+        const { error } = await s.auth.signInWithPassword({
+          email: form.email.trim().toLowerCase(),
+          password: form.password
+        });
+        if (error) throw error;
+        router.replace("/");
+        router.refresh();
+      } else {
+        const { error } = await s.auth.resetPasswordForEmail(
+          form.email.trim().toLowerCase(),
+          { redirectTo: window.location.origin + "/acceso" }
+        );
+        if (error) throw error;
+        setNotice("Si el correo está registrado, recibirás un enlace para restablecer tu contraseña.");
+      }
+    } catch (e) {
+      setNotice(e instanceof Error ? e.message : "No se pudo completar la operación. Inténtalo nuevamente.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const title = mode === "register" ? "Crea tu cuenta" : mode === "reset" ? "Recupera tu acceso" : "Qué bueno tenerte de vuelta";
+  const subtitle = mode === "register"
+    ? "Regístrate una vez y tendrás tus datos listos para tus próximos viajes y envíos."
+    : mode === "reset"
+      ? "Te enviaremos un enlace seguro a tu correo."
+      : "Entra a tu ciudad. Muévete y envía con Cotuí Go.";
+
+  return (
+    <main className="min-h-screen bg-[#f3f6f2] px-3 py-4 text-[#172820] sm:px-6 sm:py-8">
+      <div className="mx-auto grid min-h-[min(900px,calc(100vh-2rem))] max-w-6xl overflow-hidden rounded-[30px] border border-white bg-white shadow-[0_28px_90px_rgba(18,45,31,.13)] lg:grid-cols-[1.04fr_.96fr]">
+        <aside className="relative isolate flex min-h-[420px] flex-col justify-between overflow-hidden bg-[#102c22] p-6 text-white sm:p-9 lg:min-h-[760px] lg:p-11">
+          <div className="absolute inset-0 -z-20 bg-[url('https://upload.wikimedia.org/wikipedia/commons/7/7a/Cotui_Dominican_Republic_2.jpg')] bg-cover bg-center opacity-35" />
+          <div className="absolute inset-0 -z-10 bg-gradient-to-b from-[#0c211a]/75 via-[#102c22]/45 to-[#0b2119]" />
+          <div className="absolute -right-24 top-24 -z-10 h-72 w-72 rounded-full border border-white/10" />
+          <div className="absolute -right-12 top-36 -z-10 h-48 w-48 rounded-full border border-white/10" />
+
+          <div>
+            <Link href="/" className="inline-flex items-center gap-2 text-xs font-semibold text-white/75 transition hover:text-white">
+              <ArrowLeft size={15} /> Volver al inicio
+            </Link>
+            <div className="mt-12 flex items-center gap-3 sm:mt-16">
+              <div className="grid h-12 w-12 place-items-center rounded-2xl bg-[#c7f36b] text-[#102c22] shadow-lg shadow-black/20">
+                <span className="text-xl font-black tracking-tighter">CG</span>
+              </div>
+              <div>
+                <div className="text-[21px] font-black tracking-tight">COTUÍ <span className="text-[#c7f36b]">GO</span></div>
+                <div className="text-[9px] font-bold uppercase tracking-[.25em] text-white/55">Movilidad de aquí</div>
+              </div>
+            </div>
+
+            <div className="mt-12 max-w-lg sm:mt-16">
+              <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-2 text-[10px] font-bold uppercase tracking-[.18em] text-[#d8f6a5] backdrop-blur-sm">
+                <MapPin size={12} /> Hecho para Cotuí
+              </div>
+              <h1 className="mt-5 text-[38px] font-black leading-[1.04] tracking-[-.04em] sm:text-5xl">
+                Tu ciudad<br />se mueve <span className="text-[#c7f36b]">contigo.</span>
+              </h1>
+              <p className="mt-5 max-w-sm text-sm leading-6 text-white/75 sm:text-[15px]">
+                Pide una moto, envía un paquete y llega a donde necesitas. Cotuí está más cerca con Cotuí Go.
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-12">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur-md">
+                <Bike size={20} className="text-[#c7f36b]" />
+                <p className="mt-3 text-sm font-extrabold">Viajes en moto</p>
+                <p className="mt-1 text-[11px] text-white/60">Muévete por Cotuí</p>
+              </div>
+              <div className="rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur-md">
+                <Package size={20} className="text-[#c7f36b]" />
+                <p className="mt-3 text-sm font-extrabold">Envío de paquetes</p>
+                <p className="mt-1 text-[11px] text-white/60">Entrega local sencilla</p>
+              </div>
+            </div>
+            <div className="mt-5 flex items-center gap-2 text-[10px] font-medium text-white/45">
+              <ShieldCheck size={14} /> Tu cuenta protegida · Tu ciudad conectada
+            </div>
+            <p className="mt-3 text-[9px] text-white/35">
+              Fotografía: Cotuí, República Dominicana · CristoRey99 · CC BY-SA 4.0
+            </p>
+          </div>
+        </aside>
+
+        <section className="flex items-center justify-center px-5 py-10 sm:px-10 lg:px-12">
+          <div className="w-full max-w-[410px]">
+            <div className="mb-8 flex items-center gap-2 lg:hidden">
+              <div className="grid h-10 w-10 place-items-center rounded-xl bg-[#102c22] text-sm font-black text-[#c7f36b]">CG</div>
+              <span className="text-lg font-black tracking-tight">COTUÍ <span className="text-[#16845b]">GO</span></span>
+            </div>
+            <div className="text-[10px] font-black uppercase tracking-[.22em] text-[#16845b]">Acceso de clientes</div>
+            <h2 className="mt-3 text-[30px] font-black leading-tight tracking-[-.035em] sm:text-[34px]">{title}</h2>
+            <p className="mt-3 max-w-sm text-sm leading-6 text-[#718078]">{subtitle}</p>
+
+            {mode !== "reset" && (
+              <div className="mt-8 grid grid-cols-2 rounded-2xl bg-[#f1f5f1] p-1">
+                <button type="button" onClick={() => { setMode("login"); setNotice(""); }} className={mode === "login" ? "rounded-xl bg-white px-3 py-3 text-xs font-extrabold text-[#17382a] shadow-sm" : "rounded-xl px-3 py-3 text-xs font-bold text-[#7b8980]"}>
+                  Iniciar sesión
+                </button>
+                <button type="button" onClick={() => { setMode("register"); setNotice(""); }} className={mode === "register" ? "rounded-xl bg-white px-3 py-3 text-xs font-extrabold text-[#17382a] shadow-sm" : "rounded-xl px-3 py-3 text-xs font-bold text-[#7b8980]"}>
+                  Crear cuenta
+                </button>
+              </div>
+            )}
+
+            <form onSubmit={submit} className="mt-7 space-y-4">
+              {mode === "register" && (
+                <>
+                  <label className="block">
+                    <span className="mb-2 block text-xs font-bold text-[#405248]">Nombre y apellido</span>
+                    <span className="relative block">
+                      <UserRound size={17} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#91a097]" />
+                      <input required autoComplete="name" className={field + " pl-11"} placeholder="Tu nombre completo" value={form.name} onChange={e => setForm(v => ({ ...v, name: e.target.value }))} />
+                    </span>
+                  </label>
+                  <label className="block">
+                    <span className="mb-2 block text-xs font-bold text-[#405248]">Teléfono de contacto</span>
+                    <span className="relative block">
+                      <Phone size={17} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#91a097]" />
+                      <input required type="tel" autoComplete="tel" className={field + " pl-11"} placeholder="809 000 0000" value={form.phone} onChange={e => setForm(v => ({ ...v, phone: e.target.value }))} />
+                    </span>
+                  </label>
+                </>
+              )}
+
+              <label className="block">
+                <span className="mb-2 block text-xs font-bold text-[#405248]">Correo electrónico</span>
+                <span className="relative block">
+                  <Mail size={17} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#91a097]" />
+                  <input required type="email" autoComplete="email" className={field + " pl-11"} placeholder="tucorreo@ejemplo.com" value={form.email} onChange={e => setForm(v => ({ ...v, email: e.target.value }))} />
+                </span>
+              </label>
+
+              {mode !== "reset" && (
+                <label className="block">
+                  <span className="mb-2 block text-xs font-bold text-[#405248]">Contraseña</span>
+                  <span className="relative block">
+                    <LockKeyhole size={17} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#91a097]" />
+                    <input required minLength={8} type={showPassword ? "text" : "password"} autoComplete={mode === "register" ? "new-password" : "current-password"} className={field + " pl-11 pr-12"} placeholder="Mínimo 8 caracteres" value={form.password} onChange={e => setForm(v => ({ ...v, password: e.target.value }))} />
+                    <button type="button" aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"} onClick={() => setShowPassword(v => !v)} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#91a097]">
+                      {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
+                    </button>
+                  </span>
+                </label>
+              )}
+
+              {mode === "login" && (
+                <div className="flex justify-end">
+                  <button type="button" onClick={() => { setMode("reset"); setNotice(""); }} className="text-xs font-bold text-[#16845b] hover:underline">¿Olvidaste tu contraseña?</button>
+                </div>
+              )}
+
+              <button disabled={busy} className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#123b2b] px-5 py-4 text-sm font-extrabold text-white shadow-lg shadow-[#123b2b]/15 transition hover:bg-[#18563d] disabled:opacity-50">
+                {busy ? "Procesando…" : mode === "register" ? "Crear mi cuenta" : mode === "reset" ? "Enviar enlace de recuperación" : "Entrar a Cotuí Go"}
+                <ArrowRight size={17} />
+              </button>
+            </form>
+
+            {notice && (
+              <p role="status" className="mt-5 rounded-2xl border border-[#cfe6d6] bg-[#f0faf2] p-4 text-sm leading-6 text-[#24553a]">{notice}</p>
+            )}
+
+            {mode === "reset" && (
+              <button type="button" onClick={() => { setMode("login"); setNotice(""); }} className="mt-5 text-xs font-bold text-[#16845b] hover:underline">Volver a iniciar sesión</button>
+            )}
+
+            <div className="mt-8 border-t border-[#edf1ed] pt-5 text-center">
+              <p className="text-[11px] leading-5 text-[#8b9890]">Al continuar, aceptas utilizar Cotuí Go de forma responsable y mantener tus datos de acceso seguros.</p>
+              <p className="mt-4 text-[10px] font-bold tracking-[.12em] text-[#b1bbb4]">COTUÍ · SÁNCHEZ RAMÍREZ · REPÚBLICA DOMINICANA</p>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  );
 }
