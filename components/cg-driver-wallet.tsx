@@ -67,8 +67,8 @@ export default function DriverWallet(){
     <div className="rounded-xl bg-slate-50 p-3"><p className="text-[9px] font-bold uppercase text-slate-500">Ganancia neta · últimos 100</p><b className="mt-1 block text-lg">{money(totalEarned)}</b></div>
     <div className="rounded-xl bg-slate-50 p-3"><p className="text-[9px] font-bold uppercase text-slate-500">Servicios listos</p><b className="mt-1 block text-lg">{earnings.length}</b></div>
     <div className="rounded-xl bg-slate-50 p-3"><p className="text-[9px] font-bold uppercase text-slate-500">Efectivo cobrado · últimos 100</p><b className="mt-1 block text-lg">{money(totalCash)}</b></div>
-    <div className="rounded-xl bg-amber-50 p-3"><p className="text-[9px] font-bold uppercase text-amber-800">Comisiones cobradas</p><b className="mt-1 block text-lg text-amber-900">{money(commissionsPaid)}</b></div>
-    <div className="rounded-xl bg-slate-50 p-3"><p className="text-[9px] font-bold uppercase text-slate-500">Recargas aprobadas</p><b className="mt-1 block text-lg">{money(approvedTopups)}</b></div>
+    <div className="rounded-xl bg-amber-50 p-3"><p className="text-[9px] font-bold uppercase text-amber-800">Comisiones cobradas · últimas 50</p><b className="mt-1 block text-lg text-amber-900">{money(commissionsPaid)}</b></div>
+    <div className="rounded-xl bg-slate-50 p-3"><p className="text-[9px] font-bold uppercase text-slate-500">Recargas aprobadas · últimas 20</p><b className="mt-1 block text-lg">{money(approvedTopups)}</b></div>
    </div>
    <div className="mt-3 rounded-xl border border-slate-200 p-3 text-[11px] leading-5 text-slate-600">El efectivo del servicio lo recibes directamente del cliente. La ganancia confirmada muestra tu parte después de la comisión de Cotuí Go; esa comisión se descuenta de tu billetera al completar el servicio.</div>
    <div className="mt-4"><h4 className="mb-2 flex items-center gap-2 text-sm font-black"><History size={16}/> Historial de ganancias</h4>
