@@ -47,8 +47,8 @@ export default function DriverPortal(){
   const watch=navigator.geolocation.watchPosition(async pos=>{
    const now=Date.now();if(now-lastSent<4500)return;lastSent=now;
    const coords={current_lat:pos.coords.latitude,current_lng:pos.coords.longitude,last_location_at:new Date().toISOString()};
-   const {data,error}=await getSupabase().from("cg_driver_profiles").update(coords).eq("id",profile.id).select("*").single();
-   if(!error&&data)setProfile(v=>v?({...v,...coords}):v);
+   const {error}=await getSupabase().from("cg_driver_profiles").update(coords).eq("id",profile.id);
+   if(error)console.warn("No se pudo actualizar la ubicación del conductor.",error.message);
   },err=>setNotice("Activa el permiso de ubicación para compartir el recorrido con el cliente."),{enableHighAccuracy:true,maximumAge:3000,timeout:15000});
   return()=>navigator.geolocation.clearWatch(watch);
  },[profile?.id,profile?.status,hasActiveService]);
