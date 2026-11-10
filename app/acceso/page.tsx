@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { getSupabase } from "@/lib/supabase/client";
 import {
-  ArrowLeft, ArrowRight, Bike, Package, ShieldCheck, Mail,
+  ArrowRight, Bike, Package, ShieldCheck, Mail,
   LockKeyhole, UserRound, Phone, MapPin, Eye, EyeOff
 } from "lucide-react";
 
@@ -87,15 +87,13 @@ export default function AccessPage() {
     <main className="min-h-screen bg-[#f3f6f2] px-3 py-4 text-[#172820] sm:px-6 sm:py-8">
       <div className="mx-auto grid min-h-[min(900px,calc(100vh-2rem))] max-w-6xl overflow-hidden rounded-[30px] border border-white bg-white shadow-[0_28px_90px_rgba(18,45,31,.13)] lg:grid-cols-[1.04fr_.96fr]">
         <aside className="relative isolate flex min-h-[420px] flex-col justify-between overflow-hidden bg-[#102c22] p-6 text-white sm:p-9 lg:min-h-[760px] lg:p-11">
-          <div className="absolute inset-0 -z-20 bg-[url('https://upload.wikimedia.org/wikipedia/commons/7/7a/Cotui_Dominican_Republic_2.jpg')] bg-cover bg-center opacity-35" />
+          <div className="absolute inset-0 -z-20 bg-[url('https://cdn.travelpal.ai/prod/places/kvGzjHqXMun_ygHuQtsDJ7qFuVT/photos/google/webp/f1596ddfe2bf8a74b37a27ec.webp')] bg-cover bg-center opacity-35" />
           <div className="absolute inset-0 -z-10 bg-gradient-to-b from-[#0c211a]/75 via-[#102c22]/45 to-[#0b2119]" />
           <div className="absolute -right-24 top-24 -z-10 h-72 w-72 rounded-full border border-white/10" />
           <div className="absolute -right-12 top-36 -z-10 h-48 w-48 rounded-full border border-white/10" />
 
           <div>
-            <Link href="/" className="inline-flex items-center gap-2 text-xs font-semibold text-white/75 transition hover:text-white">
-              <ArrowLeft size={15} /> Volver al inicio
-            </Link>
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-2 text-[10px] font-bold uppercase tracking-[.18em] text-[#d8f6a5] backdrop-blur-sm"><MapPin size={12}/> Cotuí, República Dominicana</div>
             <div className="mt-12 flex items-center gap-3 sm:mt-16">
               <div className="grid h-12 w-12 place-items-center rounded-2xl bg-[#c7f36b] text-[#102c22] shadow-lg shadow-black/20">
                 <span className="text-xl font-black tracking-tighter">CG</span>
