@@ -5,7 +5,7 @@ import {loadCotuiGoMapLibre} from "@/lib/cotui-go-maplibre";
 type Point={lat:number;lng:number};
 type Props={onPick?:(point:Point)=>void;initial?:Point;theme?:"dark"|"light"};
 const cotui={lat:19.0527,lng:-70.1494};
-const styles={light:"https://tiles.openfreemap.org/styles/bright",dark:"https://tiles.openfreemap.org/styles/dark"};
+const rasterStyle=(dark=false)=>({version:8,sources:{carto:{type:"raster",tiles:[dark?"https://basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}.png":"https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png"],tileSize:256,attribution:"© OpenStreetMap contributors © CARTO"}},layers:[{id:"carto-base",type:"raster",source:"carto",minzoom:0,maxzoom:20}]});
 export default function CotuiGoMap({onPick,initial=cotui,theme="light"}:Props){
  const host=useRef<HTMLDivElement>(null),map=useRef<any>(null),marker=useRef<any>(null),onPickRef=useRef(onPick),themeRef=useRef(theme),fallbackUsed=useRef(false);
  const [ready,setReady]=useState(false),[style,setStyle]=useState<"dark"|"light">(theme),[locating,setLocating]=useState(false),[locationMessage,setLocationMessage]=useState(""),[mapError,setMapError]=useState("");
@@ -16,22 +16,23 @@ export default function CotuiGoMap({onPick,initial=cotui,theme="light"}:Props){
   const init=async()=>{
    try{
     const ml=await loadCotuiGoMapLibre();if(cancelled||!host.current)return;
-    const m=new ml.Map({container:host.current,style:styles[themeRef.current],center:[initial.lng,initial.lat],zoom:15,attributionControl:false,dragRotate:false,touchPitch:false,maxPitch:55});
+    const m=new ml.Map({container:host.current,style:rasterStyle(themeRef.current==="dark"),center:[initial.lng,initial.lat],zoom:15,attributionControl:false,dragRotate:false,touchPitch:false,maxPitch:55});
     m.addControl(new ml.NavigationControl({showCompass:false,visualizePitch:false}),"bottom-right");
     m.addControl(new ml.AttributionControl({compact:true}),"bottom-left");
     const el=document.createElement("div");el.className="cg-vector-pickup-pin";el.innerHTML="<span></span>";
     const mk=new ml.Marker({element:el,draggable:true,anchor:"bottom"}).setLngLat([initial.lng,initial.lat]).addTo(m);
     mk.on("dragend",()=>{const p=mk.getLngLat();onPickRef.current?.({lat:p.lat,lng:p.lng});});
     m.on("click",(e:any)=>{mk.setLngLat(e.lngLat);onPickRef.current?.({lat:e.lngLat.lat,lng:e.lngLat.lng});});
-    m.on("error",()=>{if(!fallbackUsed.current&&!cancelled){fallbackUsed.current=true;setMapError("Cambiando al estilo alternativo del mapa…");try{m.setStyle("https://tiles.openfreemap.org/styles/liberty");}catch{setMapError("No se pudo cargar el mapa. Comprueba tu conexión.");}}});
-    m.on("load",()=>{if(!cancelled){setReady(true);setMapError("");}});
+    m.on("error",()=>{if(!fallbackUsed.current&&!cancelled){fallbackUsed.current=true;setMapError("Cambiando al estilo alternativo del mapa…");try{m.setStyle(rasterStyle(themeRef.current==="dark"));}catch{setMapError("No se pudo cargar el mapa. Comprueba tu conexión.");}}});
+    m.on("load",()=>{if(!cancelled){setReady(true);setMapError("");requestAnimationFrame(()=>m.resize());}});
+    const observer=new ResizeObserver(()=>{if(!cancelled)m.resize();});observer.observe(host.current);
     map.current=m;marker.current=mk;
    }catch(error){if(!cancelled)setMapError(error instanceof Error?error.message:"No se pudo iniciar el mapa.");}
   };
   void init();
   return()=>{cancelled=true;if(map.current){map.current.remove();map.current=null;}marker.current=null;};
  },[]);
- useEffect(()=>{if(!map.current)return;map.current.setStyle(styles[style]);},[style]);
+ useEffect(()=>{if(!map.current)return;map.current.setStyle(rasterStyle(style==="dark"));},[style]);
  useEffect(()=>{if(map.current&&marker.current){map.current.easeTo({center:[initial.lng,initial.lat],zoom:16,duration:450});marker.current.setLngLat([initial.lng,initial.lat]);}},[initial.lat,initial.lng]);
  const locate=async()=>{
   if(!window.isSecureContext){setLocationMessage("Abre Cotuí Go mediante HTTPS para usar el GPS.");return;}
