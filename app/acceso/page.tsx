@@ -21,8 +21,14 @@ export default function AccessPage() {
 
   useEffect(() => {
     let live = true;
+    const params = new URLSearchParams(window.location.search);
+    const requestedMode = params.get("mode");
+    if (requestedMode === "register" || requestedMode === "login") setMode(requestedMode);
+    if (params.get("verified") === "1") setNotice("¡Correo confirmado! Ya puedes iniciar sesión en Cotuí Go.");
     getSupabase().auth.getUser().then(({ data }) => {
       if (live && data.user) router.replace("/");
+    }).catch(() => {
+      if (live) setNotice("No pudimos comprobar tu sesión. Inténtalo nuevamente.");
     });
     return () => { live = false; };
   }, [router]);
@@ -38,7 +44,7 @@ export default function AccessPage() {
         const { data, error } = await s.auth.signUp({
           email: form.email.trim().toLowerCase(),
           password: form.password,
-          options: { data: { full_name: form.name.trim(), phone: form.phone.trim() } }
+          options: { data: { full_name: form.name.trim(), phone: form.phone.trim() }, emailRedirectTo: window.location.origin + "/acceso?verified=1" }
         });
         if (error) throw error;
         if (data.session) {
@@ -58,7 +64,7 @@ export default function AccessPage() {
       } else {
         const { error } = await s.auth.resetPasswordForEmail(
           form.email.trim().toLowerCase(),
-          { redirectTo: window.location.origin + "/acceso" }
+          { redirectTo: window.location.origin + "/acceso?reset=1" }
         );
         if (error) throw error;
         setNotice("Si el correo está registrado, recibirás un enlace para restablecer tu contraseña.");
