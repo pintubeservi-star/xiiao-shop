@@ -14,6 +14,7 @@ export default function CotuiGoMap({onPick,initial=cotui,theme="light"}:Props){
  useEffect(()=>{themeRef.current=theme;setStyle(theme);},[theme]);
  useEffect(()=>{
   let cancelled=false;
+  let fallbackTimer:ReturnType<typeof window.setTimeout>|undefined;
   const init=async()=>{
    try{
     const ml=await loadCotuiGoMapLibre();if(cancelled||!host.current)return;
@@ -26,13 +27,13 @@ export default function CotuiGoMap({onPick,initial=cotui,theme="light"}:Props){
     m.on("click",(e:any)=>{mk.setLngLat(e.lngLat);onPickRef.current?.({lat:e.lngLat.lat,lng:e.lngLat.lng});});
     m.on("error",()=>{if(!fallbackUsed.current&&!cancelled){fallbackUsed.current=true;setMapError("No se pudo cargar una parte del mapa. Comprueba tu conexión.");}});
     m.on("style.load",()=>{if(!cancelled){setReady(true);setMapError("");requestAnimationFrame(()=>m.resize());}});
-    const fallbackTimer=window.setTimeout(()=>{if(!cancelled&&!m.isStyleLoaded()&&!fallbackUsed.current){fallbackUsed.current=true;setMapError("Activando mapa alternativo…");m.setStyle(fallbackStyle as any);}},10000);
+    fallbackTimer=window.setTimeout(()=>{if(!cancelled&&!m.isStyleLoaded()&&!fallbackUsed.current){fallbackUsed.current=true;setMapError("Activando mapa alternativo…");m.setStyle(fallbackStyle as any);}},10000);
     const observer=new ResizeObserver(()=>{if(!cancelled)m.resize();});observer.observe(host.current);
     map.current=m;marker.current=mk;
    }catch(error){if(!cancelled)setMapError(error instanceof Error?error.message:"No se pudo iniciar el mapa.");}
   };
   void init();
-  return()=>{cancelled=true;window.clearTimeout(fallbackTimer);if(map.current){map.current.remove();map.current=null;}marker.current=null;};
+  return()=>{cancelled=true;if(fallbackTimer)window.clearTimeout(fallbackTimer);if(map.current){map.current.remove();map.current=null;}marker.current=null;};
  },[]);
  useEffect(()=>{if(!map.current)return;map.current.setStyle(mapStyleUrl(style==="dark"));},[style]);
  useEffect(()=>{if(map.current&&marker.current){map.current.easeTo({center:[initial.lng,initial.lat],zoom:16,duration:450});marker.current.setLngLat([initial.lng,initial.lat]);}},[initial.lat,initial.lng]);
