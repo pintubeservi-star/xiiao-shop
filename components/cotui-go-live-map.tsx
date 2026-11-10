@@ -13,7 +13,7 @@ export default function CotuiGoLiveMap({driver,pickup,destination,routeToDestina
  const points=[driver,pickup,destination].filter((p):p is Point=>!!p&&p.lat!=null&&p.lng!=null);
  useEffect(()=>{
   let cancelled=false;
-  let fallbackTimer:ReturnType<typeof window.setTimeout>|undefined;
+  let fallbackTimer:any;
   const setup=async()=>{
    try{
     const ml=await loadCotuiGoMapLibre();if(cancelled||!host.current)return;
