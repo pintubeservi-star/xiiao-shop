@@ -5,7 +5,7 @@ import {loadCotuiGoMapLibre} from "@/lib/cotui-go-maplibre";
 type Point={lat:number|null;lng:number|null};
 type Props={driver?:Point|null;pickup?:Point|null;destination?:Point|null;routeToDestination?:boolean;className?:string};
 const center={lat:19.0527,lng:-70.1494};
-const mapStyle="https://tiles.openfreemap.org/styles/bright";
+const mapStyle={version:8,sources:{carto:{type:"raster",tiles:["https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png"],tileSize:256,attribution:"© OpenStreetMap contributors © CARTO"}},layers:[{id:"carto-base",type:"raster",source:"carto",minzoom:0,maxzoom:20}]};
 export default function CotuiGoLiveMap({driver,pickup,destination,routeToDestination=false,className=""}:Props){
  const host=useRef<HTMLDivElement>(null),map=useRef<any>(null),driverMarker=useRef<any>(null),pickupMarker=useRef<any>(null),destMarker=useRef<any>(null),routeCoords=useRef<number[][]>([]),lastRouteAt=useRef(0),requestId=useRef(0);
  const [nextInstruction,setNextInstruction]=useState(""),[ready,setReady]=useState(false),[mapError,setMapError]=useState("");
@@ -18,8 +18,9 @@ export default function CotuiGoLiveMap({driver,pickup,destination,routeToDestina
     const m=new ml.Map({container:host.current,style:mapStyle,center:[center.lng,center.lat],zoom:14,attributionControl:false,dragRotate:false,touchPitch:false});
     m.addControl(new ml.NavigationControl({showCompass:false}),"bottom-right");
     m.addControl(new ml.AttributionControl({compact:true}),"bottom-left");
-    m.on("load",()=>{if(cancelled)return;m.addSource("cg-route",{type:"geojson",data:{type:"Feature",properties:{},geometry:{type:"LineString",coordinates:[]}}});m.addLayer({id:"cg-route-shadow",type:"line",source:"cg-route",layout:{"line-cap":"round","line-join":"round"},paint:{"line-color":"#14251d","line-width":10,"line-opacity":0.18}});m.addLayer({id:"cg-route-line",type:"line",source:"cg-route",layout:{"line-cap":"round","line-join":"round"},paint:{"line-color":"#84cc16","line-width":6,"line-opacity":0.96}});setReady(true);});
-    m.on("error",()=>{if(!cancelled)setMapError("El mapa tuvo un problema de conexión. Reintentando…");});
+    m.on("load",()=>{if(cancelled)return;requestAnimationFrame(()=>m.resize());m.addSource("cg-route",{type:"geojson",data:{type:"Feature",properties:{},geometry:{type:"LineString",coordinates:[]}}});m.addLayer({id:"cg-route-shadow",type:"line",source:"cg-route",layout:{"line-cap":"round","line-join":"round"},paint:{"line-color":"#14251d","line-width":10,"line-opacity":0.18}});m.addLayer({id:"cg-route-line",type:"line",source:"cg-route",layout:{"line-cap":"round","line-join":"round"},paint:{"line-color":"#84cc16","line-width":6,"line-opacity":0.96}});setReady(true);});
+    m.on("error",(event:any)=>{if(!cancelled&&event?.error)setMapError("Problema cargando el mapa. Comprueba tu conexión.");});
+    const observer=new ResizeObserver(()=>{if(!cancelled)m.resize();});observer.observe(host.current);
     map.current=m;
    }catch(error){if(!cancelled)setMapError(error instanceof Error?error.message:"No se pudo iniciar el mapa.");}
   };
