@@ -43,9 +43,9 @@ export default function AdminDriverEditor({driver,onSaved}:{driver:DriverData;on
    if(existingVehicle?.id){const {error}=await s.from("cg_vehicles").update(vehicleData).eq("id",existingVehicle.id);if(error)throw error;}
    else{const {error}=await s.from("cg_vehicles").insert({driver_id:driver.id,...vehicleData});if(error)throw error;}
    if(nationalId.trim()||expiry||bikePath||insurancePath||v.national_id){
-    if(!nationalId.replace(/\\D/g,"")||!expiry||!condition||!bikePath||!insurancePath)throw new Error("Para guardar la verificación completa indica cédula, vencimiento, confirma el estado y adjunta los dos documentos.");
+    if(!nationalId.replace(/\D/g,"")||!expiry||!condition||!bikePath||!insurancePath)throw new Error("Para guardar la verificación completa indica cédula, vencimiento, confirma el estado y adjunta los dos documentos.");
     const {data:{user}}=await s.auth.getUser();
-    const {error}=await s.from("cg_driver_verifications").upsert({driver_id:driver.id,national_id:nationalId.replace(/\\D/g,""),insurance_expires_on:expiry,motorcycle_condition_confirmed:condition,motorcycle_photo_path:bikePath,insurance_document_path:insurancePath,submitted_at:v.submitted_at||new Date().toISOString(),reviewed_at:null,reviewed_by:null,admin_note:note.trim()||null},{onConflict:"driver_id"});
+    const {error}=await s.from("cg_driver_verifications").upsert({driver_id:driver.id,national_id:nationalId.replace(/\D/g,""),insurance_expires_on:expiry,motorcycle_condition_confirmed:condition,motorcycle_photo_path:bikePath,insurance_document_path:insurancePath,submitted_at:v.submitted_at||new Date().toISOString(),reviewed_at:null,reviewed_by:null,admin_note:note.trim()||null},{onConflict:"driver_id"});
     if(error)throw error;
    }
    setMessage("Datos guardados. Revisa los documentos y usa Aprobar solo cuando todo esté verificado.");
