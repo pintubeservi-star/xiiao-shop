@@ -13,6 +13,7 @@ export default function CotuiGoLiveMap({driver,pickup,destination,routeToDestina
  const points=[driver,pickup,destination].filter((p):p is Point=>!!p&&p.lat!=null&&p.lng!=null);
  useEffect(()=>{
   let cancelled=false;
+  let fallbackTimer:ReturnType<typeof window.setTimeout>|undefined;
   const setup=async()=>{
    try{
     const ml=await loadCotuiGoMapLibre();if(cancelled||!host.current)return;
@@ -20,14 +21,14 @@ export default function CotuiGoLiveMap({driver,pickup,destination,routeToDestina
     m.addControl(new ml.NavigationControl({showCompass:false}),"bottom-right");
     m.addControl(new ml.AttributionControl({compact:true}),"bottom-left");
     m.on("style.load",()=>{if(cancelled)return;requestAnimationFrame(()=>m.resize());if(!m.getSource("cg-route")){m.addSource("cg-route",{type:"geojson",data:{type:"Feature",properties:{},geometry:{type:"LineString",coordinates:[]}}});m.addLayer({id:"cg-route-shadow",type:"line",source:"cg-route",layout:{"line-cap":"round","line-join":"round"},paint:{"line-color":"#14251d","line-width":10,"line-opacity":0.18}});m.addLayer({id:"cg-route-line",type:"line",source:"cg-route",layout:{"line-cap":"round","line-join":"round"},paint:{"line-color":"#84cc16","line-width":6,"line-opacity":0.96}});}setReady(true);});
-    const fallbackTimer=window.setTimeout(()=>{if(!cancelled&&!m.isStyleLoaded()){setMapError("Activando mapa alternativo…");m.setStyle(fallbackStyle as any);}},10000);
+    fallbackTimer=window.setTimeout(()=>{if(!cancelled&&!m.isStyleLoaded()){setMapError("Activando mapa alternativo…");m.setStyle(fallbackStyle as any);}},10000);
     m.on("error",(event:any)=>{if(!cancelled&&event?.error)setMapError("Problema cargando el mapa. Comprueba tu conexión.");});
     const observer=new ResizeObserver(()=>{if(!cancelled)m.resize();});observer.observe(host.current);
     map.current=m;
    }catch(error){if(!cancelled)setMapError(error instanceof Error?error.message:"No se pudo iniciar el mapa.");}
   };
   void setup();
-  return()=>{cancelled=true;window.clearTimeout(fallbackTimer);requestId.current++;if(map.current){map.current.remove();map.current=null;}driverMarker.current=null;pickupMarker.current=null;destMarker.current=null;};
+  return()=>{cancelled=true;if(fallbackTimer)window.clearTimeout(fallbackTimer);requestId.current++;if(map.current){map.current.remove();map.current=null;}driverMarker.current=null;pickupMarker.current=null;destMarker.current=null;};
  },[]);
  useEffect(()=>{
   const ml=window.maplibregl,m=map.current;if(!ml||!m||!ready)return;
