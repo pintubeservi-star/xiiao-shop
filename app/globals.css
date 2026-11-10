@@ -66,3 +66,8 @@ html[data-theme="dark"] .cg-safety-dock{color:#edf5ef}
 .cg-dark-input::placeholder{color:#9ca3af}
 .cg-dark-input:focus{border-color:#a3e635;box-shadow:0 0 0 3px #a3e63522}
 @media(min-width:640px){.cg-customer-screen .leaflet-container{border-radius:0}}
+
+/* Cotuí Go · MapLibre vector maps */
+.cg-customer-screen .maplibregl-canvas{outline:none}
+.cg-customer-screen .maplibregl-ctrl-attrib{background:rgba(255,255,255,.82)!important;border-radius:8px 8px 0 0!important}
+.cg-customer-screen .maplibregl-ctrl-group button:focus-visible{outline:2px solid #84cc16;outline-offset:2px}
