@@ -18,8 +18,8 @@ export default function CotuiGoMap({onPick,initial=cotui,theme="light"}:Props){
    if(cancelled||!host.current||!window.L)return;
    const L=window.L;
    const m=L.map(host.current,{zoomControl:false,scrollWheelZoom:true}).setView([initial.lat,initial.lng],15);
-   layers.current.street=L.tileLayer("https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png",{maxZoom:19,attribution:'&copy; OpenStreetMap contributors, HOT'});
-   layers.current.light=L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:'&copy; OpenStreetMap contributors'});
+   layers.current.street=L.tileLayer("https://basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}.png?key=cb1_564c_1_cbce9929de4935e1d11868dd",{maxZoom:20,attribution:'&copy; OpenStreetMap contributors &copy; CARTO'});
+   layers.current.light=L.tileLayer("https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png?key=cb1_564c_1_cbce9929de4935e1d11868dd",{maxZoom:20,attribution:'&copy; OpenStreetMap contributors &copy; CARTO'});
    layers.current.dark=L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",{maxZoom:20,attribution:'&copy; OpenStreetMap &copy; CARTO'});
    layers.current[theme].addTo(m);
    L.control.zoom({position:"bottomright"}).addTo(m);
