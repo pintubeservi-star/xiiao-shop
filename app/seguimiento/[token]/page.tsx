@@ -83,6 +83,7 @@ export default function TrackingPage() {
   const completed = trip ? ["completed", "delivered"].includes(trip.status) : false;
   async function cancelService() {
     if (!trip || !canCancel || cancelBusy) return;
+    if (!window.confirm("¿Seguro que deseas cancelar este servicio?")) return;
     setCancelBusy(true); setCancelNotice("");
     try {
       const { data, error } = await getSupabase().rpc("cg_customer_cancel_service", { p_token: token, p_reason: cancelReason });
