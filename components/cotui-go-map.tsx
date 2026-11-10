@@ -5,7 +5,7 @@ import {loadCotuiGoMapLibre} from "@/lib/cotui-go-maplibre";
 type Point={lat:number;lng:number};
 type Props={onPick?:(point:Point)=>void;initial?:Point;theme?:"dark"|"light"};
 const cotui={lat:19.0527,lng:-70.1494};
-const rasterStyle=(dark=false)=>({version:8,sources:{carto:{type:"raster",tiles:[dark?"https://basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}.png?key=cb1_564_1_cbce9929de4935e1d11868dd":"https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png?key=cb1_564_1_cbce9929de4935e1d11868dd"],tileSize:256,attribution:"© OpenStreetMap contributors © CARTO"}},layers:[{id:"carto-base",type:"raster",source:"carto",minzoom:0,maxzoom:20}]});
+const mapStyleUrl=(dark=false)=>dark?"https://tiles.openfreemap.org/styles/dark":"https://tiles.openfreemap.org/styles/positron";
 export default function CotuiGoMap({onPick,initial=cotui,theme="light"}:Props){
  const host=useRef<HTMLDivElement>(null),map=useRef<any>(null),marker=useRef<any>(null),onPickRef=useRef(onPick),themeRef=useRef(theme),fallbackUsed=useRef(false);
  const [ready,setReady]=useState(false),[style,setStyle]=useState<"dark"|"light">(theme),[locating,setLocating]=useState(false),[locationMessage,setLocationMessage]=useState(""),[mapError,setMapError]=useState("");
@@ -16,7 +16,7 @@ export default function CotuiGoMap({onPick,initial=cotui,theme="light"}:Props){
   const init=async()=>{
    try{
     const ml=await loadCotuiGoMapLibre();if(cancelled||!host.current)return;
-    const m=new ml.Map({container:host.current,style:rasterStyle(themeRef.current==="dark"),center:[initial.lng,initial.lat],zoom:15,attributionControl:false,dragRotate:false,touchPitch:false,maxPitch:55});
+    const m=new ml.Map({container:host.current,style:mapStyleUrl(themeRef.current==="dark"),center:[initial.lng,initial.lat],zoom:15,attributionControl:false,dragRotate:false,touchPitch:false,maxPitch:55});
     m.addControl(new ml.NavigationControl({showCompass:false,visualizePitch:false}),"bottom-right");
     m.addControl(new ml.AttributionControl({compact:true}),"bottom-left");
     const el=document.createElement("div");el.className="cg-vector-pickup-pin";el.innerHTML="<span></span>";
@@ -32,7 +32,7 @@ export default function CotuiGoMap({onPick,initial=cotui,theme="light"}:Props){
   void init();
   return()=>{cancelled=true;if(map.current){map.current.remove();map.current=null;}marker.current=null;};
  },[]);
- useEffect(()=>{if(!map.current)return;map.current.setStyle(rasterStyle(style==="dark"));},[style]);
+ useEffect(()=>{if(!map.current)return;map.current.setStyle(mapStyleUrl(style==="dark"));},[style]);
  useEffect(()=>{if(map.current&&marker.current){map.current.easeTo({center:[initial.lng,initial.lat],zoom:16,duration:450});marker.current.setLngLat([initial.lng,initial.lat]);}},[initial.lat,initial.lng]);
  const locate=async()=>{
   if(!window.isSecureContext){setLocationMessage("Abre Cotuí Go mediante HTTPS para usar el GPS.");return;}
@@ -56,7 +56,7 @@ export default function CotuiGoMap({onPick,initial=cotui,theme="light"}:Props){
    <button type="button" onClick={locate} disabled={locating} aria-label="Mi ubicación" title="Mi ubicación" className="grid h-11 w-11 place-items-center rounded-2xl border border-white bg-white text-slate-700 shadow-lg disabled:opacity-50"><LocateFixed size={18}/></button>
   </div>
   <div className="absolute left-4 right-4 top-[150px] z-[400] flex flex-col items-start gap-2">
-   <div className="rounded-xl bg-[#14251d]/90 px-3 py-2 text-[10px] font-semibold text-white shadow-lg"><MapPin size={12} className="mr-1 inline text-lime-300"/>{ready?"Mapa vectorial listo":"Cargando mapa…"} · OpenFreeMap</div>
+   <div className="rounded-xl bg-[#14251d]/90 px-3 py-2 text-[10px] font-semibold text-white shadow-lg"><MapPin size={12} className="mr-1 inline text-lime-300"/>{ready?"Mapa listo":"Cargando mapa…"} · OpenFreeMap</div>
    {(locationMessage||mapError)&&<div role="status" className="max-w-full rounded-xl border border-white/80 bg-white px-3 py-2 text-[11px] font-semibold leading-4 text-slate-800 shadow-lg"><AlertCircle size={13} className="mr-1 inline"/>{locationMessage||mapError}</div>}
   </div>
  </div>;
