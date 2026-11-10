@@ -46,7 +46,7 @@ export default function CotuiGoLiveMap({driver,pickup,destination,routeToDestina
      m.getSource("cg-route")?.setData({type:"Feature",properties:{},geometry:result.geometry});
      const step=result.legs?.flatMap((leg:any)=>leg.steps||[]).find((x:any)=>x.distance>15);
      if(step){const type=step.maneuver?.type,mod=step.maneuver?.modifier,street=step.name?" en "+step.name:"";const action=type==="arrive"?"Llegada próxima":type==="depart"?"Continúa":type==="roundabout"?"Entra a la rotonda":mod==="left"?"Gira a la izquierda":mod==="right"?"Gira a la derecha":mod==="slight left"?"Mantente a la izquierda":mod==="slight right"?"Mantente a la derecha":mod==="uturn"?"Haz un retorno":"Continúa recto";setNextInstruction(action+street);}
-    }).catch(()=>{if(id!==requestId.current||!map.current)return;const coordsLine=routePoints.map(p=>[p.lng,p.lat]);routeCoords.current=coordsLine;m.getSource("cg-route")?.setData({type:"Feature",properties:{},geometry:{type:"LineString",coordinates:coordsLine}});setNextInstruction("Sigue la ruta marcada");});
+    }).catch(()=>{if(id!==requestId.current||!map.current)return;const coordsLine:number[][]=routePoints.map(p=>[Number(p.lng),Number(p.lat)]);routeCoords.current=coordsLine;m.getSource("cg-route")?.setData({type:"Feature",properties:{},geometry:{type:"LineString",coordinates:coordsLine}});setNextInstruction("Sigue la ruta marcada");});
   }
   if(points.length>1){const bounds=new ml.LngLatBounds();points.forEach(p=>bounds.extend([p.lng!,p.lat!]));m.fitBounds(bounds,{padding:55,maxZoom:16,duration:450});}
   else if(points.length===1)m.easeTo({center:[points[0].lng,points[0].lat],zoom:15,duration:400});
