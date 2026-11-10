@@ -14,7 +14,7 @@ export default function CotuiGoMap({onPick,initial=cotui,theme="light"}:Props){
  useEffect(()=>{themeRef.current=theme;setStyle(theme);},[theme]);
  useEffect(()=>{
   let cancelled=false;
-  let fallbackTimer:ReturnType<typeof window.setTimeout>|undefined;
+  let fallbackTimer:any;
   const init=async()=>{
    try{
     const ml=await loadCotuiGoMapLibre();if(cancelled||!host.current)return;
