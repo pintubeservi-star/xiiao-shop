@@ -18,9 +18,9 @@ export default function CotuiGoMap({onPick,initial=cotui,theme="light"}:Props){
    if(cancelled||!host.current||!window.L)return;
    const L=window.L;
    const m=L.map(host.current,{zoomControl:false,scrollWheelZoom:true}).setView([initial.lat,initial.lng],15);
-   layers.current.street=L.tileLayer("https://basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}.png",{maxZoom:20,attribution:'&copy; OpenStreetMap contributors &copy; CARTO'});
-   layers.current.light=L.tileLayer("https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png",{maxZoom:20,attribution:'&copy; OpenStreetMap contributors &copy; CARTO'});
-   layers.current.dark=L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",{maxZoom:20,attribution:'&copy; OpenStreetMap &copy; CARTO'});
+   layers.current.street=L.tileLayer("https://basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}.png?key=cb1_564c_1_cbce9929de4935e1d11868dd",{maxZoom:20,attribution:'&copy; OpenStreetMap contributors &copy; CARTO'});
+   layers.current.light=L.tileLayer("https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png?key=cb1_564c_1_cbce9929de4935e1d11868dd",{maxZoom:20,attribution:'&copy; OpenStreetMap contributors &copy; CARTO'});
+   layers.current.dark=L.tileLayer("https://basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}.png?key=cb1_564c_1_cbce9929de4935e1d11868dd",{maxZoom:20,attribution:'&copy; OpenStreetMap &copy; CARTO'});
    layers.current[theme].addTo(m);
    L.control.zoom({position:"bottomright"}).addTo(m);
    const pin=L.divIcon({className:"cg-map-pin-wrap",html:'<div class="cg-map-pin"><span></span></div>',iconSize:[34,42],iconAnchor:[17,38]});
