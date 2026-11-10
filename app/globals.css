@@ -53,3 +53,16 @@ html[data-theme="dark"] .border-slate-100,html[data-theme="dark"] .border-slate-
 html[data-theme="dark"] input,html[data-theme="dark"] textarea,html[data-theme="dark"] select{background-color:#17271f!important;color:#edf5ef!important;border-color:#3a5144!important}
 html[data-theme="dark"] .cg-install-card{background:#14221b;color:#edf5ef}
 html[data-theme="dark"] .cg-safety-dock{color:#edf5ef}
+
+/* Cotuí Go customer: full-screen map + ride-booking bottom sheet */
+.cg-customer-screen .leaflet-container{background:#202020!important;font-family:Arial,Helvetica,sans-serif}
+.cg-customer-screen .leaflet-control-attribution{font-size:8px!important;opacity:.55}
+.cg-customer-sheet{scrollbar-width:thin;scrollbar-color:#555 transparent}
+.cg-service-choice{display:flex;min-width:86px;flex-direction:column;align-items:center;justify-content:center;gap:7px;border:1px solid transparent;border-radius:15px;background:transparent;padding:10px 15px;color:#e5e5e5;font-size:12px;font-weight:800;white-space:nowrap}
+.cg-service-choice svg{color:#d1d5db}
+.cg-service-active{background:#3730a3;border-color:#5145cd;color:#fff;box-shadow:0 5px 18px #0005}
+.cg-service-active svg{color:#fff}
+.cg-dark-input{display:block;width:100%;border:1px solid #444;border-radius:11px;background:#303030;padding:11px 12px;color:#fff;font-size:13px;outline:none}
+.cg-dark-input::placeholder{color:#9ca3af}
+.cg-dark-input:focus{border-color:#a3e635;box-shadow:0 0 0 3px #a3e63522}
+@media(min-width:640px){.cg-customer-screen .leaflet-container{border-radius:0}}
