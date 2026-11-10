@@ -21,7 +21,9 @@ type Trip = {
   driver_lat: number | null;
   driver_lng: number | null;
   last_location_at: string | null;
-  tracking_code?: string;\n  cancelled_by_role?: string | null;\n  cancellation_reason?: string | null;
+  tracking_code?: string;
+  cancelled_by_role?: string | null;
+  cancellation_reason?: string | null;
 };
 
 const labels: Record<string, string> = {
@@ -41,7 +43,10 @@ export default function TrackingPage() {
   const token = String(params.token || "");
   const [trip, setTrip] = useState<Trip | null>(null);
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(true);\n  const [cancelBusy, setCancelBusy] = useState(false);\n  const [cancelReason, setCancelReason] = useState("Cambio de planes");\n  const [cancelNotice, setCancelNotice] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [cancelBusy, setCancelBusy] = useState(false);
+  const [cancelReason, setCancelReason] = useState("Cambio de planes");
+  const [cancelNotice, setCancelNotice] = useState("");
 
   const load = useCallback(async () => {
     const { data, error: requestError } = await getSupabase().rpc("cg_get_public_trip", { p_token: token });
@@ -72,9 +77,24 @@ export default function TrackingPage() {
     return () => { mounted = false; window.clearInterval(timer); window.removeEventListener("focus", onFocus); document.removeEventListener("visibilitychange", onFocus); };
   }, [token]);
 
-  const active = trip ? !["completed", "delivered", "cancelled"].includes(trip.status) : false;\n  const cancelled = trip?.status === "cancelled";\n  const canCancel = trip ? (trip.kind === "ride" ? ["requested","accepted","driver_arriving"].includes(trip.status) : ["requested","accepted"].includes(trip.status)) : false;
+  const active = trip ? !["completed", "delivered", "cancelled"].includes(trip.status) : false;
+  const cancelled = trip?.status === "cancelled";
+  const canCancel = trip ? (trip.kind === "ride" ? ["requested","accepted","driver_arriving"].includes(trip.status) : ["requested","accepted"].includes(trip.status)) : false;
   const completed = trip ? ["completed", "delivered"].includes(trip.status) : false;
-  async function cancelService() {\n    if (!trip || !canCancel || cancelBusy) return;\n    setCancelBusy(true); setCancelNotice("");\n    try {\n      const { data, error } = await getSupabase().rpc("cg_customer_cancel_service", { p_token: token, p_reason: cancelReason });\n      if (error) throw error;\n      if (!data || data.status !== "cancelled") throw new Error("No se pudo confirmar la cancelación. Actualiza el seguimiento.");\n      setTrip(current => current ? ({ ...current, status: "cancelled", cancellation_reason: cancelReason, cancelled_by_role: "customer" }) : current);\n      setCancelNotice("Servicio cancelado correctamente.");\n    } catch (e) { setCancelNotice(e instanceof Error ? e.message : "No se pudo cancelar el servicio."); }\n    finally { setCancelBusy(false); }\n  }\n\n  const navUrl = trip && trip.driver_lat != null && trip.driver_lng != null
+  async function cancelService() {
+    if (!trip || !canCancel || cancelBusy) return;
+    setCancelBusy(true); setCancelNotice("");
+    try {
+      const { data, error } = await getSupabase().rpc("cg_customer_cancel_service", { p_token: token, p_reason: cancelReason });
+      if (error) throw error;
+      if (!data || data.status !== "cancelled") throw new Error("No se pudo confirmar la cancelación. Actualiza el seguimiento.");
+      setTrip(current => current ? ({ ...current, status: "cancelled", cancellation_reason: cancelReason, cancelled_by_role: "customer" }) : current);
+      setCancelNotice("Servicio cancelado correctamente.");
+    } catch (e) { setCancelNotice(e instanceof Error ? e.message : "No se pudo cancelar el servicio."); }
+    finally { setCancelBusy(false); }
+  }
+
+  const navUrl = trip && trip.driver_lat != null && trip.driver_lng != null
     ? `https://www.google.com/maps/dir/?api=1&origin=${trip.driver_lat},${trip.driver_lng}&destination=${encodeURIComponent(trip.destination_address || trip.pickup_address)}&travelmode=driving`
     : null;
 
@@ -117,7 +137,8 @@ export default function TrackingPage() {
                 {active ? "La ubicación del conductor se actualiza automáticamente mientras el servicio está activo." : "Este servicio ya finalizó."}
               </p>
             </section>}
-            {cancelled && <section className="mb-4 rounded-3xl border border-rose-200 bg-white p-7 text-center shadow-sm"><div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-rose-100 text-rose-700"><ShieldCheck size={28}/></div><h2 className="mt-4 text-2xl font-black text-slate-900">Servicio cancelado</h2><p className="mt-2 text-sm text-slate-500">{trip.cancellation_reason || "La solicitud fue cancelada."}</p><Link href="/" className="mt-5 inline-flex rounded-xl bg-[#14251d] px-5 py-3 text-xs font-bold text-white">Volver a Cotuí Go</Link></section>}\n            {completed && <section className="mb-4 rounded-3xl border border-lime-200 bg-white p-7 text-center shadow-sm"><div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-lime-100 text-lime-800"><ShieldCheck size={28}/></div><h2 className="mt-4 text-2xl font-black text-[#14251d]">{trip.kind==="ride"?"¡Gracias por viajar con nosotros!":"¡Gracias por confiar tu envío a Cotuí Go!"}</h2><p className="mt-2 text-sm text-slate-500">Cotuí Go agradece tu preferencia. Esperamos acompañarte nuevamente.</p></section>}
+            {cancelled && <section className="mb-4 rounded-3xl border border-rose-200 bg-white p-7 text-center shadow-sm"><div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-rose-100 text-rose-700"><ShieldCheck size={28}/></div><h2 className="mt-4 text-2xl font-black text-slate-900">Servicio cancelado</h2><p className="mt-2 text-sm text-slate-500">{trip.cancellation_reason || "La solicitud fue cancelada."}</p><Link href="/" className="mt-5 inline-flex rounded-xl bg-[#14251d] px-5 py-3 text-xs font-bold text-white">Volver a Cotuí Go</Link></section>}
+            {completed && <section className="mb-4 rounded-3xl border border-lime-200 bg-white p-7 text-center shadow-sm"><div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-lime-100 text-lime-800"><ShieldCheck size={28}/></div><h2 className="mt-4 text-2xl font-black text-[#14251d]">{trip.kind==="ride"?"¡Gracias por viajar con nosotros!":"¡Gracias por confiar tu envío a Cotuí Go!"}</h2><p className="mt-2 text-sm text-slate-500">Cotuí Go agradece tu preferencia. Esperamos acompañarte nuevamente.</p></section>}
             {!completed && !cancelled && <div className="relative -mx-3 -mt-2 h-[62vh] min-h-[430px] overflow-hidden bg-[#e9eee8] sm:mx-0 sm:rounded-[30px] sm:border sm:border-white sm:shadow-lg">
               <CotuiGoLiveMap
                 driver={active ? { lat: trip.driver_lat, lng: trip.driver_lng } : null}
