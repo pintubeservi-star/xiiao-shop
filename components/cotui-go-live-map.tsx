@@ -5,7 +5,7 @@ import {loadCotuiGoMapLibre} from "@/lib/cotui-go-maplibre";
 type Point={lat:number|null;lng:number|null};
 type Props={driver?:Point|null;pickup?:Point|null;destination?:Point|null;routeToDestination?:boolean;className?:string};
 const center={lat:19.0527,lng:-70.1494};
-const mapStyle={version:8,sources:{carto:{type:"raster",tiles:["https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png?key=cb1_564_1_cbce9929de4935e1d11868dd"],tileSize:256,attribution:"© OpenStreetMap contributors © CARTO"}},layers:[{id:"carto-base",type:"raster",source:"carto",minzoom:0,maxzoom:20}]};
+const mapStyle="https://tiles.openfreemap.org/styles/positron";
 export default function CotuiGoLiveMap({driver,pickup,destination,routeToDestination=false,className=""}:Props){
  const host=useRef<HTMLDivElement>(null),map=useRef<any>(null),driverMarker=useRef<any>(null),pickupMarker=useRef<any>(null),destMarker=useRef<any>(null),routeCoords=useRef<number[][]>([]),lastRouteAt=useRef(0),requestId=useRef(0);
  const [nextInstruction,setNextInstruction]=useState(""),[ready,setReady]=useState(false),[mapError,setMapError]=useState("");
