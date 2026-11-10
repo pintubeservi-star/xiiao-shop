@@ -23,10 +23,15 @@ export function loadCotuiGoLeaflet(): Promise<any> {
 
     const finish = () => {
       if (window.L) resolve(window.L);
-      else reject(new Error("Leaflet se cargó, pero no quedó disponible."));
+      else {
+        window.__cotuiGoLeafletPromise = undefined;
+        document.querySelector('script[data-cg-leaflet-js]')?.remove();
+        reject(new Error("Leaflet se cargó, pero no quedó disponible. Actualiza la página e inténtalo de nuevo."));
+      }
     };
     const fail = () => {
       window.__cotuiGoLeafletPromise = undefined;
+      document.querySelector('script[data-cg-leaflet-js]')?.remove();
       reject(new Error("No se pudo cargar el motor del mapa. Comprueba tu conexión e inténtalo de nuevo."));
     };
 
