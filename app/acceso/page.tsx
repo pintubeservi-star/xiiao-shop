@@ -63,7 +63,7 @@ export default function AccessPage() {
       <span className="flex items-center gap-3"><span className="grid h-11 w-11 place-items-center rounded-xl bg-[#10291e]/10"><MapPin size={23}/></span><span><span className="block text-[14px] font-black">Quiero un viaje</span><span className="mt-1 block text-[10px] text-[#25452f]/75">Pedir moto o enviar paquete</span></span></span><ArrowRight size={19}/>
      </button>
     </div>
-    <div className="mt-7 flex flex-wrap gap-x-8 gap-y-3 border-t border-white/15 pt-5 text-[10px] font-bold text-white/65"><span className="flex items-center gap-2"><Bike size={15} className="text-[#c7f36b]"/> Viajes en moto</span><span className="flex items-center gap-2"><ArrowRight size={14} className="text-[#c7f36b}"/> Entrega de paquetes</span><span className="flex items-center gap-2"><ShieldCheck size={14} className="text-[#c7f36b}"/> Fácil, local y seguro</span></div>
+    <div className="mt-7 flex flex-wrap gap-x-8 gap-y-3 border-t border-white/15 pt-5 text-[10px] font-bold text-white/65"><span className="flex items-center gap-2"><Bike size={15} className="text-[#c7f36b]"/> Viajes en moto</span><span className="flex items-center gap-2"><ArrowRight size={14} className="text-[#c7f36b]"/> Entrega de paquetes</span><span className="flex items-center gap-2"><ShieldCheck size={14} className="text-[#c7f36b]"/> Fácil, local y seguro</span></div>
    </section>
    {showAuth&&<section id="acceso" className="cg-cover-auth w-full self-center">
     <div className="mx-auto w-full max-w-[410px] rounded-[28px] border border-white/65 bg-[#fbfdf9]/[.97] p-5 text-[#172820] shadow-[0_30px_100px_rgba(0,0,0,.35)] backdrop-blur-2xl sm:p-7">
