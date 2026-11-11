@@ -3,14 +3,16 @@ import {useEffect,useRef,useState} from "react";
 import {LocateFixed,Layers,MapPin,AlertCircle} from "lucide-react";
 import {loadCotuiGoMapLibre,COTUI_GO_MAP_STYLES,COTUI_GO_CENTER} from "@/lib/cotui-go-maplibre";
 type Point={lat:number;lng:number};
-type Props={onPick?:(point:Point)=>void;initial?:Point;secondary?:Point|null;target?:"pickup"|"destination";theme?:"dark"|"light"};
+type Props={onPick?:(point:Point)=>void;initial?:Point|null;secondary?:Point|null;target?:"pickup"|"destination";theme?:"dark"|"light"};
 function pinElement(kind:"pickup"|"destination"){
  const el=document.createElement("div");
  el.className="cg-map-pin "+(kind==="pickup"?"cg-map-pin-pickup":"cg-map-pin-destination");
  el.innerHTML=kind==="pickup"?"<span>●</span>":"<span>◆</span>";
  return el;
 }
-export default function CotuiGoMap({onPick,initial=COTUI_GO_CENTER,secondary=null,target="pickup",theme="light"}:Props){
+export default function CotuiGoMap({onPick,initial,secondary=null,target="pickup",theme="light"}:Props){
+ const safeInitial:Point = initial && Number.isFinite(initial.lat) && Number.isFinite(initial.lng) ? initial : COTUI_GO_CENTER;
+ const safeSecondary:Point|null = secondary && Number.isFinite(secondary.lat) && Number.isFinite(secondary.lng) ? secondary : null;
  const host=useRef<HTMLDivElement>(null),map=useRef<any>(null),pickupMarker=useRef<any>(null),destinationMarker=useRef<any>(null),onPickRef=useRef(onPick),targetRef=useRef(target),maplibre=useRef<any>(null);
  const [ready,setReady]=useState(false),[style,setStyle]=useState<"dark"|"light">(theme),[locating,setLocating]=useState(false),[locationMessage,setLocationMessage]=useState(""),[mapError,setMapError]=useState("");
  useEffect(()=>{onPickRef.current=onPick;},[onPick]);
@@ -20,7 +22,7 @@ export default function CotuiGoMap({onPick,initial=COTUI_GO_CENTER,secondary=nul
   const init=async()=>{
    try{
     const ml=await loadCotuiGoMapLibre();if(cancelled||!host.current)return;maplibre.current=ml;
-    const m=new ml.Map({container:host.current,style:COTUI_GO_MAP_STYLES[style],center:[initial.lng,initial.lat],zoom:15,pitch:48,bearing:0,attributionControl:false, maxPitch:65});
+    const m=new ml.Map({container:host.current,style:COTUI_GO_MAP_STYLES[style],center:[safeInitial.lng,safeInitial.lat],zoom:15,pitch:48,bearing:0,attributionControl:false, maxPitch:65});
     m.addControl(new ml.NavigationControl({visualizePitch:true}),"bottom-right");
     m.addControl(new ml.AttributionControl({compact:true}),"bottom-left");
     m.on("load",()=>{
