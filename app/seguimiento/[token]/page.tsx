@@ -81,11 +81,13 @@ export default function TrackingPage() {
 
   const active = trip ? !["completed", "delivered", "cancelled"].includes(trip.status) : false;
   const cancelled = trip?.status === "cancelled";
-  const canCancel = trip ? (trip.kind === "ride" ? ["requested","accepted","driver_arriving"].includes(trip.status) : ["requested","accepted","courier_arriving"].includes(trip.status)) : false;
+  const canCancel = trip ? (trip.kind === "ride" ? ["requested","accepted","driver_arriving","in_progress"].includes(trip.status) : ["requested","accepted","courier_arriving"].includes(trip.status)) : false;
   const completed = trip ? ["completed", "delivered"].includes(trip.status) : false;
   async function cancelService() {
     if (!trip || !canCancel || cancelBusy) return;
-    if (!window.confirm("¿Seguro que deseas cancelar este servicio?")) return;
+    const startedRide = trip.kind === "ride" && trip.status === "in_progress";
+    const confirmation = startedRide ? "El viaje ya comenzó. Si lo cancelas ahora, se registrarán RD$25 para tu próximo viaje y aparecerán en tu perfil. ¿Deseas continuar?" : "¿Seguro que deseas cancelar este servicio?";
+    if (!window.confirm(confirmation)) return;
     setCancelBusy(true); setCancelNotice("");
     try {
       const { data, error } = await getSupabase().rpc("cg_customer_cancel_service", { p_token: token, p_reason: cancelReason });
@@ -93,7 +95,7 @@ export default function TrackingPage() {
       if (!data || data.status !== "cancelled") throw new Error("No se pudo confirmar la cancelación. Actualiza el seguimiento.");
       setTrip(current => current ? ({ ...current, status: "cancelled", cancellation_reason: cancelReason, cancelled_by_role: "customer" }) : current);
       const fee=Number(data.cancellation_fee_dop||0);setCancellationFeeNotice(fee);
-      setCancelNotice(fee>0?"Servicio cancelado. Se registró RD$25 para tu próximo viaje; aparecerá en tu perfil y se pagará en efectivo.":"Servicio cancelado correctamente.");
+      setCancelNotice(fee>0?"Servicio cancelado. Se registraron RD$25 para tu próximo viaje. El cargo aparecerá en tu perfil y se pagará en efectivo junto con tu próximo servicio.":"Servicio cancelado correctamente.");
     } catch (e) { setCancelNotice(e instanceof Error ? e.message : "No se pudo cancelar el servicio."); }
     finally { setCancelBusy(false); }
   }
