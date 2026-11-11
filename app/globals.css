@@ -86,3 +86,17 @@ html[data-theme="dark"] .cg-safety-dock{color:#edf5ef}
 .cg-login-art .cg-art-cloud{animation:cg-cloud-drift 5s ease-in-out infinite}
 @media(max-height:740px){.cg-login-screen>div{min-height:calc(100svh - 16px)}.cg-login-screen section{padding-top:10px;padding-bottom:10px}.cg-login-art{height:124px}.cg-login-screen form{margin-top:10px}.cg-login-screen .mt-4{margin-top:10px}}
 @media(prefers-reduced-motion:reduce){.cg-login-art svg g:nth-of-type(2),.cg-login-art .cg-art-cloud{animation:none}}
+
+/* Cotuí Go cinematic sign-in intro */
+@keyframes cg-bike-cruise{0%,100%{transform:translate3d(-5px,2px,0)}50%{transform:translate3d(13px,-2px,0)}}
+@keyframes cg-pin-pulse{0%,100%{transform:translateY(0) scale(1);filter:drop-shadow(0 0 0 rgba(201,247,125,0))}50%{transform:translateY(-7px) scale(1.06);filter:drop-shadow(0 8px 12px rgba(201,247,125,.35))}}
+@keyframes cg-route-flow{to{stroke-dashoffset:-60}}
+@keyframes cg-scene-glow{0%,100%{opacity:.45;transform:scale(.95)}50%{opacity:.9;transform:scale(1.12)}}
+.cg-immersive-scene{isolation:isolate;box-shadow:0 18px 45px rgba(8,35,26,.24)}
+.cg-moving-bike{animation:cg-bike-cruise 4.5s ease-in-out infinite;transform-origin:center}
+.cg-floating-pin{animation:cg-pin-pulse 2.8s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+.cg-route-line{animation:cg-route-flow 5s linear infinite}
+.cg-scene-glow{animation:cg-scene-glow 6s ease-in-out infinite}
+.cg-stars{mask-image:linear-gradient(to bottom,black,transparent 90%)}
+@media(max-height:760px){.cg-immersive-scene{height:190px}.cg-login-screen .cg-login-art{height:190px}}
+@media(prefers-reduced-motion:reduce){.cg-moving-bike,.cg-floating-pin,.cg-route-line,.cg-scene-glow{animation:none}}
