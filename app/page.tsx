@@ -92,9 +92,10 @@ export default function Home(){
   <div className="cg-customer-sheet absolute inset-x-0 bottom-0 z-[650] max-h-[57svh] overflow-y-auto rounded-t-[30px] border-t border-white/15 bg-[#191919]/95 px-4 pb-[max(18px,env(safe-area-inset-bottom))] pt-3 shadow-[0_-12px_50px_rgba(0,0,0,.42)] backdrop-blur-xl sm:left-1/2 sm:max-h-[62svh] sm:max-w-3xl sm:-translate-x-1/2 sm:rounded-t-[30px]">
    <div className="mx-auto mb-3 h-1.5 w-14 rounded-full bg-white/25"/>
    <div className="mb-3"><p className="text-base font-black tracking-tight text-white">¿Qué necesitas hoy?</p><p className="mt-1 text-xs font-medium text-white/55">El mapa queda visible mientras organizas tu viaje.</p></div>
+   {trackingUrl&&<a href={trackingUrl} className="mb-3 flex items-center justify-between gap-3 rounded-2xl border border-lime-300/30 bg-lime-300/10 px-4 py-3 text-left text-sm font-black text-lime-100"><span>Tu servicio está guardado · Ver seguimiento</span><ChevronRight size={18}/></a>}
    <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
-    <button type="button" onClick={()=>{setService("moto");setQuote(null);setMessage("");setTrackingUrl("");setPickupPin("");}} className={"cg-service-choice "+(service==="moto"?"cg-service-active":"")}><Bike size={23}/><span className="text-base">Pedir una moto</span></button>
-    <button type="button" onClick={()=>{setService("package");setQuote(null);setMessage("");setTrackingUrl("");setPickupPin("");}} className={"cg-service-choice "+(service==="package"?"cg-service-active":"")}><Package size={23}/><span className="text-base">Enviar un paquete</span></button>
+    <button type="button" onClick={()=>{setService("moto");setQuote(null);setPickupPin("");}} className={"cg-service-choice "+(service==="moto"?"cg-service-active":"")}><Bike size={23}/><span className="text-base">Pedir una moto</span></button>
+    <button type="button" onClick={()=>{setService("package");setQuote(null);setPickupPin("");}} className={"cg-service-choice "+(service==="package"?"cg-service-active":"")}><Package size={23}/><span className="text-base">Enviar un paquete</span></button>
    </div>
    <div className="mb-3 flex items-center gap-3 rounded-2xl bg-[#303030] px-4 py-4 ring-1 ring-white/5">
     <Search size={24} className="shrink-0 text-white"/>
