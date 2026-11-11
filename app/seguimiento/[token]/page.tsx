@@ -47,6 +47,7 @@ export default function TrackingPage() {
   const [cancelBusy, setCancelBusy] = useState(false);
   const [cancelReason, setCancelReason] = useState("Cambio de planes");
   const [cancelNotice, setCancelNotice] = useState("");
+  const [cancellationFeeNotice, setCancellationFeeNotice] = useState(0);
 
   const load = useCallback(async () => {
     const { data, error: requestError } = await getSupabase().rpc("cg_get_public_trip", { p_token: token });
@@ -90,7 +91,8 @@ export default function TrackingPage() {
       if (error) throw error;
       if (!data || data.status !== "cancelled") throw new Error("No se pudo confirmar la cancelación. Actualiza el seguimiento.");
       setTrip(current => current ? ({ ...current, status: "cancelled", cancellation_reason: cancelReason, cancelled_by_role: "customer" }) : current);
-      setCancelNotice("Servicio cancelado correctamente.");
+      const fee=Number(data.cancellation_fee_dop||0);setCancellationFeeNotice(fee);
+      setCancelNotice(fee>0?"Servicio cancelado. Se registró RD$25 para tu próximo viaje; aparecerá en tu perfil y se pagará en efectivo.":"Servicio cancelado correctamente.");
     } catch (e) { setCancelNotice(e instanceof Error ? e.message : "No se pudo cancelar el servicio."); }
     finally { setCancelBusy(false); }
   }
@@ -138,7 +140,7 @@ export default function TrackingPage() {
                 {active ? "La ubicación del conductor se actualiza automáticamente mientras el servicio está activo." : "Este servicio ya finalizó."}
               </p>
             </section>}
-            {cancelled && <section className="mb-4 rounded-3xl border border-rose-200 bg-white p-7 text-center shadow-sm"><div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-rose-100 text-rose-700"><ShieldCheck size={28}/></div><h2 className="mt-4 text-2xl font-black text-slate-900">Servicio cancelado</h2><p className="mt-2 text-sm text-slate-500">{trip.cancellation_reason || "La solicitud fue cancelada."}</p><Link href="/" className="mt-5 inline-flex rounded-xl bg-[#14251d] px-5 py-3 text-xs font-bold text-white">Volver a Cotuí Go</Link></section>}
+            {cancelled && <section className="mb-4 rounded-3xl border border-rose-200 bg-white p-7 text-center shadow-sm"><div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-rose-100 text-rose-700"><ShieldCheck size={28}/></div><h2 className="mt-4 text-2xl font-black text-slate-900">Servicio cancelado</h2><p className="mt-2 text-sm text-slate-500">{trip.cancellation_reason || "La solicitud fue cancelada."}</p>{cancellationFeeNotice>0&&<p className="mt-4 rounded-xl bg-amber-50 p-3 text-sm font-bold text-amber-900">RD$25 se añadirán a tu próximo servicio. Lo verás en tu perfil y lo pagarás en efectivo junto con el próximo viaje.</p>}<Link href="/" className="mt-5 inline-flex rounded-xl bg-[#14251d] px-5 py-3 text-xs font-bold text-white">Volver a Cotuí Go</Link></section>}
             {completed && <section className="mb-4 rounded-3xl border border-lime-200 bg-white p-7 text-center shadow-sm"><div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-lime-100 text-lime-800"><ShieldCheck size={28}/></div><h2 className="mt-4 text-2xl font-black text-[#14251d]">{trip.kind==="ride"?"¡Gracias por viajar con nosotros!":"¡Gracias por confiar tu envío a Cotuí Go!"}</h2><p className="mt-2 text-sm text-slate-500">Cotuí Go agradece tu preferencia. Esperamos acompañarte nuevamente.</p></section>}
             {!completed && !cancelled && <div className="relative -mx-3 -mt-2 h-[62vh] min-h-[430px] overflow-hidden bg-[#e9eee8] sm:mx-0 sm:rounded-[30px] sm:border sm:border-white sm:shadow-lg">
               <CotuiGoLiveMap
