@@ -7,27 +7,29 @@ import { ArrowRight, Bike, Mail, LockKeyhole, UserRound, Phone, Eye, EyeOff, Pac
 
 const field = "w-full rounded-xl border border-[#dce5df] bg-white px-4 py-3 text-[14px] text-[#172820] outline-none transition placeholder:text-[#9aa9a0] focus:border-[#16845b] focus:ring-4 focus:ring-[#16845b]/10";
 
-function RideIllustration(){return <div className="cg-login-art relative mx-auto h-[154px] w-full max-w-[340px] overflow-hidden rounded-[26px] bg-[#eaf5e7]">
- <div className="absolute -right-8 -top-12 h-40 w-40 rounded-full bg-[#d7efb6]"/>
- <div className="absolute left-7 top-8 h-8 w-8 rounded-full bg-[#f8d36a]"/>
- <div className="absolute bottom-0 left-0 h-10 w-full rounded-t-[50%] bg-[#c6e7aa]"/>
- <svg viewBox="0 0 340 154" className="absolute inset-0 h-full w-full" role="img" aria-label="Ilustración animada de un motorista de Cotuí Go">
-  <path d="M0 126 Q80 112 170 126 T340 120" fill="none" stroke="#91c77b" strokeWidth="3" strokeDasharray="7 7"/>
-  <g className="cg-art-cloud"><path d="M220 39c0-8 7-14 15-14 5-10 21-10 26 0 10-2 17 5 17 14z" fill="#fff" opacity=".9"/></g>
-  <g transform="translate(70 25)">
-   <circle cx="36" cy="91" r="20" fill="#fff" stroke="#173b2b" strokeWidth="5"/><circle cx="36" cy="91" r="5" fill="#173b2b"/>
-   <circle cx="151" cy="91" r="20" fill="#fff" stroke="#173b2b" strokeWidth="5"/><circle cx="151" cy="91" r="5" fill="#173b2b"/>
-   <path d="M36 91 65 56 104 91 36 91 81 91 111 52 151 91" fill="none" stroke="#173b2b" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round"/>
-   <path d="M66 55h30l15-10h18" fill="none" stroke="#173b2b" strokeWidth="6" strokeLinecap="round"/>
-   <path d="M85 42c0-18 13-29 29-29 15 0 26 10 26 25v7h-55z" fill="#c7f36b" stroke="#173b2b" strokeWidth="4"/>
-   <path d="M105 46v-8c0-8 6-14 14-14" fill="none" stroke="#173b2b" strokeWidth="4" strokeLinecap="round"/>
-   <circle cx="119" cy="57" r="4" fill="#173b2b"/>
-   <path d="M91 61 77 79l27 12 20-23" fill="none" stroke="#e6a16b" strokeWidth="12" strokeLinecap="round" strokeLinejoin="round"/>
-   <path d="m106 89 17 2 12-19" fill="none" stroke="#173b2b" strokeWidth="10" strokeLinecap="round"/>
-   <rect x="130" y="38" width="29" height="24" rx="5" fill="#173b2b"/><path d="M136 44h17" stroke="#c7f36b" strokeWidth="3"/>
+function RideIllustration(){return <div className="cg-login-art cg-immersive-scene relative mx-auto h-[230px] w-full max-w-[520px] overflow-hidden rounded-[26px] bg-[#0c3027] sm:h-[250px]">
+ <div className="cg-scene-glow absolute -right-12 -top-24 h-64 w-64 rounded-full bg-[#b8e66b]/20 blur-3xl"/>
+ <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_70%_20%,rgba(187,230,113,.22),transparent_40%),linear-gradient(155deg,#164536_0%,#0b2924_65%,#102b25_100%)]"/>
+ <div className="cg-stars absolute inset-0 opacity-60" style={{backgroundImage:"radial-gradient(#e9ffd1 1px,transparent 1px)",backgroundSize:"37px 37px"}}/>
+ <svg viewBox="0 0 520 250" className="absolute inset-0 h-full w-full" role="img" aria-label="Cotuí Go: una moto recorre la ciudad de noche">
+  <circle cx="405" cy="52" r="27" fill="#d7f5a5" opacity=".8"/><circle cx="405" cy="52" r="42" fill="#d7f5a5" opacity=".08"/>
+  <g fill="#173f34"><path d="M0 142V89h34v53zm38 0V66h39v76zm45 0V97h35v45zm42 0V76h42v66zm50 0V54h36v88zm44 0V91h35v51zm42 0V72h44v70zm52 0V96h37v46zm45 0V61h43v81zm51 0V88h42v54z"/></g>
+  <g fill="#c9ef91" opacity=".5"><path d="M47 80h5v7h-5zm14 0h5v7h-5zm0 15h5v7h-5zm76-5h5v7h-5zm14 0h5v7h-5zm56-22h5v7h-5zm14 0h5v7h-5zm58 17h5v7h-5zm15 0h5v7h-5zm80-9h5v7h-5zm15 0h5v7h-5zm57 20h5v7h-5z"/></g>
+  <path d="M0 151 Q130 128 260 150 T520 144V250H0Z" fill="#1d4438"/><path d="M0 190 Q150 146 290 179T520 164V250H0Z" fill="#142c27"/>
+  <path d="M-10 216 Q150 174 290 203T530 187" fill="none" stroke="#d5edb2" strokeOpacity=".38" strokeWidth="2"/><path d="M-10 232 Q150 190 290 219T530 203" fill="none" stroke="#d5edb2" strokeOpacity=".22" strokeWidth="2"/>
+  <path className="cg-route-line" d="M20 190 Q120 155 200 181T370 169" fill="none" stroke="#c9f77d" strokeWidth="3" strokeDasharray="6 9" strokeLinecap="round"/>
+  <g className="cg-floating-pin" transform="translate(370 110)"><path d="M0 0c-15 0-25 11-25 24 0 18 25 42 25 42s25-24 25-42C25 11 15 0 0 0" fill="#c9f77d"/><circle r="9" cy="23" fill="#173d30"/><circle r="3" cy="23" fill="#fff"/></g>
+  <g className="cg-moving-bike" transform="translate(185 128)"><ellipse cx="75" cy="77" rx="84" ry="10" fill="#071d18" opacity=".45"/>
+   <circle cx="25" cy="66" r="20" fill="#10251f" stroke="#e8f4dc" strokeWidth="4"/><circle cx="25" cy="66" r="6" fill="#9bb8a0"/><circle cx="132" cy="66" r="20" fill="#10251f" stroke="#e8f4dc" strokeWidth="4"/><circle cx="132" cy="66" r="6" fill="#9bb8a0"/>
+   <path d="M25 66 52 32 91 66 25 66 77 66 105 31 132 66" fill="none" stroke="#d9f2bd" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round"/><path d="M51 32h34l20-9h20" fill="none" stroke="#d9f2bd" strokeWidth="6" strokeLinecap="round"/>
+   <path d="M67 28c0-23 15-37 35-37 18 0 31 12 31 32v7H67z" fill="#c7f36b" stroke="#173d30" strokeWidth="4"/><path d="M96 28v-9c0-9 7-16 16-16" fill="none" stroke="#173d30" strokeWidth="4" strokeLinecap="round"/>
+   <path d="M75 43 61 59l30 12 20-24" fill="none" stroke="#e8a477" strokeWidth="13" strokeLinecap="round" strokeLinejoin="round"/><path d="m91 69 20 0 14-19" fill="none" stroke="#c7f36b" strokeWidth="11" strokeLinecap="round"/>
+   <rect x="111" y="22" width="28" height="25" rx="5" fill="#102d25"/><path d="M117 29h16" stroke="#c7f36b" strokeWidth="3"/>
   </g>
  </svg>
- <div className="absolute bottom-3 right-4 rounded-full bg-white/90 px-3 py-1 text-[9px] font-black tracking-[.14em] text-[#28543a] shadow-sm">COTUÍ SE MUEVE</div>
+ <div className="absolute left-4 top-4 rounded-full border border-white/15 bg-[#0b2b23]/65 px-3 py-1.5 text-[9px] font-black tracking-[.18em] text-[#d7f5a5] backdrop-blur">COTUÍ · REPÚBLICA DOMINICANA</div>
+ <div className="absolute bottom-4 left-4"><div className="text-[10px] font-bold uppercase tracking-[.2em] text-[#d5efb6]/70">Tu ciudad, en movimiento</div><div className="mt-1 text-xl font-black tracking-tight text-white">COTUÍ <span className="text-[#c7f36b]">GO</span></div></div>
+ <div className="absolute bottom-4 right-4 rounded-full border border-white/15 bg-white/10 px-3 py-2 text-[9px] font-bold text-white/90 backdrop-blur">MOTO · PAQUETES</div>
 </div>}
 
 export default function AccessPage() {
