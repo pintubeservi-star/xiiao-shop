@@ -30,6 +30,7 @@ const labels: Record<string, string> = {
   requested: "Buscando conductor",
   accepted: "Conductor asignado",
   driver_arriving: "Conductor en camino a recogida",
+  courier_arriving: "Conductor en camino a recoger el paquete",
   in_progress: "Viaje en curso",
   picked_up: "Paquete recogido",
   on_the_way: "En camino al destino",
@@ -80,7 +81,7 @@ export default function TrackingPage() {
 
   const active = trip ? !["completed", "delivered", "cancelled"].includes(trip.status) : false;
   const cancelled = trip?.status === "cancelled";
-  const canCancel = trip ? (trip.kind === "ride" ? ["requested","accepted","driver_arriving"].includes(trip.status) : ["requested","accepted"].includes(trip.status)) : false;
+  const canCancel = trip ? (trip.kind === "ride" ? ["requested","accepted","driver_arriving"].includes(trip.status) : ["requested","accepted","courier_arriving"].includes(trip.status)) : false;
   const completed = trip ? ["completed", "delivered"].includes(trip.status) : false;
   async function cancelService() {
     if (!trip || !canCancel || cancelBusy) return;
