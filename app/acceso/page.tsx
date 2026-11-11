@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getSupabase } from "@/lib/supabase/client";
-import { ArrowRight, Bike, Mail, LockKeyhole, UserRound, Phone, Eye, EyeOff, ShieldCheck, Camera, X, MapPin } from "lucide-react";
+import { ArrowRight, Bike, Mail, LockKeyhole, UserRound, Phone, Eye, EyeOff, ShieldCheck, MapPin } from "lucide-react";
 
 const field = "w-full rounded-xl border border-[#dce5df] bg-white px-4 py-3 text-[14px] text-[#172820] outline-none transition placeholder:text-[#9aa9a0] focus:border-[#16845b] focus:ring-4 focus:ring-[#16845b]/10";
 
-function RideIllustration(){return <div className="cg-login-art cg-immersive-scene relative mx-auto h-[230px] w-full max-w-[520px] overflow-hidden rounded-[26px] bg-[#0c3027] sm:h-[250px]">
+function RideIllustration(){return <div className="cg-login-art cg-immersive-scene absolute inset-0 h-full w-full max-w-none overflow-hidden rounded-none bg-[#0c3027]">
  <div className="cg-scene-glow absolute -right-12 -top-24 h-64 w-64 rounded-full bg-[#b8e66b]/20 blur-3xl"/>
  <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_70%_20%,rgba(187,230,113,.22),transparent_40%),linear-gradient(155deg,#164536_0%,#0b2924_65%,#102b25_100%)]"/>
  <div className="cg-stars absolute inset-0 opacity-60" style={{backgroundImage:"radial-gradient(#e9ffd1 1px,transparent 1px)",backgroundSize:"37px 37px"}}/>
@@ -37,33 +37,33 @@ export default function AccessPage() {
  const [mode,setMode]=useState<"login"|"register"|"reset">("login");
  const [form,setForm]=useState({name:"",phone:"",email:"",password:""});
  const [busy,setBusy]=useState(false),[notice,setNotice]=useState(""),[showPassword,setShowPassword]=useState(false);
- const [arOpen,setArOpen]=useState(false),[cameraError,setCameraError]=useState("");
- const [cameraStream,setCameraStream]=useState<MediaStream|null>(null);
- const cameraRef=useRef<HTMLVideoElement|null>(null);
- useEffect(()=>{if(cameraRef.current&&cameraStream){cameraRef.current.srcObject=cameraStream;cameraRef.current.play().catch(()=>{});}return()=>{if(cameraStream)cameraStream.getTracks().forEach(track=>track.stop());};},[cameraStream]);
- async function openAR(){setCameraError("");if(!navigator.mediaDevices?.getUserMedia){setCameraError("Tu navegador no permite abrir la cámara. Puedes disfrutar la experiencia inmersiva del mapa.");setArOpen(true);return;}try{const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"}},audio:false});setCameraStream(stream);setArOpen(true);}catch{setCameraError("No se pudo activar la cámara. Revisa el permiso del navegador y vuelve a intentarlo.");setArOpen(true);}}
- function closeAR(){setArOpen(false);if(cameraStream){cameraStream.getTracks().forEach(track=>track.stop());setCameraStream(null);}}
  useEffect(()=>{let live=true;const params=new URLSearchParams(window.location.search);const requested=params.get("mode");if(requested==="register"||requested==="login")setMode(requested);if(params.get("verified")==="1")setNotice("¡Correo confirmado! Ya puedes iniciar sesión.");getSupabase().auth.getUser().then(({data})=>{if(live&&data.user)router.replace("/");}).catch(()=>{if(live)setNotice("No pudimos comprobar tu sesión. Inténtalo nuevamente.");});return()=>{live=false;};},[router]);
  async function submit(e:React.FormEvent){e.preventDefault();setBusy(true);setNotice("");try{const s=getSupabase();if(mode==="register"){if(form.password.length<8)throw new Error("La contraseña debe tener al menos 8 caracteres.");const {data,error}=await s.auth.signUp({email:form.email.trim().toLowerCase(),password:form.password,options:{data:{full_name:form.name.trim(),phone:form.phone.trim()},emailRedirectTo:window.location.origin+"/acceso?verified=1"}});if(error)throw error;if(data.session){router.replace("/");router.refresh();}else setNotice("Cuenta creada. Revisa tu correo para confirmar y activar el acceso.");}else if(mode==="login"){const {error}=await s.auth.signInWithPassword({email:form.email.trim().toLowerCase(),password:form.password});if(error)throw error;router.replace("/");router.refresh();}else{const {error}=await s.auth.resetPasswordForEmail(form.email.trim().toLowerCase(),{redirectTo:window.location.origin+"/acceso?reset=1"});if(error)throw error;setNotice("Si el correo está registrado, recibirás un enlace para recuperar tu acceso.");}}catch(e){setNotice(e instanceof Error?e.message:"No se pudo completar. Inténtalo nuevamente.");}finally{setBusy(false);}}
  const title=mode==="register"?"Crea tu cuenta":mode==="reset"?"Recupera tu acceso":"¡Qué bueno verte!";
- return <main className="cg-login-screen min-h-[100svh] h-[100svh] overflow-y-auto bg-[#f3f6f2] px-3 py-3 text-[#172820] sm:grid sm:place-items-center sm:px-6">
-  <div className="mx-auto grid min-h-[calc(100svh-24px)] w-full max-w-5xl overflow-hidden rounded-[28px] border border-white bg-white shadow-[0_20px_70px_rgba(18,45,31,.12)] lg:min-h-[min(720px,calc(100svh-40px))] lg:grid-cols-[.92fr_1.08fr]">
-   <aside className="relative hidden flex-col justify-between overflow-hidden bg-[#102c22] p-8 text-white lg:flex">
-    <div className="absolute -right-24 -top-20 h-80 w-80 rounded-full border border-white/10"/><div className="absolute -right-10 top-20 h-52 w-52 rounded-full border border-white/10"/>
-    <div className="relative"><div className="text-[10px] font-black uppercase tracking-[.2em] text-[#d8f6a5]">Cotuí · República Dominicana</div><div className="mt-4 text-3xl font-black">COTUÍ <span className="text-[#c7f36b]">GO</span></div></div>
-    <div className="relative"><RideIllustration/><h1 className="mt-7 text-4xl font-black leading-[1.05]">Tu ciudad se mueve <span className="text-[#c7f36b]">contigo.</span></h1><p className="mt-3 max-w-sm text-sm leading-6 text-white/70">Pide tu moto o envía un paquete sin complicaciones.</p></div>
-    <div className="relative flex items-center gap-2 text-[10px] text-white/60"><ShieldCheck size={14} className="text-[#c7f36b]"/> Acceso seguro y sencillo</div>
-   </aside>
-   <section className="flex min-h-[calc(100svh-24px)] flex-col justify-center px-5 py-4 sm:px-10 lg:px-12">
-    <div className="mx-auto w-full max-w-[390px]">
-     <div className="mb-3 flex items-center justify-between lg:hidden"><div><div className="text-[19px] font-black tracking-tight">COTUÍ <span className="text-[#16845b]">GO</span></div><div className="text-[9px] font-bold uppercase tracking-[.16em] text-[#829187]">Movilidad de aquí</div></div><div className="rounded-xl bg-[#eaf5e7] p-2 text-[#173b2b]"><Bike size={21}/></div></div>
-     <div className="lg:hidden"><RideIllustration/></div>
-     <button type="button" onClick={openAR} className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-[#cfe2d4] bg-[#f5faf4] px-4 py-2.5 text-[11px] font-extrabold text-[#174b35] shadow-sm lg:hidden"><Camera size={15}/> Explorar Cotuí en realidad aumentada <span className="rounded-full bg-[#dff4b8] px-2 py-0.5 text-[9px]">AR</span></button>
-     <div className="mt-4 text-[9px] font-black uppercase tracking-[.2em] text-[#16845b]">Acceso de clientes</div>
-     <h2 className="mt-1 text-[26px] font-black leading-tight tracking-[-.035em] sm:text-[30px]">{title}</h2>
-     <p className="mt-1 text-[12px] leading-5 text-[#718078]">{mode==="register"?"Regístrate una vez y pide viajes o envía paquetes.":mode==="reset"?"Te enviaremos un enlace seguro a tu correo.":"Inicia sesión y pide tu viaje en unos segundos."}</p>
-     {mode!=="reset"&&<div className="mt-4 grid grid-cols-2 rounded-xl bg-[#f1f5f1] p-1"><button type="button" onClick={()=>{setMode("login");setNotice("");}} className={mode==="login"?"rounded-lg bg-white px-3 py-2.5 text-xs font-extrabold text-[#17382a] shadow-sm":"rounded-lg px-3 py-2.5 text-xs font-bold text-[#7b8980]"}>Iniciar sesión</button><button type="button" onClick={()=>{setMode("register");setNotice("");}} className={mode==="register"?"rounded-lg bg-white px-3 py-2.5 text-xs font-extrabold text-[#17382a] shadow-sm":"rounded-lg px-3 py-2.5 text-xs font-bold text-[#7b8980]"}>Crear cuenta</button></div>}
-     <form onSubmit={submit} className="mt-4 space-y-3">
+ return <main className="cg-immersive-cover relative min-h-[100svh] overflow-hidden bg-[#071b14] text-white">
+  <div className="absolute inset-0"><RideIllustration/></div>
+  <div className="cg-cover-shade absolute inset-0"/>
+  <header className="relative z-10 mx-auto flex w-full max-w-[1440px] items-center justify-between px-5 py-5 sm:px-9 lg:px-14">
+   <div className="flex items-center gap-3"><div className="grid h-10 w-10 place-items-center rounded-2xl border border-white/20 bg-white/10 text-[#d5f79a] backdrop-blur"><Bike size={22}/></div><div><div className="text-[19px] font-black tracking-[-.04em]">COTUÍ <span className="text-[#c7f36b]">GO</span></div><div className="text-[8px] font-bold uppercase tracking-[.25em] text-white/55">Movilidad inteligente</div></div></div>
+   <div className="hidden items-center gap-7 text-[11px] font-bold text-white/75 md:flex"><span>Viajes en moto</span><span>Envío de paquetes</span><span className="rounded-full border border-white/20 bg-white/10 px-4 py-2 text-white">Cotuí, República Dominicana</span></div>
+   <a href="#acceso" className="rounded-full border border-white/25 bg-white/10 px-4 py-2.5 text-[11px] font-extrabold text-white backdrop-blur hover:bg-white/20">Acceder <ArrowRight size={13} className="ml-1 inline"/></a>
+  </header>
+  <div className="relative z-10 mx-auto grid min-h-[calc(100svh-80px)] w-full max-w-[1440px] items-center gap-8 px-5 pb-8 pt-3 sm:px-9 lg:grid-cols-[1.1fr_.72fr] lg:gap-16 lg:px-14 lg:pb-14">
+   <section className="cg-cover-copy max-w-[690px] self-center pb-2 pt-4 lg:pt-0">
+    <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-[#d9f99d]/30 bg-[#d9f99d]/10 px-3.5 py-2 text-[9px] font-black uppercase tracking-[.2em] text-[#e4ffb5] backdrop-blur"><span className="h-1.5 w-1.5 rounded-full bg-[#c7f36b] shadow-[0_0_12px_#c7f36b]"/> Cotuí está en movimiento</div>
+    <h1 className="max-w-[700px] text-[clamp(42px,7vw,88px)] font-black leading-[.91] tracking-[-.065em] text-white">Tu ciudad.<br/><span className="text-[#c7f36b]">Tu camino.</span><br/>A tu manera.</h1>
+    <p className="mt-6 max-w-[460px] text-[14px] leading-7 text-white/75 sm:text-[16px]">Muévete por Cotuí con facilidad. Pide una moto o envía tus paquetes desde un solo lugar, con seguimiento de tu servicio en tiempo real.</p>
+    <div className="mt-7 flex flex-wrap items-center gap-3">
+     <a href="#acceso" className="inline-flex items-center gap-3 rounded-full bg-[#c7f36b] px-6 py-4 text-[12px] font-black text-[#10291e] shadow-[0_12px_35px_#b7ef5b35] transition hover:-translate-y-1 hover:shadow-[0_16px_45px_#b7ef5b55]">Comenzar ahora <ArrowRight size={17}/></a>
+     <div className="flex items-center gap-2 rounded-full border border-white/15 bg-black/20 px-4 py-3 text-[10px] font-bold text-white/75 backdrop-blur"><ShieldCheck size={15} className="text-[#c7f36b]"/> Fácil, local y seguro</div>
+    </div>
+    <div className="mt-9 flex flex-wrap gap-x-8 gap-y-3 border-t border-white/15 pt-5 text-[10px] font-bold text-white/65"><span className="flex items-center gap-2"><Bike size={15} className="text-[#c7f36b]"/> Viajes en moto</span><span className="flex items-center gap-2"><ArrowRight size={14} className="text-[#c7f36b]"/> Entrega de paquetes</span><span className="flex items-center gap-2"><MapPin size={14} className="text-[#c7f36b]"/> Hecho para Cotuí</span></div>
+   </section>
+   <section id="acceso" className="cg-cover-auth w-full self-center">
+    <div className="mx-auto w-full max-w-[410px] rounded-[28px] border border-white/65 bg-[#fbfdf9]/[.97] p-5 text-[#172820] shadow-[0_30px_100px_rgba(0,0,0,.35)] backdrop-blur-2xl sm:p-7">
+     <div className="mb-5 flex items-center justify-between"><div><div className="text-[9px] font-black uppercase tracking-[.2em] text-[#16845b]">Bienvenido a Cotuí Go</div><h2 className="mt-1 text-[25px] font-black tracking-[-.04em]">{title}</h2><p className="mt-1 text-[11px] text-[#718078]">{mode==="register"?"Regístrate y comienza a moverte.":mode==="reset"?"Recupera tu acceso de forma segura.":"Entra y pide tu servicio en segundos."}</p></div><div className="grid h-11 w-11 place-items-center rounded-2xl bg-[#eaf5e7] text-[#174b35]"><Bike size={22}/></div></div>
+     {mode!=="reset"&&<div className="mb-4 grid grid-cols-2 rounded-xl bg-[#edf2ec] p-1"><button type="button" onClick={()=>{setMode("login");setNotice("");}} className={mode==="login"?"rounded-lg bg-white px-3 py-2.5 text-xs font-extrabold text-[#17382a] shadow-sm":"rounded-lg px-3 py-2.5 text-xs font-bold text-[#7b8980]"}>Iniciar sesión</button><button type="button" onClick={()=>{setMode("register");setNotice("");}} className={mode==="register"?"rounded-lg bg-white px-3 py-2.5 text-xs font-extrabold text-[#17382a] shadow-sm":"rounded-lg px-3 py-2.5 text-xs font-bold text-[#7b8980]"}>Crear cuenta</button></div>}
+     <form onSubmit={submit} className="space-y-3">
       {mode==="register"&&<><label className="block"><span className="mb-1 block text-[11px] font-bold text-[#405248]">Nombre y apellido</span><span className="relative block"><UserRound size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#91a097]"/><input required autoComplete="name" className={field+" pl-10"} placeholder="Tu nombre completo" value={form.name} onChange={e=>setForm(v=>({...v,name:e.target.value}))}/></span></label><label className="block"><span className="mb-1 block text-[11px] font-bold text-[#405248]">Teléfono</span><span className="relative block"><Phone size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#91a097]"/><input required type="tel" autoComplete="tel" className={field+" pl-10"} placeholder="809 000 0000" value={form.phone} onChange={e=>setForm(v=>({...v,phone:e.target.value}))}/></span></label></>}
       <label className="block"><span className="mb-1 block text-[11px] font-bold text-[#405248]">Correo electrónico</span><span className="relative block"><Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#91a097]"/><input required type="email" autoComplete="email" className={field+" pl-10"} placeholder="tucorreo@ejemplo.com" value={form.email} onChange={e=>setForm(v=>({...v,email:e.target.value}))}/></span></label>
       {mode!=="reset"&&<label className="block"><span className="mb-1 block text-[11px] font-bold text-[#405248]">Contraseña</span><span className="relative block"><LockKeyhole size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#91a097]"/><input required minLength={8} type={showPassword?"text":"password"} autoComplete={mode==="register"?"new-password":"current-password"} className={field+" pl-10 pr-11"} placeholder="Tu contraseña" value={form.password} onChange={e=>setForm(v=>({...v,password:e.target.value}))}/><button type="button" aria-label={showPassword?"Ocultar contraseña":"Mostrar contraseña"} onClick={()=>setShowPassword(v=>!v)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#91a097]">{showPassword?<EyeOff size={16}/>:<Eye size={16}/>}</button></span></label>}
@@ -76,12 +76,5 @@ export default function AccessPage() {
     </div>
    </section>
   </div>
-  {arOpen&&<div className="cg-ar-overlay" role="dialog" aria-modal="true" aria-label="Vista de realidad aumentada de Cotuí Go">
-   <div className="cg-ar-stage">
-    {cameraStream?<video ref={cameraRef} autoPlay muted playsInline className="cg-ar-camera"/>:<div className="cg-ar-fallback"><div className="text-5xl">🌃</div><div className="mt-3 text-lg font-black">COTUÍ EN MODO AR</div><p className="mt-2 max-w-xs text-xs leading-5 text-white/70">{cameraError||"Activa la cámara para ver la capa de navegación sobre tu entorno."}</p></div>}
-    <div className="cg-ar-vignette"/><div className="cg-ar-top"><span><span className="cg-ar-live-dot"/> COTUÍ GO · AR VIEW</span><button type="button" onClick={closeAR} aria-label="Cerrar vista AR"><X size={19}/></button></div>
-    <div className="cg-ar-hud"><div className="cg-ar-label"><MapPin size={14}/> DESTINO CERCA DE TI</div><div className="cg-ar-route"><span className="cg-ar-distance">1.2 <small>KM</small></span><span className="cg-ar-direction">SIGUE LA RUTA <b>↗</b></span></div><div className="cg-ar-marker"><span className="cg-ar-marker-ring"/><MapPin size={25} fill="#c7f36b"/></div><div className="cg-ar-bottom"><strong>Tu ciudad. Tu camino.</strong><span>Experiencia visual de navegación · Cotuí, RD</span></div></div>
-   </div>
-  </div>}
  </main>;
 }
