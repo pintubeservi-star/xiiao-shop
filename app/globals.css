@@ -122,3 +122,36 @@ html[data-theme="dark"] .cg-safety-dock{color:#edf5ef}
 @keyframes cg-ar-blink{50%{opacity:.35}}
 @media(min-width:900px){.cg-ar-stage{max-width:520px;height:min(92vh,900px);border-radius:28px}.cg-ar-overlay{background:#06120dee}}
 @media(prefers-reduced-motion:reduce){.cg-ar-marker-ring,.cg-ar-live-dot{animation:none}}
+
+
+/* Cotuí Go · full-screen cinematic welcome cover */
+.cg-immersive-cover{isolation:isolate;min-height:100svh;background:#071b14}
+.cg-immersive-cover>.absolute:first-child{z-index:0}
+.cg-immersive-cover .cg-login-art{border-radius:0!important;max-width:none!important;box-shadow:none!important}
+.cg-immersive-cover .cg-login-art>div:first-child{filter:blur(2px)}
+.cg-cover-shade{z-index:1;pointer-events:none;background:linear-gradient(90deg,rgba(3,17,12,.94) 0%,rgba(3,17,12,.79) 39%,rgba(3,17,12,.47) 72%,rgba(3,17,12,.68) 100%),linear-gradient(0deg,rgba(3,17,12,.76),transparent 55%,rgba(3,17,12,.35))}
+.cg-cover-copy{animation:cg-cover-enter .85s cubic-bezier(.2,.75,.2,1) both}
+.cg-cover-auth{animation:cg-cover-enter 1s .12s cubic-bezier(.2,.75,.2,1) both;scroll-margin-top:20px}
+@keyframes cg-cover-enter{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+.cg-immersive-cover header{animation:cg-cover-enter .65s ease both}
+@media(max-width:767px){
+ .cg-cover-shade{background:linear-gradient(180deg,rgba(3,17,12,.65),rgba(3,17,12,.62) 32%,rgba(3,17,12,.88) 58%,#071b14 100%)}
+ .cg-immersive-cover header{padding-top:calc(13px + env(safe-area-inset-top));padding-bottom:8px}
+ .cg-immersive-cover header>a{padding:9px 13px}
+ .cg-immersive-cover>div:nth-of-type(3){min-height:calc(100svh - 66px);align-content:start;gap:18px;padding-top:5vh;padding-bottom:calc(22px + env(safe-area-inset-bottom))}
+ .cg-cover-copy{padding-top:0;padding-bottom:0}
+ .cg-cover-copy>h1{font-size:clamp(39px,11vw,57px);line-height:.94}
+ .cg-cover-copy>p{margin-top:12px;font-size:12px;line-height:1.55}
+ .cg-cover-copy>div:nth-of-type(2){margin-top:15px}
+ .cg-cover-copy>div:nth-of-type(3){display:none}
+ .cg-cover-auth>div{padding:17px!important;border-radius:22px!important}
+ .cg-cover-auth h2{font-size:22px}
+}
+@media(max-height:760px) and (min-width:768px){
+ .cg-cover-copy>h1{font-size:clamp(42px,5vw,68px)}
+ .cg-cover-copy>p{margin-top:14px}
+ .cg-cover-copy>div:nth-of-type(3){margin-top:20px}
+ .cg-cover-auth>div{padding:20px}
+ .cg-cover-auth form{gap:9px}
+}
+@media(prefers-reduced-motion:reduce){.cg-cover-copy,.cg-cover-auth,.cg-immersive-cover header{animation:none}}
