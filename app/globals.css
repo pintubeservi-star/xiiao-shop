@@ -155,3 +155,10 @@ html[data-theme="dark"] .cg-safety-dock{color:#edf5ef}
  .cg-cover-auth form{gap:9px}
 }
 @media(prefers-reduced-motion:reduce){.cg-cover-copy,.cg-cover-auth,.cg-immersive-cover header{animation:none}}
+
+/* Cotuí Go live trip and driver dispatch feedback */
+.cg-customer-active-trip{animation:cg-trip-panel-in .42s cubic-bezier(.18,.82,.25,1) both}
+.cg-driver-offer-pop{animation:cg-driver-offer-in .42s cubic-bezier(.18,.82,.25,1) both;transform-origin:center bottom}
+@keyframes cg-trip-panel-in{from{opacity:0;transform:translateY(34px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes cg-driver-offer-in{0%{opacity:0;transform:translateY(60px) scale(.94)}65%{opacity:1;transform:translateY(-7px) scale(1.01)}100%{transform:translateY(0) scale(1)}}
+@media(prefers-reduced-motion:reduce){.cg-customer-active-trip,.cg-driver-offer-pop{animation:none}}
