@@ -3,10 +3,17 @@
 export async function loadCotuiGoMapLibre(): Promise<any> {
   if (typeof window === "undefined") throw new Error("El mapa solo puede cargarse en el navegador.");
   try {
-    const module = await import("maplibre-gl");
-    return module.default || module;
-  } catch {
-    throw new Error("No se pudo cargar MapLibre. Comprueba la conexión e inténtalo nuevamente.");
+    const imported: any = await import("maplibre-gl");
+    // MapLibre exposes Map, Marker and controls as named exports.
+    // Do not blindly return default: in some builds it is the Map class itself.
+    const api = imported?.Map ? imported : imported?.default?.Map ? imported.default : imported;
+    if (!api?.Map || !api?.Marker || !api?.NavigationControl) {
+      throw new Error("La biblioteca MapLibre se cargó sin sus componentes principales.");
+    }
+    return api;
+  } catch (error) {
+    console.error("MapLibre initialization failed:", error);
+    throw new Error("No se pudo inicializar el mapa. Recarga la aplicación e inténtalo nuevamente.");
   }
 }
 
