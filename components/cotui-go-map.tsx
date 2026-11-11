@@ -52,10 +52,10 @@ export default function CotuiGoMap({onPick,initial,secondary=null,target="pickup
    ref.current.off?.("dragend");
    ref.current.on("dragend",()=>{const p=ref.current.getLngLat();onPickRef.current?.({lat:p.lat,lng:p.lng});});
   };
-  sync(pickupMarker,initial,"pickup");sync(destinationMarker,secondary,"destination");
-  if(secondary){const bounds=new ml.LngLatBounds([initial.lng,initial.lat],[secondary.lng,secondary.lat]);m.fitBounds(bounds,{padding:90,maxZoom:16,duration:500});}
-  else m.easeTo({center:[initial.lng,initial.lat],duration:350});
- },[ready,initial.lat,initial.lng,secondary?.lat,secondary?.lng,target]);
+  sync(pickupMarker,safeInitial,"pickup");sync(destinationMarker,safeSecondary,"destination");
+  if(safeSecondary){const bounds=new ml.LngLatBounds([safeInitial.lng,safeInitial.lat],[safeSecondary.lng,safeSecondary.lat]);m.fitBounds(bounds,{padding:90,maxZoom:16,duration:500});}
+  else m.easeTo({center:[safeInitial.lng,safeInitial.lat],duration:350});
+ },[ready,safeInitial.lat,safeInitial.lng,safeSecondary?.lat,safeSecondary?.lng,target]);
  useEffect(()=>{const m=map.current;if(!m||!ready)return;const next=COTUI_GO_MAP_STYLES[style];m.setStyle(next);m.once("style.load",()=>{try{const sources=m.getStyle()?.sources||{},vectorSource=Object.keys(sources).find(k=>sources[k]?.type==="vector");if(vectorSource&&!m.getLayer("cg-3d-buildings"))m.addLayer({id:"cg-3d-buildings",source:vectorSource,"source-layer":"building",type:"fill-extrusion",minzoom:14,paint:{"fill-extrusion-color":"#cbd5d1","fill-extrusion-height":["coalesce",["get","render_height"],["get","height"],8],"fill-extrusion-base":["coalesce",["get","render_min_height"],0],"fill-extrusion-opacity":0.72}});}catch{} });},[style]);
  const locate=async()=>{
   if(!window.isSecureContext){setLocationMessage("Abre Cotuí Go mediante HTTPS para usar el GPS.");return;}
