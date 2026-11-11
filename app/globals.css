@@ -100,3 +100,25 @@ html[data-theme="dark"] .cg-safety-dock{color:#edf5ef}
 .cg-stars{mask-image:linear-gradient(to bottom,black,transparent 90%)}
 @media(max-height:760px){.cg-immersive-scene{height:190px}.cg-login-screen .cg-login-art{height:190px}}
 @media(prefers-reduced-motion:reduce){.cg-moving-bike,.cg-floating-pin,.cg-route-line,.cg-scene-glow{animation:none}}
+
+/* Cotuí Go · immersive camera AR sign-in */
+.cg-ar-overlay{position:fixed;inset:0;z-index:20000;background:#06120d;padding:0;display:grid;place-items:center}
+.cg-ar-stage{position:relative;width:100%;height:100%;overflow:hidden;background:radial-gradient(ellipse at 50% 40%,#285b43 0%,#0c2119 55%,#050d0a 100%);isolation:isolate}
+.cg-ar-camera{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.cg-ar-vignette{position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(180deg,rgba(3,15,10,.72),transparent 28%,transparent 58%,rgba(3,15,10,.85))}
+.cg-ar-top{position:absolute;z-index:3;top:calc(16px + env(safe-area-inset-top));left:16px;right:16px;display:flex;align-items:center;justify-content:space-between;color:#efffe2;font-size:10px;font-weight:950;letter-spacing:.17em}
+.cg-ar-top>span{display:flex;align-items:center;gap:9px;border:1px solid #ffffff30;border-radius:999px;background:#071b14a8;padding:11px 14px;backdrop-filter:blur(14px)}
+.cg-ar-top button{width:42px;height:42px;display:grid;place-items:center;border:1px solid #ffffff35;border-radius:50%;background:#071b14b8;color:white;backdrop-filter:blur(12px)}
+.cg-ar-live-dot{width:7px;height:7px;border-radius:50%;background:#c7f36b;box-shadow:0 0 13px #c7f36b;animation:cg-ar-blink 1.4s infinite}
+.cg-ar-hud{position:absolute;z-index:2;inset:0;color:white;pointer-events:none}
+.cg-ar-label{position:absolute;top:24%;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:7px;white-space:nowrap;border:1px solid #d8ff9c66;border-radius:999px;background:#09271dcc;padding:10px 14px;color:#eaffc8;font-size:9px;font-weight:950;letter-spacing:.13em;backdrop-filter:blur(12px)}
+.cg-ar-route{position:absolute;left:50%;top:34%;transform:translateX(-50%);display:flex;align-items:center;gap:14px;border:1px solid #ffffff35;border-radius:18px;background:#061b13c9;padding:12px 17px;box-shadow:0 12px 45px #0005;backdrop-filter:blur(14px);white-space:nowrap}
+.cg-ar-distance{font-size:30px;font-weight:950;letter-spacing:-.06em;color:#d6ff8b}.cg-ar-distance small{font-size:9px;letter-spacing:.15em}.cg-ar-direction{font-size:9px;font-weight:900;letter-spacing:.1em}.cg-ar-direction b{margin-left:7px;color:#c7f36b;font-size:20px}
+.cg-ar-marker{position:absolute;left:50%;top:53%;transform:translate(-50%,-50%);display:grid;place-items:center;width:76px;height:76px;color:#c7f36b;filter:drop-shadow(0 0 20px #b5f66c99)}
+.cg-ar-marker-ring{position:absolute;inset:0;border:1px solid #d6ff8b99;border-radius:50%;animation:cg-ar-ring 2.4s ease-out infinite}.cg-ar-marker-ring:after{content:"";position:absolute;inset:9px;border:1px solid #d6ff8b66;border-radius:50%}
+.cg-ar-bottom{position:absolute;left:22px;right:22px;bottom:calc(30px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:6px;text-align:center}.cg-ar-bottom strong{font-size:20px;font-weight:950;letter-spacing:-.03em}.cg-ar-bottom span{font-size:10px;color:#ffffffa8}
+.cg-ar-fallback{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:28px;color:white;background:radial-gradient(ellipse at 50% 45%,#326849 0%,#102d21 45%,#07140e 100%)}
+@keyframes cg-ar-ring{0%{transform:scale(.55);opacity:.9}100%{transform:scale(1.8);opacity:0}}
+@keyframes cg-ar-blink{50%{opacity:.35}}
+@media(min-width:900px){.cg-ar-stage{max-width:520px;height:min(92vh,900px);border-radius:28px}.cg-ar-overlay{background:#06120dee}}
+@media(prefers-reduced-motion:reduce){.cg-ar-marker-ring,.cg-ar-live-dot{animation:none}}
