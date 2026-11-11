@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getSupabase } from "@/lib/supabase/client";
-import { ArrowRight, Bike, Mail, LockKeyhole, UserRound, Phone, Eye, EyeOff, Package, ShieldCheck } from "lucide-react";
+import { ArrowRight, Bike, Mail, LockKeyhole, UserRound, Phone, Eye, EyeOff, ShieldCheck, Camera, X, MapPin } from "lucide-react";
 
 const field = "w-full rounded-xl border border-[#dce5df] bg-white px-4 py-3 text-[14px] text-[#172820] outline-none transition placeholder:text-[#9aa9a0] focus:border-[#16845b] focus:ring-4 focus:ring-[#16845b]/10";
 
@@ -37,6 +37,12 @@ export default function AccessPage() {
  const [mode,setMode]=useState<"login"|"register"|"reset">("login");
  const [form,setForm]=useState({name:"",phone:"",email:"",password:""});
  const [busy,setBusy]=useState(false),[notice,setNotice]=useState(""),[showPassword,setShowPassword]=useState(false);
+ const [arOpen,setArOpen]=useState(false),[cameraError,setCameraError]=useState("");
+ const [cameraStream,setCameraStream]=useState<MediaStream|null>(null);
+ const cameraRef=useRef<HTMLVideoElement|null>(null);
+ useEffect(()=>{if(cameraRef.current&&cameraStream){cameraRef.current.srcObject=cameraStream;cameraRef.current.play().catch(()=>{});}return()=>{if(cameraStream)cameraStream.getTracks().forEach(track=>track.stop());};},[cameraStream]);
+ async function openAR(){setCameraError("");if(!navigator.mediaDevices?.getUserMedia){setCameraError("Tu navegador no permite abrir la cámara. Puedes disfrutar la experiencia inmersiva del mapa.");setArOpen(true);return;}try{const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"}},audio:false});setCameraStream(stream);setArOpen(true);}catch{setCameraError("No se pudo activar la cámara. Revisa el permiso del navegador y vuelve a intentarlo.");setArOpen(true);}}
+ function closeAR(){setArOpen(false);if(cameraStream){cameraStream.getTracks().forEach(track=>track.stop());setCameraStream(null);}}
  useEffect(()=>{let live=true;const params=new URLSearchParams(window.location.search);const requested=params.get("mode");if(requested==="register"||requested==="login")setMode(requested);if(params.get("verified")==="1")setNotice("¡Correo confirmado! Ya puedes iniciar sesión.");getSupabase().auth.getUser().then(({data})=>{if(live&&data.user)router.replace("/");}).catch(()=>{if(live)setNotice("No pudimos comprobar tu sesión. Inténtalo nuevamente.");});return()=>{live=false;};},[router]);
  async function submit(e:React.FormEvent){e.preventDefault();setBusy(true);setNotice("");try{const s=getSupabase();if(mode==="register"){if(form.password.length<8)throw new Error("La contraseña debe tener al menos 8 caracteres.");const {data,error}=await s.auth.signUp({email:form.email.trim().toLowerCase(),password:form.password,options:{data:{full_name:form.name.trim(),phone:form.phone.trim()},emailRedirectTo:window.location.origin+"/acceso?verified=1"}});if(error)throw error;if(data.session){router.replace("/");router.refresh();}else setNotice("Cuenta creada. Revisa tu correo para confirmar y activar el acceso.");}else if(mode==="login"){const {error}=await s.auth.signInWithPassword({email:form.email.trim().toLowerCase(),password:form.password});if(error)throw error;router.replace("/");router.refresh();}else{const {error}=await s.auth.resetPasswordForEmail(form.email.trim().toLowerCase(),{redirectTo:window.location.origin+"/acceso?reset=1"});if(error)throw error;setNotice("Si el correo está registrado, recibirás un enlace para recuperar tu acceso.");}}catch(e){setNotice(e instanceof Error?e.message:"No se pudo completar. Inténtalo nuevamente.");}finally{setBusy(false);}}
  const title=mode==="register"?"Crea tu cuenta":mode==="reset"?"Recupera tu acceso":"¡Qué bueno verte!";
@@ -52,6 +58,7 @@ export default function AccessPage() {
     <div className="mx-auto w-full max-w-[390px]">
      <div className="mb-3 flex items-center justify-between lg:hidden"><div><div className="text-[19px] font-black tracking-tight">COTUÍ <span className="text-[#16845b]">GO</span></div><div className="text-[9px] font-bold uppercase tracking-[.16em] text-[#829187]">Movilidad de aquí</div></div><div className="rounded-xl bg-[#eaf5e7] p-2 text-[#173b2b]"><Bike size={21}/></div></div>
      <div className="lg:hidden"><RideIllustration/></div>
+     <button type="button" onClick={openAR} className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-[#cfe2d4] bg-[#f5faf4] px-4 py-2.5 text-[11px] font-extrabold text-[#174b35] shadow-sm lg:hidden"><Camera size={15}/> Explorar Cotuí en realidad aumentada <span className="rounded-full bg-[#dff4b8] px-2 py-0.5 text-[9px]">AR</span></button>
      <div className="mt-4 text-[9px] font-black uppercase tracking-[.2em] text-[#16845b]">Acceso de clientes</div>
      <h2 className="mt-1 text-[26px] font-black leading-tight tracking-[-.035em] sm:text-[30px]">{title}</h2>
      <p className="mt-1 text-[12px] leading-5 text-[#718078]">{mode==="register"?"Regístrate una vez y pide viajes o envía paquetes.":mode==="reset"?"Te enviaremos un enlace seguro a tu correo.":"Inicia sesión y pide tu viaje en unos segundos."}</p>
@@ -69,5 +76,12 @@ export default function AccessPage() {
     </div>
    </section>
   </div>
+  {arOpen&&<div className="cg-ar-overlay" role="dialog" aria-modal="true" aria-label="Vista de realidad aumentada de Cotuí Go">
+   <div className="cg-ar-stage">
+    {cameraStream?<video ref={cameraRef} autoPlay muted playsInline className="cg-ar-camera"/>:<div className="cg-ar-fallback"><div className="text-5xl">🌃</div><div className="mt-3 text-lg font-black">COTUÍ EN MODO AR</div><p className="mt-2 max-w-xs text-xs leading-5 text-white/70">{cameraError||"Activa la cámara para ver la capa de navegación sobre tu entorno."}</p></div>}
+    <div className="cg-ar-vignette"/><div className="cg-ar-top"><span><span className="cg-ar-live-dot"/> COTUÍ GO · AR VIEW</span><button type="button" onClick={closeAR} aria-label="Cerrar vista AR"><X size={19}/></button></div>
+    <div className="cg-ar-hud"><div className="cg-ar-label"><MapPin size={14}/> DESTINO CERCA DE TI</div><div className="cg-ar-route"><span className="cg-ar-distance">1.2 <small>KM</small></span><span className="cg-ar-direction">SIGUE LA RUTA <b>↗</b></span></div><div className="cg-ar-marker"><span className="cg-ar-marker-ring"/><MapPin size={25} fill="#c7f36b"/></div><div className="cg-ar-bottom"><strong>Tu ciudad. Tu camino.</strong><span>Experiencia visual de navegación · Cotuí, RD</span></div></div>
+   </div>
+  </div>}
  </main>;
 }
