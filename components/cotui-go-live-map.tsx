@@ -5,10 +5,10 @@ import {loadCotuiGoMapLibre} from "@/lib/cotui-go-maplibre";
 type Point={lat:number|null;lng:number|null};
 type Props={driver?:Point|null;pickup?:Point|null;destination?:Point|null;routeToDestination?:boolean;className?:string};
 const center={lat:19.0527,lng:-70.1494};
-const mapStyle="https://tiles.openfreemap.org/styles/positron";
+const mapStyle="https://tiles.openfreemap.org/styles/bright";
 const fallbackStyle={version:8,sources:{"cg-osm-fallback":{type:"raster",tiles:["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],tileSize:256,attribution:"© OpenStreetMap contributors"}},layers:[{id:"cg-osm-fallback-layer",type:"raster",source:"cg-osm-fallback"}]};
 export default function CotuiGoLiveMap({driver,pickup,destination,routeToDestination=false,className=""}:Props){
- const host=useRef<HTMLDivElement>(null),map=useRef<any>(null),driverMarker=useRef<any>(null),pickupMarker=useRef<any>(null),destMarker=useRef<any>(null),routeCoords=useRef<number[][]>([]),lastRouteAt=useRef(0),requestId=useRef(0);
+ const host=useRef<HTMLDivElement>(null),map=useRef<any>(null),driverMarker=useRef<any>(null),pickupMarker=useRef<any>(null),destMarker=useRef<any>(null),routeCoords=useRef<number[][]>([]),lastRouteAt=useRef(0),requestId=useRef(0),fallbackUsed=useRef(false);
  const [nextInstruction,setNextInstruction]=useState(""),[ready,setReady]=useState(false),[mapError,setMapError]=useState("");
  const points=[driver,pickup,destination].filter((p):p is Point=>!!p&&p.lat!=null&&p.lng!=null);
  useEffect(()=>{
@@ -21,8 +21,8 @@ export default function CotuiGoLiveMap({driver,pickup,destination,routeToDestina
     m.addControl(new ml.NavigationControl({showCompass:false}),"bottom-right");
     m.addControl(new ml.AttributionControl({compact:true}),"bottom-left");
     m.on("style.load",()=>{if(cancelled)return;requestAnimationFrame(()=>m.resize());if(!m.getSource("cg-route")){m.addSource("cg-route",{type:"geojson",data:{type:"Feature",properties:{},geometry:{type:"LineString",coordinates:[]}}});m.addLayer({id:"cg-route-shadow",type:"line",source:"cg-route",layout:{"line-cap":"round","line-join":"round"},paint:{"line-color":"#14251d","line-width":10,"line-opacity":0.18}});m.addLayer({id:"cg-route-line",type:"line",source:"cg-route",layout:{"line-cap":"round","line-join":"round"},paint:{"line-color":"#84cc16","line-width":6,"line-opacity":0.96}});}setReady(true);});
-    fallbackTimer=window.setTimeout(()=>{if(!cancelled&&!m.isStyleLoaded()){setMapError("Activando mapa alternativo…");m.setStyle(fallbackStyle as any);}},10000);
-    m.on("error",(event:any)=>{if(!cancelled&&event?.error)setMapError("Problema cargando el mapa. Comprueba tu conexión.");});
+    fallbackTimer=window.setTimeout(()=>{if(!cancelled&&!m.isStyleLoaded()&&!fallbackUsed.current){fallbackUsed.current=true;setMapError("Activando mapa alternativo…");try{m.setStyle(fallbackStyle as any);}catch{setMapError("No se pudo cargar el mapa. Revisa tu conexión.");}}},10000);
+    m.on("error",(event:any)=>{const message=String(event?.error?.message||event?.error||"");if(!cancelled&&!fallbackUsed.current&&(/style|source|tile|fetch|network|http|failed|load/i.test(message))){fallbackUsed.current=true;setMapError("Conectando al mapa alternativo…");try{m.setStyle(fallbackStyle as any);}catch{setMapError("No se pudo cargar el mapa. Revisa tu conexión.");}}});
     const observer=new ResizeObserver(()=>{if(!cancelled)m.resize();});observer.observe(host.current);
     map.current=m;
    }catch(error){if(!cancelled)setMapError(error instanceof Error?error.message:"No se pudo iniciar el mapa.");}
