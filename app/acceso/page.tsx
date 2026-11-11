@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getSupabase } from "@/lib/supabase/client";
-import { ArrowRight, Bike, Mail, LockKeyhole, UserRound, Phone, Eye, EyeOff, ShieldCheck, MapPin } from "lucide-react";
+import { ArrowRight, ArrowLeft, Bike, Mail, LockKeyhole, UserRound, Phone, Eye, EyeOff, ShieldCheck, MapPin } from "lucide-react";
 
 const field = "w-full rounded-xl border border-[#dce5df] bg-white px-4 py-3 text-[14px] text-[#172820] outline-none transition placeholder:text-[#9aa9a0] focus:border-[#16845b] focus:ring-4 focus:ring-[#16845b]/10";
 
@@ -35,10 +35,12 @@ function RideIllustration(){return <div className="cg-login-art cg-immersive-sce
 export default function AccessPage() {
  const router=useRouter();
  const [mode,setMode]=useState<"login"|"register"|"reset">("login");
+ const [role,setRole]=useState<"customer"|"driver">("customer");
+ const [showAuth,setShowAuth]=useState(false);
  const [form,setForm]=useState({name:"",phone:"",email:"",password:""});
  const [busy,setBusy]=useState(false),[notice,setNotice]=useState(""),[showPassword,setShowPassword]=useState(false);
- useEffect(()=>{let live=true;const params=new URLSearchParams(window.location.search);const requested=params.get("mode");if(requested==="register"||requested==="login")setMode(requested);if(params.get("verified")==="1")setNotice("¡Correo confirmado! Ya puedes iniciar sesión.");getSupabase().auth.getUser().then(({data})=>{if(live&&data.user)router.replace("/");}).catch(()=>{if(live)setNotice("No pudimos comprobar tu sesión. Inténtalo nuevamente.");});return()=>{live=false;};},[router]);
- async function submit(e:React.FormEvent){e.preventDefault();setBusy(true);setNotice("");try{const s=getSupabase();if(mode==="register"){if(form.password.length<8)throw new Error("La contraseña debe tener al menos 8 caracteres.");const {data,error}=await s.auth.signUp({email:form.email.trim().toLowerCase(),password:form.password,options:{data:{full_name:form.name.trim(),phone:form.phone.trim()},emailRedirectTo:window.location.origin+"/acceso?verified=1"}});if(error)throw error;if(data.session){router.replace("/");router.refresh();}else setNotice("Cuenta creada. Revisa tu correo para confirmar y activar el acceso.");}else if(mode==="login"){const {error}=await s.auth.signInWithPassword({email:form.email.trim().toLowerCase(),password:form.password});if(error)throw error;router.replace("/");router.refresh();}else{const {error}=await s.auth.resetPasswordForEmail(form.email.trim().toLowerCase(),{redirectTo:window.location.origin+"/acceso?reset=1"});if(error)throw error;setNotice("Si el correo está registrado, recibirás un enlace para recuperar tu acceso.");}}catch(e){setNotice(e instanceof Error?e.message:"No se pudo completar. Inténtalo nuevamente.");}finally{setBusy(false);}}
+ useEffect(()=>{let live=true;const params=new URLSearchParams(window.location.search);const requested=params.get("mode");if(requested==="register"||requested==="login"){setMode(requested);setShowAuth(true);}if(params.get("reset")==="1"){setMode("reset");setShowAuth(true);}if(params.get("verified")==="1")setNotice("¡Correo confirmado! Ya puedes iniciar sesión.");getSupabase().auth.getUser().then(({data})=>{if(live&&data.user)router.replace("/");}).catch(()=>{if(live)setNotice("No pudimos comprobar tu sesión. Inténtalo nuevamente.");});return()=>{live=false;};},[router]);
+ async function submit(e:React.FormEvent){e.preventDefault();setBusy(true);setNotice("");try{const s=getSupabase();if(mode==="register"){if(form.password.length<8)throw new Error("La contraseña debe tener al menos 8 caracteres.");const {data,error}=await s.auth.signUp({email:form.email.trim().toLowerCase(),password:form.password,options:{data:{full_name:form.name.trim(),phone:form.phone.trim(),role},emailRedirectTo:window.location.origin+"/acceso?verified=1"}});if(error)throw error;if(data.session){router.replace("/");router.refresh();}else setNotice("Cuenta creada. Revisa tu correo para confirmar y activar el acceso.");}else if(mode==="login"){const {error}=await s.auth.signInWithPassword({email:form.email.trim().toLowerCase(),password:form.password});if(error)throw error;router.replace("/");router.refresh();}else{const {error}=await s.auth.resetPasswordForEmail(form.email.trim().toLowerCase(),{redirectTo:window.location.origin+"/acceso?reset=1"});if(error)throw error;setNotice("Si el correo está registrado, recibirás un enlace para recuperar tu acceso.");}}catch(e){setNotice(e instanceof Error?e.message:"No se pudo completar. Inténtalo nuevamente.");}finally{setBusy(false);}}
  const title=mode==="register"?"Crea tu cuenta":mode==="reset"?"Recupera tu acceso":"¡Qué bueno verte!";
  return <main className="cg-immersive-cover relative min-h-[100svh] overflow-hidden bg-[#071b14] text-white">
   <div className="absolute inset-0"><RideIllustration/></div>
@@ -46,21 +48,27 @@ export default function AccessPage() {
   <header className="relative z-10 mx-auto flex w-full max-w-[1440px] items-center justify-between px-5 py-5 sm:px-9 lg:px-14">
    <div className="flex items-center gap-3"><div className="grid h-10 w-10 place-items-center rounded-2xl border border-white/20 bg-white/10 text-[#d5f79a] backdrop-blur"><Bike size={22}/></div><div><div className="text-[19px] font-black tracking-[-.04em]">COTUÍ <span className="text-[#c7f36b]">GO</span></div><div className="text-[8px] font-bold uppercase tracking-[.25em] text-white/55">Movilidad inteligente</div></div></div>
    <div className="hidden items-center gap-7 text-[11px] font-bold text-white/75 md:flex"><span>Viajes en moto</span><span>Envío de paquetes</span><span className="rounded-full border border-white/20 bg-white/10 px-4 py-2 text-white">Cotuí, República Dominicana</span></div>
-   <a href="#acceso" className="rounded-full border border-white/25 bg-white/10 px-4 py-2.5 text-[11px] font-extrabold text-white backdrop-blur hover:bg-white/20">Acceder <ArrowRight size={13} className="ml-1 inline"/></a>
+   <span className="rounded-full border border-white/20 bg-white/10 px-4 py-2.5 text-[10px] font-bold text-white/80 backdrop-blur">Cotuí, República Dominicana</span>
   </header>
   <div className="relative z-10 mx-auto grid min-h-[calc(100svh-80px)] w-full max-w-[1440px] items-center gap-8 px-5 pb-8 pt-3 sm:px-9 lg:grid-cols-[1.1fr_.72fr] lg:gap-16 lg:px-14 lg:pb-14">
    <section className="cg-cover-copy max-w-[690px] self-center pb-2 pt-4 lg:pt-0">
     <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-[#d9f99d]/30 bg-[#d9f99d]/10 px-3.5 py-2 text-[9px] font-black uppercase tracking-[.2em] text-[#e4ffb5] backdrop-blur"><span className="h-1.5 w-1.5 rounded-full bg-[#c7f36b] shadow-[0_0_12px_#c7f36b]"/> Cotuí está en movimiento</div>
     <h1 className="max-w-[700px] text-[clamp(42px,7vw,88px)] font-black leading-[.91] tracking-[-.065em] text-white">Tu ciudad.<br/><span className="text-[#c7f36b]">Tu camino.</span><br/>A tu manera.</h1>
     <p className="mt-6 max-w-[460px] text-[14px] leading-7 text-white/75 sm:text-[16px]">Muévete por Cotuí con facilidad. Pide una moto o envía tus paquetes desde un solo lugar, con seguimiento de tu servicio en tiempo real.</p>
-    <div className="mt-7 flex flex-wrap items-center gap-3">
-     <a href="#acceso" className="inline-flex items-center gap-3 rounded-full bg-[#c7f36b] px-6 py-4 text-[12px] font-black text-[#10291e] shadow-[0_12px_35px_#b7ef5b35] transition hover:-translate-y-1 hover:shadow-[0_16px_45px_#b7ef5b55]">Comenzar ahora <ArrowRight size={17}/></a>
-     <div className="flex items-center gap-2 rounded-full border border-white/15 bg-black/20 px-4 py-3 text-[10px] font-bold text-white/75 backdrop-blur"><ShieldCheck size={15} className="text-[#c7f36b]"/> Fácil, local y seguro</div>
+    <div className="mt-8 grid w-full max-w-[540px] gap-3 sm:grid-cols-2">
+     <button type="button" onClick={()=>{setRole("driver");setShowAuth(true);setMode("login");setNotice("");}} className="group flex min-h-[76px] items-center justify-between rounded-2xl border border-white/25 bg-white/[.10] px-5 py-4 text-left text-white shadow-xl backdrop-blur-xl transition hover:-translate-y-1 hover:border-[#c7f36b]/70 hover:bg-white/[.16]">
+      <span className="flex items-center gap-3"><span className="grid h-11 w-11 place-items-center rounded-xl bg-[#c7f36b] text-[#10291e]"><Bike size={23}/></span><span><span className="block text-[14px] font-black">Soy conductor</span><span className="mt-1 block text-[10px] text-white/65">Quiero recibir servicios</span></span></span><ArrowRight size={19} className="text-[#c7f36b] transition group-hover:translate-x-1"/>
+     </button>
+     <button type="button" onClick={()=>{setRole("customer");setShowAuth(true);setMode("login");setNotice("");}} className="group flex min-h-[76px] items-center justify-between rounded-2xl bg-[#c7f36b] px-5 py-4 text-left text-[#10291e] shadow-[0_14px_40px_#b7ef5b35] transition hover:-translate-y-1 hover:bg-[#d7ff91]">
+      <span className="flex items-center gap-3"><span className="grid h-11 w-11 place-items-center rounded-xl bg-[#10291e]/10"><MapPin size={23}/></span><span><span className="block text-[14px] font-black">Quiero un viaje</span><span className="mt-1 block text-[10px] text-[#25452f]/75">Pedir moto o enviar paquete</span></span></span><ArrowRight size={19}/>
+     </button>
     </div>
-    <div className="mt-9 flex flex-wrap gap-x-8 gap-y-3 border-t border-white/15 pt-5 text-[10px] font-bold text-white/65"><span className="flex items-center gap-2"><Bike size={15} className="text-[#c7f36b]"/> Viajes en moto</span><span className="flex items-center gap-2"><ArrowRight size={14} className="text-[#c7f36b]"/> Entrega de paquetes</span><span className="flex items-center gap-2"><MapPin size={14} className="text-[#c7f36b]"/> Hecho para Cotuí</span></div>
+    <div className="mt-7 flex flex-wrap gap-x-8 gap-y-3 border-t border-white/15 pt-5 text-[10px] font-bold text-white/65"><span className="flex items-center gap-2"><Bike size={15} className="text-[#c7f36b]"/> Viajes en moto</span><span className="flex items-center gap-2"><ArrowRight size={14} className="text-[#c7f36b}"/> Entrega de paquetes</span><span className="flex items-center gap-2"><ShieldCheck size={14} className="text-[#c7f36b}"/> Fácil, local y seguro</span></div>
    </section>
-   <section id="acceso" className="cg-cover-auth w-full self-center">
+   {showAuth&&<section id="acceso" className="cg-cover-auth w-full self-center">
     <div className="mx-auto w-full max-w-[410px] rounded-[28px] border border-white/65 bg-[#fbfdf9]/[.97] p-5 text-[#172820] shadow-[0_30px_100px_rgba(0,0,0,.35)] backdrop-blur-2xl sm:p-7">
+     <button type="button" onClick={()=>setShowAuth(false)} className="mb-4 inline-flex items-center gap-2 text-[11px] font-extrabold text-[#16845b]"><ArrowLeft size={15}/> Volver a elegir</button>
+     <div className="mb-3 rounded-xl bg-[#eaf5e7] px-3 py-2 text-[10px] font-black uppercase tracking-[.12em] text-[#174b35]">{role==="driver"?"Acceso para conductores":"Acceso para pasajeros"}</div>
      <div className="mb-5 flex items-center justify-between"><div><div className="text-[9px] font-black uppercase tracking-[.2em] text-[#16845b]">Bienvenido a Cotuí Go</div><h2 className="mt-1 text-[25px] font-black tracking-[-.04em]">{title}</h2><p className="mt-1 text-[11px] text-[#718078]">{mode==="register"?"Regístrate y comienza a moverte.":mode==="reset"?"Recupera tu acceso de forma segura.":"Entra y pide tu servicio en segundos."}</p></div><div className="grid h-11 w-11 place-items-center rounded-2xl bg-[#eaf5e7] text-[#174b35]"><Bike size={22}/></div></div>
      {mode!=="reset"&&<div className="mb-4 grid grid-cols-2 rounded-xl bg-[#edf2ec] p-1"><button type="button" onClick={()=>{setMode("login");setNotice("");}} className={mode==="login"?"rounded-lg bg-white px-3 py-2.5 text-xs font-extrabold text-[#17382a] shadow-sm":"rounded-lg px-3 py-2.5 text-xs font-bold text-[#7b8980]"}>Iniciar sesión</button><button type="button" onClick={()=>{setMode("register");setNotice("");}} className={mode==="register"?"rounded-lg bg-white px-3 py-2.5 text-xs font-extrabold text-[#17382a] shadow-sm":"rounded-lg px-3 py-2.5 text-xs font-bold text-[#7b8980]"}>Crear cuenta</button></div>}
      <form onSubmit={submit} className="space-y-3">
@@ -74,7 +82,7 @@ export default function AccessPage() {
      {mode==="reset"&&<button type="button" onClick={()=>{setMode("login");setNotice("");}} className="mt-3 text-xs font-bold text-[#16845b]">Volver al inicio de sesión</button>}
      <div className="mt-4 flex items-center justify-center gap-1.5 text-[9px] font-semibold text-[#9aa69e]"><ShieldCheck size={12}/> Tu cuenta está protegida · Cotuí, RD</div>
     </div>
-   </section>
+   </section>}
   </div>
  </main>;
 }
