@@ -78,3 +78,11 @@ html[data-theme="dark"] .cg-safety-dock{color:#edf5ef}
 .cg-map-pin,.cg-live-marker{user-select:none;cursor:grab}
 .cg-maplibre-canvas .maplibregl-ctrl-attrib,.cg-live-maplibre .maplibregl-ctrl-attrib{font-size:9px;background:rgba(255,255,255,.85);border-radius:8px 8px 0 0}
 .cg-maplibre-canvas .maplibregl-ctrl-group,.cg-live-maplibre .maplibregl-ctrl-group{border-radius:12px;overflow:hidden;box-shadow:0 3px 14px rgba(0,0,0,.16)}
+
+/* Login: ilustración ligera y pantalla compacta */
+@keyframes cg-bike-bob{0%,100%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(-4px) rotate(1deg)}}
+@keyframes cg-cloud-drift{0%,100%{transform:translateX(0)}50%{transform:translateX(9px)}}
+.cg-login-art svg g:nth-of-type(2){transform-box:fill-box;transform-origin:center;animation:cg-bike-bob 2.8s ease-in-out infinite}
+.cg-login-art .cg-art-cloud{animation:cg-cloud-drift 5s ease-in-out infinite}
+@media(max-height:740px){.cg-login-screen>div{min-height:calc(100svh - 16px)}.cg-login-screen section{padding-top:10px;padding-bottom:10px}.cg-login-art{height:124px}.cg-login-screen form{margin-top:10px}.cg-login-screen .mt-4{margin-top:10px}}
+@media(prefers-reduced-motion:reduce){.cg-login-art svg g:nth-of-type(2),.cg-login-art .cg-art-cloud{animation:none}}
