@@ -5,7 +5,7 @@ import {loadCotuiGoMapLibre} from "@/lib/cotui-go-maplibre";
 type Point={lat:number|null;lng:number|null};
 type Props={driver?:Point|null;pickup?:Point|null;destination?:Point|null;routeToDestination?:boolean;className?:string};
 const center={lat:19.0527,lng:-70.1494};
-const mapStyle="https://tiles.openfreemap.org/styles/bright";
+const mapStyle="https://tiles.openfreemap.org/styles/liberty";
 const fallbackStyle={version:8,sources:{"cg-osm-fallback":{type:"raster",tiles:["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],tileSize:256,attribution:"© OpenStreetMap contributors"}},layers:[{id:"cg-osm-fallback-layer",type:"raster",source:"cg-osm-fallback"}]};
 export default function CotuiGoLiveMap({driver,pickup,destination,routeToDestination=false,className=""}:Props){
  const host=useRef<HTMLDivElement>(null),map=useRef<any>(null),driverMarker=useRef<any>(null),pickupMarker=useRef<any>(null),destMarker=useRef<any>(null),routeCoords=useRef<number[][]>([]),lastRouteAt=useRef(0),requestId=useRef(0),fallbackUsed=useRef(false);
