@@ -83,3 +83,6 @@ header.sticky{background:rgba(15,118,110,.97)!important;border-color:rgba(255,25
   button:hover:not(:disabled){filter:saturate(1.04)}
   .cg-app-tools button:hover{transform:translateY(-2px)}
 }
+
+/* Evita superficies negras: los diálogos usan el teal de la marca */
+[class*="bg-black"]{background-color:rgba(9,55,52,.68)!important}
