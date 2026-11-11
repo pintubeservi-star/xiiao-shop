@@ -41,3 +41,45 @@ button:active,a:active{transform:scale(.975)}
 .cg-role-banner p{max-width:470px;font-size:12px;line-height:1.6;color:rgba(255,255,255,.75)}
 .cg-role-admin:before{background:linear-gradient(90deg,rgba(7,18,32,.96),rgba(7,18,32,.68)),url("https://cdn.travelpal.ai/prod/places/kvGzjHqXMun_ygHuQtsDJ7qFuVT/photos/google/webp/86da01c5f89de80b60d143c4.webp") center/cover}
 .cg-role-admin span{color:#7dd3fc}
+
+
+/* Cotuí Go · movilidad fluida, identidad teal + lima */
+:root{--cg-ink:#115e59;--cg-lime:#a3e635;--cg-brand:#0f766e;--cg-brand-dark:#115e59;--cg-surface:#ffffff;--cg-canvas:#f3f8f6}
+html,body{background:var(--cg-canvas);overscroll-behavior-y:contain}
+body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+button,a,input,select,textarea{-webkit-tap-highlight-color:transparent}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid rgba(20,184,166,.28);outline-offset:2px}
+button:disabled{cursor:not-allowed}
+input,select,textarea{scroll-margin-top:90px}
+header.sticky{background:rgba(15,118,110,.97)!important;border-color:rgba(255,255,255,.18)!important;box-shadow:0 5px 22px rgba(15,75,70,.12)}
+[class*="bg-[#14251d]"],[class*="bg-[#101b15]"]{background-color:#0f766e!important}
+[class*="text-[#14251d]"]{color:#115e59!important}
+[class~="bg-slate-900"]{background-color:#0f766e!important}
+[class~="text-lime-300"]{color:#d9f99d!important}
+.cg-city-hero{background-color:#0f766e}
+.cg-city-hero:before{background-image:linear-gradient(90deg,rgba(9,55,52,.94) 0%,rgba(9,55,52,.68) 48%,rgba(9,55,52,.12) 100%),url("https://cdn.travelpal.ai/prod/places/kvGzjHqXMun_ygHuQtsDJ7qFuVT/photos/google/webp/f1596ddfe2bf8a74b37a27ec.webp")}
+.cg-role-banner:before{background-image:linear-gradient(90deg,rgba(9,55,52,.94),rgba(9,55,52,.48)),url("https://cdn.travelpal.ai/prod/places/kvGzjHqXMun_ygHuQtsDJ7qFuVT/photos/google/webp/72403273563a97b6e1effb49.webp")}
+.cg-role-admin:before{background-image:linear-gradient(90deg,rgba(13,48,73,.96),rgba(13,48,73,.62)),url("https://cdn.travelpal.ai/prod/places/kvGzjHqXMun_ygHuQtsDJ7qFuVT/photos/google/webp/86da01c5f89de80b60d143c4.webp")}
+.cg-app-tools .cg-tool-sound{background:rgba(15,118,110,.94)}
+.cg-app-tools .cg-tool-install{background:#a3e635;color:#115e59}
+.cg-install-card>button:last-child{background:#0f766e}
+.cg-install-card h3{color:#115e59}
+.cg-driver-shell{background:radial-gradient(circle at 95% 0%,rgba(163,230,53,.16),transparent 28%),#f3f8f6}
+.cg-admin-shell{background:radial-gradient(circle at 100% 0%,rgba(20,184,166,.14),transparent 26%),#f1f7f8}
+.cg-map-pin{background:#a3e635}
+.cg-live-pin>div{background:#0f766e!important;color:#fff!important}
+.cg-map-pin-wrap{filter:drop-shadow(0 5px 12px rgba(15,118,110,.2))}
+.cg-app-tools button,.cg-install-card,.cg-driver-shell article,.cg-admin-shell article{transition:transform .2s ease,box-shadow .2s ease}
+.cg-app-tools button:active{transform:scale(.96)}
+@media(max-width:640px){
+  main{min-height:100svh}
+  header.sticky>div{padding-top:calc(10px + env(safe-area-inset-top));padding-bottom:10px}
+  .cg-app-tools{right:10px;bottom:calc(10px + env(safe-area-inset-bottom))}
+  input,select,textarea{font-size:16px!important}
+  .leaflet-control-zoom{margin-bottom:22px!important}
+}
+@media(prefers-reduced-motion:no-preference){
+  button,a{transition:transform .18s cubic-bezier(.2,.8,.2,1),box-shadow .2s ease,background-color .2s ease,border-color .2s ease}
+  button:hover:not(:disabled){filter:saturate(1.04)}
+  .cg-app-tools button:hover{transform:translateY(-2px)}
+}
