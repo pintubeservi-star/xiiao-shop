@@ -1,3 +1,4 @@
+@import "maplibre-gl/dist/maplibre-gl.css";
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -71,3 +72,10 @@ html[data-theme="dark"] .cg-safety-dock{color:#edf5ef}
 .cg-customer-screen .maplibregl-canvas{outline:none}
 .cg-customer-screen .maplibregl-ctrl-attrib{background:rgba(255,255,255,.82)!important;border-radius:8px 8px 0 0!important}
 .cg-customer-screen .maplibregl-ctrl-group button:focus-visible{outline:2px solid #84cc16;outline-offset:2px}
+
+/* Cotuí Go · MapLibre vector and custom vehicle markers */
+.cg-maplibre-canvas,.cg-live-maplibre{height:100%;width:100%;min-height:100%}
+.cg-customer-screen .maplibregl-canvas{outline:none}
+.cg-map-pin,.cg-live-marker{user-select:none;cursor:grab}
+.cg-maplibre-canvas .maplibregl-ctrl-attrib,.cg-live-maplibre .maplibregl-ctrl-attrib{font-size:9px;background:rgba(255,255,255,.85);border-radius:8px 8px 0 0}
+.cg-maplibre-canvas .maplibregl-ctrl-group,.cg-live-maplibre .maplibregl-ctrl-group{border-radius:12px;overflow:hidden;box-shadow:0 3px 14px rgba(0,0,0,.16)}
