@@ -14,7 +14,7 @@ const popularPlaces=[{name:"Parque Duarte",address:"Parque Duarte, Cotuí",lat:1
 async function hashPickupPin(pin:string):Promise<string>{const bytes=new TextEncoder().encode(pin);const digest=await crypto.subtle.digest("SHA-256",bytes);return Array.from(new Uint8Array(digest)).map(b=>b.toString(16).padStart(2,"0")).join("");}
 async function restoreCustomerActiveService(userId:string){
  const s=getSupabase();
- const activeStatuses=["requested","accepted","driver_arriving","in_progress","picked_up","on_the_way"];
+ const activeStatuses=["requested","accepted","driver_arriving","in_progress","courier_arriving","picked_up","on_the_way"];
  const [rides,deliveries]=await Promise.all([
   s.from("cg_ride_requests").select("tracking_token,created_at,status,customer_name,customer_phone,pickup_address,destination_address,pickup_lat,pickup_lng,destination_lat,destination_lng,note").eq("customer_id",userId).in("status",activeStatuses).order("created_at",{ascending:false}).limit(1),
   s.from("cg_delivery_requests").select("tracking_token,created_at,status,sender_name,sender_phone,recipient_name,recipient_phone,pickup_address,delivery_address,pickup_lat,pickup_lng,destination_lat,destination_lng,package_type,package_description").eq("customer_id",userId).in("status",activeStatuses).order("created_at",{ascending:false}).limit(1)
