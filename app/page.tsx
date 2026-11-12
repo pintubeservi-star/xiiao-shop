@@ -70,7 +70,7 @@ export default function Home(){
    </Link>
    <div className="pointer-events-auto flex gap-2">
     <Link href="/conductores" className="hidden items-center gap-1.5 rounded-full border border-white bg-white/95 px-3.5 py-3 text-xs font-extrabold text-slate-800 shadow-lg sm:flex"><Bike size={15}/> Conducir</Link>
-    <Link href={authUser?"/mi-cuenta":"/acceso"} aria-label={authUser?"Mi cuenta":"Iniciar sesión"} className="grid h-12 w-12 place-items-center rounded-full border border-white bg-white/95 text-slate-800 shadow-lg"><UserRound size={19}/></Link>
+    <Link href={authUser?"/mi-cuenta":"/acceso"} aria-label={authUser?"Mi cuenta":"Iniciar sesión"} className="flex h-12 items-center justify-center gap-2 rounded-full border border-white bg-white/95 px-4 text-xs font-extrabold text-slate-800 shadow-lg"><UserRound size={18}/><span>{authUser?"Mi cuenta":"Iniciar sesión"}</span></Link>
    </div>
   </header>
   <div className="absolute bottom-0 left-0 right-0 z-[650] mx-auto w-full sm:bottom-5 sm:left-5 sm:right-auto sm:mx-0 sm:max-w-[440px]">
@@ -91,7 +91,7 @@ export default function Home(){
       <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2.5">
        <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-teal-600 ring-4 ring-teal-100"/>
        <div className="min-w-0 flex-1"><label className="mb-0.5 block text-[9px] font-black uppercase tracking-wider text-slate-500">Recogida</label><input aria-label="Punto de recogida" className="w-full border-0 bg-transparent p-0 text-[14px] font-semibold text-slate-900 outline-none placeholder:text-slate-400 focus:ring-0" placeholder="¿Dónde te recogemos?" value={service==="moto"?ride.pickup:parcel.pickup} onFocus={()=>setMapTarget("pickup")} onChange={e=>{setQuote(null);if(service==="moto")setRide(v=>({...v,pickup:e.target.value}));else setParcel(v=>({...v,pickup:e.target.value}));}}/></div>
-       <button type="button" onClick={()=>setMapTarget("pickup")} className={mapTarget==="pickup"?"text-[10px] font-black text-teal-700":"text-[10px] font-bold text-slate-400"}>Mapa</button>
+       <div className="flex shrink-0 items-center gap-2"><button type="button" onClick={locate} disabled={locating} className="flex items-center gap-1 rounded-full bg-teal-50 px-2.5 py-2 text-[10px] font-extrabold text-teal-800 disabled:opacity-50"><MapPin size={13}/>{locating?"Buscando…":"Mi ubicación"}</button><button type="button" aria-label="Marcar recogida en el mapa" onClick={()=>setMapTarget("pickup")} className={mapTarget==="pickup"?"text-[10px] font-black text-teal-700":"text-[10px] font-bold text-slate-400"}>Mapa</button></div>
       </div>
       <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2.5">
        <span className="grid h-3 w-3 shrink-0 place-items-center rounded-full border-[3px] border-slate-800 bg-white"/>
@@ -99,10 +99,7 @@ export default function Home(){
        <button type="button" onClick={()=>setMapTarget("destination")} className={mapTarget==="destination"?"text-[10px] font-black text-teal-700":"text-[10px] font-bold text-slate-400"}>Mapa</button>
       </div>
      </div>
-     <div className="mt-2 flex items-center justify-between">
-      <span className="text-[10px] font-medium text-slate-500">Toca el mapa para marcar {mapTarget==="pickup"?"la recogida":"el destino"}.</span>
-      <button type="button" onClick={locate} disabled={locating} className="flex items-center gap-1.5 rounded-full px-2.5 py-2 text-[11px] font-extrabold text-teal-800 disabled:opacity-50"><MapPin size={14}/>{locating?"Buscando…":"Mi ubicación"}</button>
-     </div>
+     <div className="mt-2"><span className="text-[10px] font-medium text-slate-500">Toca el mapa para marcar {mapTarget==="pickup"?"la recogida":"el destino"}.</span></div>
      {panelExpanded&&<div className="mt-3 border-t border-slate-100 pt-3">
       {service==="moto"?<form onSubmit={submit} className="space-y-3">
        <div className="grid grid-cols-2 gap-2"><label><span className="mb-1 block text-[9px] font-extrabold uppercase tracking-wider text-slate-500">Tu nombre</span><input required className="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-[13px] text-slate-900 outline-none focus:border-teal-600" placeholder="Nombre y apellido" value={ride.name} onChange={e=>setRide({...ride,name:e.target.value})}/></label><label><span className="mb-1 block text-[9px] font-extrabold uppercase tracking-wider text-slate-500">Teléfono</span><input required type="tel" className="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-[13px] text-slate-900 outline-none focus:border-teal-600" placeholder="809..." value={ride.phone} onChange={e=>setRide({...ride,phone:e.target.value})}/></label></div>
@@ -116,7 +113,7 @@ export default function Home(){
        <button disabled={busy||quoting||!quote} className="flex w-full items-center justify-center gap-2 rounded-2xl bg-teal-700 px-4 py-4 text-sm font-black text-white shadow-lg shadow-teal-900/15 disabled:opacity-50">{busy?"Enviando…":quoting?"Calculando tarifa…":!quote?"Completa recogida y destino":<><Package size={18}/> Solicitar entrega</>}</button>
       </form>}
       {message&&<div role="status" className="mt-3 rounded-2xl border border-teal-100 bg-teal-50 p-3 text-xs font-semibold leading-5 text-teal-950">{message}</div>}
-      {!authUser&&<Link href="/acceso" className="mt-3 block rounded-xl bg-slate-100 px-3 py-3 text-center text-xs font-extrabold text-slate-800">Inicia sesión o crea tu cuenta para continuar <ArrowRight size={14} className="ml-1 inline"/></Link>}
+      
       <div className="mt-3 flex items-center justify-center gap-4 pb-1 text-[9px] font-semibold text-slate-400"><span className="flex items-center gap-1"><ShieldCheck size={12}/> Servicio seguro</span><span className="flex items-center gap-1"><Clock3 size={12}/> Cotuí</span></div>
      </div>}
     </div>
