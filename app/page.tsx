@@ -82,8 +82,8 @@ export default function Home(){
     </button>
     <div className="max-h-[calc(78svh-76px)] overflow-y-auto overscroll-contain px-4 pb-[max(18px,env(safe-area-inset-bottom))] sm:max-h-[calc(78svh-76px)]">
      <div className="mb-3 grid grid-cols-2 gap-2 rounded-2xl bg-slate-100 p-1">
-      <button type="button" onClick={()=>{setService("moto");setQuote(null);setMessage("");setPickupPin("");setPanelExpanded(true);}} className={service==="moto"?"flex items-center justify-center gap-2 rounded-xl bg-teal-700 px-3 py-3.5 text-sm font-black text-white shadow":"flex items-center justify-center gap-2 rounded-xl px-3 py-3.5 text-sm font-bold text-slate-600"}><Bike size={17}/> Moto</button>
-      <button type="button" onClick={()=>{setService("package");setQuote(null);setMessage("");setPickupPin("");setPanelExpanded(true);}} className={service==="package"?"flex items-center justify-center gap-2 rounded-xl bg-teal-700 px-3 py-3.5 text-sm font-black text-white shadow":"flex items-center justify-center gap-2 rounded-xl px-3 py-3.5 text-sm font-bold text-slate-600"}><Package size={17}/> Paquetes</button>
+      <button type="button" onClick={()=>{setService("moto");setQuote(null);setMessage("");setPanelExpanded(true);}} className={service==="moto"?"flex items-center justify-center gap-2 rounded-xl bg-teal-700 px-3 py-3.5 text-sm font-black text-white shadow":"flex items-center justify-center gap-2 rounded-xl px-3 py-3.5 text-sm font-bold text-slate-600"}><Bike size={17}/> Moto</button>
+      <button type="button" onClick={()=>{setService("package");setQuote(null);setMessage("");setPanelExpanded(true);}} className={service==="package"?"flex items-center justify-center gap-2 rounded-xl bg-teal-700 px-3 py-3.5 text-sm font-black text-white shadow":"flex items-center justify-center gap-2 rounded-xl px-3 py-3.5 text-sm font-bold text-slate-600"}><Package size={17}/> Paquetes</button>
      </div>
      <div className="space-y-2.5">
       <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2.5">
