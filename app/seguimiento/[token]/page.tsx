@@ -17,7 +17,7 @@ type Trip = {
   pickup_lng: number | null;
   destination_lat: number | null;
   destination_lng: number | null;
-  driver_name: string | null;
+  driver_name: string | null;\n  driver_phone?: string | null;
   driver_lat: number | null;
   driver_lng: number | null;
   last_location_at: string | null;
@@ -140,7 +140,7 @@ export default function TrackingPage() {
               <div className="rounded-3xl border border-slate-200 bg-white p-5">
                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Conductor asignado</p>
                 <h2 className="mt-2 text-lg font-black">{trip.driver_name || "Esperando asignación"}</h2>
-                <p className="mt-3 text-[10px] text-slate-400">
+                {trip.driver_phone&&<a href={"tel:"+trip.driver_phone} className="mt-3 inline-flex rounded-full bg-black px-4 py-2.5 text-xs font-bold text-white">Llamar al repartidor</a>}<p className="mt-3 text-[10px] text-slate-400">
                   {trip.last_location_at ? "Última actualización: " + new Date(trip.last_location_at).toLocaleTimeString("es-DO") : "Aún no hay ubicación compartida."}
                 </p>
               </div>
