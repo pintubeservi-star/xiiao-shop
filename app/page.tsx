@@ -106,7 +106,7 @@ export default function Home() {
       if (route.ok && typeof meters === "number" && meters > 0) routeDistance = meters / 1000;
     } catch {}
     const { data, error } = await getSupabase().rpc("cg_quote_fare", {
-      p_service: "package", p_pickup_lat: pickupCoords.lat, p_pickup_lng: pickupCoords.lng,
+      p_service: service === "food" ? "moto" : "package", p_pickup_lat: pickupCoords.lat, p_pickup_lng: pickupCoords.lng,
       p_destination_lat: destinationCoords.lat, p_destination_lng: destinationCoords.lng, p_route_distance_km: routeDistance
     });
     if (error) throw error;
