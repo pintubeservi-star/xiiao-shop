@@ -144,7 +144,8 @@ export default function Home() {
       if (error) throw error;
       if (!data?.tracking_token) throw new Error("La solicitud se creó, pero no se generó el enlace de seguimiento.");
       setTrackingUrl(window.location.origin + "/seguimiento/" + data.tracking_token);
-      const { data: sessionData } = await getSupabase().auth.getSession();\n      if (sessionData.session?.access_token) void fetch("/api/push/new-delivery", { method: "POST", headers: { "Content-Type": "application/json", Authorization: "Bearer " + sessionData.session.access_token }, body: JSON.stringify({ deliveryId: data.id }) }).catch(() => {});
+      const { data: sessionData } = await getSupabase().auth.getSession();
+      if (sessionData.session?.access_token) void fetch("/api/push/new-delivery", { method: "POST", headers: { "Content-Type": "application/json", Authorization: "Bearer " + sessionData.session.access_token }, body: JSON.stringify({ deliveryId: data.id }) }).catch(() => {});
       setNotice("¡Solicitud enviada! Estamos buscando un repartidor disponible.");
     } catch (e) { setNotice(e instanceof Error ? e.message : "No se pudo enviar la solicitud. Intenta nuevamente."); }
     finally { setBusy(false); }
