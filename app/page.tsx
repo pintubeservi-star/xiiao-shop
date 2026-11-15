@@ -161,7 +161,7 @@ export default function Home() {
 
     <section className="relative h-[calc(100svh-65px)] min-h-[690px] overflow-hidden bg-[#e9ece9]">
       <div className="absolute inset-0 bg-[#e9ece9]">
-        <CotuiGoMap initial={mapTarget === "pickup" ? point : (destinationPoint || center)} onPick={pickPoint}/>
+        <CotuiGoMap initial={mapTarget === "pickup" ? point : (destinationPoint || center)} pickup={pickup.startsWith("Punto del mapa:") ? point : null} destination={destinationPoint} target={mapTarget} onPick={pickPoint}/>
         <div className="absolute left-4 top-4 z-[500] rounded-full border border-white bg-white/95 px-3 py-2 text-[10px] font-extrabold text-slate-700 shadow-lg"><MapPin size={13} className="mr-1 inline text-lime-700"/> Cotuí, República Dominicana</div>
         <div className="absolute right-4 top-4 z-[500] flex max-w-[calc(100%-120px)] flex-wrap justify-end gap-2">
           <button type="button" onClick={() => setMapTarget("pickup")} className={"rounded-full px-4 py-3 text-xs font-black shadow-lg " + (mapTarget === "pickup" ? "bg-[#14251d] text-white" : "bg-white text-slate-700")}>Marcar recogida</button>
