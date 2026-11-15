@@ -8,13 +8,13 @@
     "scheme": "cotuigo",
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "do.cotuigo.app",
+      "bundleIdentifier": "com.cotuigo.app",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Cotuí Go usa tu ubicación para mostrar recogidas y entregas cercanas."
       }
     },
     "android": {
-      "package": "do.cotuigo.app",
+      "package": "com.cotuigo.app",
       "permissions": ["ACCESS_COARSE_LOCATION", "ACCESS_FINE_LOCATION", "VIBRATE"],
       "adaptiveIcon": { "backgroundColor": "#F4F7F5" }
     },
