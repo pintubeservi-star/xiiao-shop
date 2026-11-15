@@ -17,7 +17,8 @@ type Trip = {
   pickup_lng: number | null;
   destination_lat: number | null;
   destination_lng: number | null;
-  driver_name: string | null;\n  driver_phone?: string | null;
+  driver_name: string | null;
+  driver_phone?: string | null;
   driver_lat: number | null;
   driver_lng: number | null;
   last_location_at: string | null;
