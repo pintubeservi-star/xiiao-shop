@@ -1,24 +1,19 @@
-# Cotuí Go — aplicación móvil nativa
+# Cotuí Go — aplicación nativa Android/iOS
 
-Esta aplicación se construye con Expo + React Native. No es una PWA ni una web dentro de un WebView.
+Aplicación React Native con Expo (no PWA ni WebView). Incluye experiencia de cliente, repartidor y panel administrativo por roles, mapa, selección de destino, cálculo de tarifa por distancia, solicitudes, asignación, PIN de inicio, estados y lectura en tiempo real cuando Supabase está configurado.
 
-## Preparación
+## Configurar backend
+1. Crea un proyecto Supabase.
+2. Ejecuta todo el archivo `supabase/schema.sql` en SQL Editor.
+3. Copia `.env.example` a `.env` y coloca URL y anon key.
+4. Crea usuarios en Supabase Auth y sus perfiles en `public.profiles`. Para repartidores y administradores, asigna los roles desde el panel seguro de Supabase; nunca desde la app del usuario.
+5. Ejecuta `npm install`, `npx expo install --fix` y `npx expo start`.
 
-1. `cd mobile`
-2. `npm install`
-3. `npx expo install --fix`
-4. Copia `.env.example` a `.env` y configura las variables públicas de Supabase.
-5. `npx expo start` para probar en Expo Go cuando los módulos lo permitan.
+## Tarifas iniciales editables
+`src/lib/pricing.ts` define RD$100 de base + RD$25 por km (mínimo RD$100). La función SQL aplica la misma regla. Confirma y ajusta estos valores antes de operar comercialmente. Comisión: 15%.
 
 ## APK Android
+Instala EAS CLI, ejecuta `eas login`, luego `eas build:configure` y finalmente `eas build --platform android --profile preview`. El perfil preview produce APK instalable. Para compilar hace falta vincular el proyecto EAS y tener credenciales.
 
-1. Instala EAS CLI: `npm install -g eas-cli`
-2. Ejecuta `eas login` y `eas build:configure`.
-3. Sustituye `REPLACE_WITH_EAS_PROJECT_ID` por el ID generado por EAS.
-4. Ejecuta `eas build --platform android --profile preview`.
-
-El perfil preview genera un APK instalable. Para compilación local se requiere Android Studio y SDK Android.
-
-## Alcance de esta base
-
-Incluye interfaz móvil nativa inicial, selección de servicio, mapa, permiso de ubicación y flujo visual de solicitud. La conexión real a Supabase, despacho de repartidores, GPS en segundo plano, push remotas y pagos requieren configurar el proyecto/backend y sus credenciales antes de producción.
+## Alcance y pendientes antes de producción
+La interfaz nativa y el flujo principal están implementados. El esquema SQL proporciona creación segura de solicitudes, asignación exclusiva, PIN de inicio y panel de métricas. Aún hay que configurar el proyecto Supabase real, permisos/roles, credenciales de mapas, notificaciones push, pasarela de recargas, tracking GPS persistente en segundo plano, y el proceso de cobro/liquidación. No se ha generado un APK en este commit.
