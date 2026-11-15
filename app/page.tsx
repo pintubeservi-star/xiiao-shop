@@ -75,10 +75,12 @@ export default function Home() {
 
   const canQuote = useMemo(() => pickup.trim().length > 2 && destination.trim().length > 2, [pickup, destination]);
 
-  function pickPoint(p: Point) {
+  function pickPoint(p: Point, targetOverride?: "pickup" | "destination") {
+    const target = targetOverride || mapTarget;
+    setMapTarget(target);
     setQuote(null);
     const value = "Punto del mapa: " + p.lat.toFixed(5) + ", " + p.lng.toFixed(5);
-    if (mapTarget === "pickup") { setPoint(p); setPickup(value); }
+    if (target === "pickup") { setPoint(p); setPickup(value); }
     else { setDestinationPoint(p); setDestination(value); }
   }
 
