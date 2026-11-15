@@ -135,7 +135,7 @@ export default function Home() {
         distance_km: route.data.distance_km,
         pickup_lat: route.pickupCoords.lat, pickup_lng: route.pickupCoords.lng,
         destination_lat: route.destinationCoords.lat, destination_lng: route.destinationCoords.lng,
-        sender_name: sender.trim(), sender_phone: senderPhone.trim(),
+        sender_name: service === "food" ? merchant.trim() : sender.trim(), sender_phone: senderPhone.trim(),
         recipient_name: recipient.trim(), recipient_phone: recipientPhone.trim(),
         pickup_address: pickup.trim(), delivery_address: destination.trim(),
         package_type: service === "food" ? "comida" : "paquete",
