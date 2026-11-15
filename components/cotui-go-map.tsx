@@ -4,7 +4,7 @@ import {LocateFixed,Layers,MapPin} from "lucide-react";
 
 declare global { interface Window { L?: any } }
 type Point={lat:number;lng:number};
-type Props={onPick?:(point:Point)=>void; initial?:Point; pickup?:Point|null; destination?:Point|null; target?:"pickup"|"destination" };
+type Props={onPick?:(point:Point,target?:"pickup"|"destination")=>void; initial?:Point; pickup?:Point|null; destination?:Point|null; target?:"pickup"|"destination" };
 const cotui={lat:19.0527,lng:-70.1494};
 
 export default function CotuiGoMap({onPick,initial=cotui,pickup=null,destination=null,target="pickup"}:Props){
@@ -24,8 +24,8 @@ export default function CotuiGoMap({onPick,initial=cotui,pickup=null,destination
    L.control.zoom({position:"bottomright"}).addTo(m);
    const pin=L.divIcon({className:"cg-map-pin-wrap",html:'<div class="cg-map-pin"><span></span></div>',iconSize:[34,42],iconAnchor:[17,38]});
    marker.current=L.marker([initial.lat,initial.lng],{icon:pin,draggable:true}).addTo(m);
-   marker.current.on("dragend",()=>{const p=marker.current.getLatLng();onPickRef.current?.({lat:p.lat,lng:p.lng});});
-   m.on("click",(e:any)=>{const active=targetRef.current==="pickup"?pickupMarker.current:destinationMarker.current;if(active)active.setLatLng(e.latlng);else marker.current?.setLatLng(e.latlng);onPickRef.current?.({lat:e.latlng.lat,lng:e.latlng.lng});});
+   marker.current.on("dragend",()=>{const p=marker.current.getLatLng();onPickRef.current?.({lat:p.lat,lng:p.lng},targetRef.current);});
+   m.on("click",(e:any)=>{const active=targetRef.current==="pickup"?pickupMarker.current:destinationMarker.current;if(active)active.setLatLng(e.latlng);else marker.current?.setLatLng(e.latlng);onPickRef.current?.({lat:e.latlng.lat,lng:e.latlng.lng},targetRef.current);});
    map.current=m;setReady(true);setTimeout(()=>m.invalidateSize(),250);
   };
   addCss();
@@ -41,7 +41,7 @@ export default function CotuiGoMap({onPick,initial=cotui,pickup=null,destination
   const L=window.L;
   const makeIcon=(kind:"pickup"|"destination")=>L.divIcon({className:"cg-map-pin-wrap",html:'<div class="cg-map-pin cg-map-pin-'+kind+'"><span></span></div>',iconSize:[34,42],iconAnchor:[17,38]});
   const sync=(point:Point|null,ref:any,kind:"pickup"|"destination")=>{
-   if(point){if(!ref.current){ref.current=L.marker([point.lat,point.lng],{icon:makeIcon(kind),draggable:true}).addTo(map.current);ref.current.on("dragend",()=>{const p=ref.current.getLatLng();onPickRef.current?.({lat:p.lat,lng:p.lng});});}else ref.current.setLatLng([point.lat,point.lng]);}
+   if(point){if(!ref.current){ref.current=L.marker([point.lat,point.lng],{icon:makeIcon(kind),draggable:true}).addTo(map.current);ref.current.on("dragend",()=>{const p=ref.current.getLatLng();onPickRef.current?.({lat:p.lat,lng:p.lng},kind);});}else ref.current.setLatLng([point.lat,point.lng]);}
    else if(ref.current){map.current.removeLayer(ref.current);ref.current=null;}
   };
   sync(pickup,pickupMarker,"pickup");sync(destination,destinationMarker,"destination");
@@ -60,7 +60,7 @@ export default function CotuiGoMap({onPick,initial=cotui,pickup=null,destination
    catch(first:any){if(first?.code===1)throw first;pos=await getPosition({enableHighAccuracy:false,timeout:25000,maximumAge:300000});}
    const p={lat:pos.coords.latitude,lng:pos.coords.longitude};
    if(!Number.isFinite(p.lat)||!Number.isFinite(p.lng))throw new Error("El iPhone devolvió una ubicación inválida.");
-   map.current?.setView([p.lat,p.lng],17);marker.current?.setLatLng([p.lat,p.lng]);onPickRef.current?.(p);
+   map.current?.setView([p.lat,p.lng],17);marker.current?.setLatLng([p.lat,p.lng]);onPickRef.current?.(p,targetRef.current);
    setLocationMessage(pos.coords.accuracy>1000?"Ubicación aproximada. Ajusta el pin si es necesario.":"Ubicación encontrada.");
   }catch(e:any){
    setLocationMessage(e?.code===1?"Permiso denegado: activa Localización para Safari en Ajustes del iPhone.":e?.code===2?"No se pudo determinar la ubicación. Activa Wi‑Fi y Localización.":e?.code===3?"El GPS tardó demasiado. Marca el punto manualmente en el mapa.":e instanceof Error?e.message:"No se pudo obtener la ubicación. Marca el punto en el mapa.");
