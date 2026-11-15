@@ -153,15 +153,15 @@ export default function Home() {
     finally { setBusy(false); }
   }
 
-  return <main className="min-h-screen bg-[#f4f6f3] text-slate-900">
-    <header className="sticky top-0 z-[700] border-b border-slate-200 bg-white/95 text-slate-950 backdrop-blur-xl">
+  return <main className="cg-uber-shell min-h-screen bg-white text-slate-950">
+    <header className="cg-uber-header sticky top-0 z-[700] border-b border-slate-200 bg-white/95 text-slate-950 backdrop-blur-xl">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3.5">
         <Link href="/" className="flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-2xl bg-black text-white"><Navigation size={21}/></span><span className="text-xl font-black tracking-tight">Cotuí <span className="text-lime-600">Go</span><small className="block text-[9px] font-bold uppercase tracking-[.22em] text-slate-400">Entregas en tu ciudad</small></span></Link>
         <div className="flex items-center gap-2"><Link href={user ? "/mi-cuenta" : "/acceso"} className="flex items-center gap-2 rounded-full border border-slate-200 px-3.5 py-2.5 text-xs font-bold"><UserRound size={15}/>{user ? "Mi cuenta" : "Entrar"}</Link><Link href="/conductores" className="hidden rounded-full bg-black px-4 py-2.5 text-xs font-black text-white sm:inline-flex"><Bike size={15} className="mr-2"/> Soy repartidor</Link><Link href="/admin/movilidad" className="hidden rounded-full border border-white/20 px-3 py-2.5 text-xs font-bold sm:inline-flex">Administración</Link></div>
       </div>
     </header>
 
-    <section className="relative h-[calc(100svh-65px)] min-h-[690px] overflow-hidden bg-[#e9ece9]">
+    <section className="cg-uber-stage relative h-[calc(100svh-65px)] min-h-[690px] overflow-hidden bg-[#e9ece9]">
       <div className="absolute inset-0 bg-[#e9ece9]">
         <CotuiGoMap initial={mapTarget === "pickup" ? point : (destinationPoint || center)} pickup={pickup.startsWith("Punto del mapa:") ? point : null} destination={destinationPoint} target={mapTarget} onPick={pickPoint}/>
         <div className="absolute left-4 top-4 z-[500] rounded-full border border-white bg-white/95 px-3 py-2 text-[10px] font-extrabold text-slate-700 shadow-lg"><MapPin size={13} className="mr-1 inline text-lime-700"/> Cotuí, República Dominicana</div>
@@ -172,11 +172,11 @@ export default function Home() {
         </div>
       </div>
 
-      <aside className="absolute bottom-3 left-3 right-3 z-[600] mx-auto max-h-[78svh] w-full max-w-[470px] overflow-y-auto rounded-[28px] border border-white bg-white p-4 shadow-[0_18px_60px_rgba(0,0,0,.20)] sm:bottom-5 sm:left-5 sm:right-auto sm:p-5">
-        <div className="mb-5"><p className="text-[10px] font-black uppercase tracking-[.2em] text-slate-500">COTUÍ GO</p><h1 className="mt-1 text-xl font-black tracking-tight">¿A dónde llevamos tu pedido?</h1><p className="mt-1 text-xs text-slate-500">Comida y paquetes, con seguimiento en tiempo real.</p></div>
-        <div className="mb-5 grid grid-cols-2 gap-2 rounded-2xl bg-slate-100 p-1">
-          <button type="button" onClick={() => { setService("food"); setQuote(null); setNotice(""); }} className={"flex items-center justify-center gap-2 rounded-xl px-3 py-3.5 text-xs font-black " + (service === "food" ? "bg-black text-white shadow" : "text-slate-600")}><Utensils size={16}/> Comida</button>
-          <button type="button" onClick={() => { setService("package"); setQuote(null); setNotice(""); }} className={"flex items-center justify-center gap-2 rounded-xl px-3 py-3.5 text-xs font-black " + (service === "package" ? "bg-[#14251d] text-white shadow" : "text-slate-600")}><Package size={16}/> Paquetes</button>
+      <aside className="cg-uber-sheet absolute bottom-3 left-3 right-3 z-[600] mx-auto max-h-[78svh] w-full max-w-[470px] overflow-y-auto rounded-[28px] border border-white bg-white p-4 shadow-[0_18px_60px_rgba(0,0,0,.20)] sm:bottom-5 sm:left-5 sm:right-auto sm:p-5">
+        <div className="cg-uber-sheet-grip" aria-hidden="true"/><div className="mb-5"><p className="text-[10px] font-black uppercase tracking-[.2em] text-slate-500">COTUÍ GO · DELIVERY</p><h1 className="mt-1 text-2xl font-black tracking-tight">Tu entrega, a tu manera.</h1><p className="mt-1 text-xs text-slate-500">Solicita en segundos. Sigue cada movimiento en el mapa.</p></div>
+        <div className="mb-5 grid grid-cols-2 gap-2 rounded-full bg-[#f1f1f1] p-1">
+          <button type="button" onClick={() => { setService("food"); setQuote(null); setNotice(""); }} className={"flex items-center justify-center gap-2 rounded-full px-3 py-3.5 text-xs font-black " + (service === "food" ? "bg-black text-white shadow-md" : "text-slate-600")}><Utensils size={16}/> Comida</button>
+          <button type="button" onClick={() => { setService("package"); setQuote(null); setNotice(""); }} className={"flex items-center justify-center gap-2 rounded-xl px-3 py-3.5 text-xs font-black " + (service === "package" ? "bg-black text-white shadow-md" : "text-slate-600")}><Package size={16}/> Paquetes</button>
         </div>
         <form onSubmit={submit} className="space-y-3.5">
           {service === "food" ? <><label className="block"><span className={label}>Restaurante o comercio</span><input required className={field} placeholder="Ej. XiiAO Kitchen" value={merchant} onChange={e => setMerchant(e.target.value)}/></label><label className="block"><span className={label}>¿Qué deseas pedir?</span><textarea required rows={3} className={field} placeholder="Escribe los platos, cantidades y detalles" value={items} onChange={e => setItems(e.target.value)}/></label></> : <label className="block"><span className={label}>¿Qué vamos a transportar?</span><textarea rows={2} className={field} placeholder="Describe el paquete o artículo" value={description} onChange={e => setDescription(e.target.value)}/></label>}
