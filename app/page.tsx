@@ -1,86 +1,192 @@
 "use client";
-import {useEffect,useRef,useState} from "react";
-import {useRouter} from "next/navigation";
-import Link from "next/link";
-import {getSupabase} from "@/lib/supabase/client";
-import CotuiGoMap from "@/components/cotui-go-map";
-import {Bike,Package,ShieldCheck,Clock3,Navigation,MapPin,ArrowRight,UserRound} from "lucide-react";
 
-const input="w-full rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm text-slate-900 outline-none transition focus:border-lime-500 focus:ring-4 focus:ring-lime-100";
-const label="mb-1.5 block text-[10px] font-extrabold uppercase tracking-[.14em] text-slate-500";
-const center={lat:19.0527,lng:-70.1494};
-async function hashPickupPin(pin:string):Promise<string>{const bytes=new TextEncoder().encode(pin);const digest=await crypto.subtle.digest("SHA-256",bytes);return Array.from(new Uint8Array(digest)).map(b=>b.toString(16).padStart(2,"0")).join("");}
-async function geocodeAddress(address:string):Promise<{lat:number;lng:number}|null>{try{const response=await fetch("https://photon.komoot.io/api/?q="+encodeURIComponent(address+", Cotuí, Dominican Republic")+"&lat=19.0527&lon=-70.1494&limit=1");if(!response.ok)return null;const data=await response.json();const coordinates=data?.features?.[0]?.geometry?.coordinates;if(!Array.isArray(coordinates)||coordinates.length<2)return null;return {lng:Number(coordinates[0]),lat:Number(coordinates[1])};}catch{return null}}
-export default function Home(){
- const router=useRouter();
- const logoTapCount=useRef(0);
- const logoTapTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
- const [service,setService]=useState<"moto"|"package">("moto");
- const [authUser,setAuthUser]=useState<any>(null),[profile,setProfile]=useState<{full_name:string|null;phone:string|null}|null>(null),[authReady,setAuthReady]=useState(false);
- const [busy,setBusy]=useState(false),[message,setMessage]=useState(""),[trackingUrl,setTrackingUrl]=useState(""),[pickupPin,setPickupPin]=useState(""),[locating,setLocating]=useState(false);
- const [quote,setQuote]=useState<{distance_km:number;fare_dop:number;commission_pct:number;commission_dop:number;driver_payout_dop:number}|null>(null),[quoting,setQuoting]=useState(false);
- const [point,setPoint]=useState(center),[destinationPoint,setDestinationPoint]=useState<{lat:number;lng:number}|null>(null),[mapTarget,setMapTarget]=useState<"pickup"|"destination">("pickup");
- const [ride,setRide]=useState({name:"",phone:"",pickup:"",destination:"",note:""});
- const [parcel,setParcel]=useState({sender:"",phone:"",recipient:"",recipientPhone:"",pickup:"",destination:"",kind:"paquete",description:""});
- useEffect(()=>{const s=getSupabase();let alive=true;const load=async()=>{const {data:{user}}=await s.auth.getUser();if(!alive)return;setAuthUser(user);if(user){const {data}=await s.from("profiles").select("full_name,phone").eq("id",user.id).maybeSingle();if(!alive)return;setProfile(data||null);if(data){setRide(v=>({...v,name:v.name||data.full_name||"",phone:v.phone||data.phone||""}));setParcel(v=>({...v,sender:v.sender||data.full_name||"",phone:v.phone||data.phone||""}));}}setAuthReady(true);};void load();const {data:{subscription}}=s.auth.onAuthStateChange((_event,session)=>{if(!alive)return;setAuthUser(session?.user||null);if(!session?.user){setProfile(null);setAuthReady(true);}else{void s.from("profiles").select("full_name,phone").eq("id",session.user.id).maybeSingle().then(({data})=>{if(!alive)return;setProfile(data||null);if(data){setRide(v=>({...v,name:data.full_name||v.name,phone:data.phone||v.phone}));setParcel(v=>({...v,sender:data.full_name||v.sender,phone:data.phone||v.phone}));}setAuthReady(true);});}});return()=>{alive=false;subscription.unsubscribe();};},[]);
- function pickPoint(p:{lat:number;lng:number}){setQuote(null);const hint="Punto del mapa: "+p.lat.toFixed(5)+", "+p.lng.toFixed(5);if(mapTarget==="pickup"){setPoint(p);setRide(v=>({...v,pickup:hint}));setParcel(v=>({...v,pickup:hint}));}else{setDestinationPoint(p);setRide(v=>({...v,destination:hint}));setParcel(v=>({...v,destination:hint}));}}
- async function locate(){
-  setMapTarget("pickup");setMessage("");
-  if(!window.isSecureContext){setMessage("La ubicación necesita una conexión segura HTTPS. Abre Cotuí Go desde su enlace oficial.");return;}
-  if(!navigator.geolocation){setMessage("Este navegador no permite compartir ubicación. Abre Cotuí Go en Safari.");return;}
-  setLocating(true);
-  const getPosition=(options:PositionOptions)=>new Promise<GeolocationPosition>((resolve,reject)=>navigator.geolocation.getCurrentPosition(resolve,reject,options));
-  try{
-   let pos:GeolocationPosition;
-   try{pos=await getPosition({enableHighAccuracy:true,timeout:20000,maximumAge:60000});}
-   catch(first:any){
-    if(first?.code===1)throw first;
-    pos=await getPosition({enableHighAccuracy:false,timeout:25000,maximumAge:300000});
-   }
-   const p={lat:pos.coords.latitude,lng:pos.coords.longitude};
-   if(!Number.isFinite(p.lat)||!Number.isFinite(p.lng))throw new Error("El iPhone devolvió una ubicación inválida.");
-   setPoint(p);const hint="Punto del mapa: "+p.lat.toFixed(5)+", "+p.lng.toFixed(5);
-   setRide(v=>({...v,pickup:hint}));setParcel(v=>({...v,pickup:hint}));
-   setMessage(pos.coords.accuracy>1000?"Ubicación aproximada detectada. Puedes ajustar el pin moviéndolo en el mapa.":"Ubicación detectada correctamente.");
-  }catch(e:any){
-   const code=e?.code;
-   setMessage(code===1?"Permiso denegado. En el iPhone entra en Ajustes > Privacidad y seguridad > Localización, activa Localización y permite el acceso a Safari.":code===2?"El iPhone no pudo determinar tu ubicación. Activa Wi‑Fi y Localización e inténtalo de nuevo.":code===3?"El GPS tardó demasiado. Muévete a un lugar abierto o marca el punto manualmente en el mapa.":e instanceof Error?e.message:"No pudimos obtener tu ubicación. Puedes marcar la recogida directamente en el mapa.");
-  }finally{setLocating(false);}
- }
- async function calculateQuote(){setQuoting(true);setMessage("");try{const pickupAddress=service==="moto"?ride.pickup:parcel.pickup;const destinationAddress=service==="moto"?ride.destination:parcel.destination;const pickupCoords=pickupAddress.startsWith("Punto del mapa:")?point:await geocodeAddress(pickupAddress);const destinationCoords=destinationPoint||await geocodeAddress(destinationAddress);if(!pickupCoords||!destinationCoords)throw new Error("No pudimos ubicar ambas direcciones. Marca recogida y destino en el mapa.");let routeDistance:number|null=null;try{const route=await fetch("https://router.project-osrm.org/route/v1/driving/"+pickupCoords.lng+","+pickupCoords.lat+";"+destinationCoords.lng+","+destinationCoords.lat+"?overview=false&steps=false");if(route.ok){const routeData=await route.json();const meters=routeData?.routes?.[0]?.distance;if(typeof meters==="number"&&meters>0)routeDistance=meters/1000;}}catch{}const {data,error}=await getSupabase().rpc("cg_quote_fare",{p_service:service==="moto"?"moto":"package",p_pickup_lat:pickupCoords.lat,p_pickup_lng:pickupCoords.lng,p_destination_lat:destinationCoords.lat,p_destination_lng:destinationCoords.lng,p_route_distance_km:routeDistance});if(error)throw error;setQuote(data);return {pickupCoords,destinationCoords,data};}catch(e){setMessage(e instanceof Error?e.message:"No se pudo calcular la tarifa.");throw e;}finally{setQuoting(false);}}
- useEffect(()=>{const pickup=service==="moto"?ride.pickup:parcel.pickup;const destination=service==="moto"?ride.destination:parcel.destination;if(!pickup.trim()||!destination.trim()){setQuote(null);return;}const timer=window.setTimeout(()=>{calculateQuote().catch(()=>{});},650);return()=>window.clearTimeout(timer);},[service,ride.pickup,ride.destination,parcel.pickup,parcel.destination,point.lat,point.lng,destinationPoint?.lat,destinationPoint?.lng]);
- function handleLogoTap(e:React.MouseEvent<HTMLAnchorElement>){e.preventDefault();logoTapCount.current+=1;if(logoTapTimer.current)clearTimeout(logoTapTimer.current);if(logoTapCount.current>=7){logoTapCount.current=0;router.push("/admin/movilidad");return;}logoTapTimer.current=setTimeout(()=>{logoTapCount.current=0;},2500);}
- async function submit(e:React.FormEvent){e.preventDefault();if(!authUser){setMessage("Inicia sesión o crea tu cuenta para solicitar un servicio.");return;}setBusy(true);setMessage("");setTrackingUrl("");try{const s=getSupabase();const fullName=service==="moto"?ride.name:parcel.sender;const phone=service==="moto"?ride.phone:parcel.phone;const {error:profileError}=await s.from("profiles").update({full_name:fullName,phone}).eq("id",authUser.id);if(profileError)throw profileError;const pricingResult=await calculateQuote();const pricing=pricingResult.data;if(!pricing)throw new Error("No se pudo obtener el precio. Calcula la tarifa nuevamente.");const pickupCoords=pricingResult.pickupCoords;const destinationCoords=pricingResult.destinationCoords;if(service==="moto"){const pickupPin=String(crypto.getRandomValues(new Uint32Array(1))[0]%9000+1000);const pickupPinHash=await hashPickupPin(pickupPin);const {data:createdRide,error}=await s.from("cg_ride_requests").insert({distance_km:pricing.distance_km,customer_id:authUser.id,pickup_pin_hash:pickupPinHash,customer_name:ride.name,customer_phone:ride.phone,pickup_address:ride.pickup,destination_address:ride.destination,ride_type:"moto",passengers:1,note:ride.note||null,pickup_lat:pickupCoords?.lat??null,pickup_lng:pickupCoords?.lng??null,destination_lat:destinationCoords?.lat??null,destination_lng:destinationCoords?.lng??null}).select("tracking_token").single();if(error)throw error;if(!createdRide?.tracking_token)throw new Error("No se pudo generar el enlace de seguimiento.");setTrackingUrl(window.location.origin+"/seguimiento/"+createdRide.tracking_token);setPickupPin(pickupPin);setRide(v=>({...v,pickup:"",destination:"",note:""}));setQuote(null);setMessage("¡Solicitud enviada! Guarda tu enlace y muestra este PIN al conductor cuando llegue para iniciar el viaje.");}else{const {data:createdDelivery,error}=await s.from("cg_delivery_requests").insert({distance_km:pricing.distance_km,customer_id:authUser.id,pickup_lat:pickupCoords?.lat??null,pickup_lng:pickupCoords?.lng??null,destination_lat:destinationCoords?.lat??null,destination_lng:destinationCoords?.lng??null,sender_name:parcel.sender,sender_phone:parcel.phone,recipient_name:parcel.recipient,recipient_phone:parcel.recipientPhone,pickup_address:parcel.pickup,delivery_address:parcel.destination,package_type:parcel.kind,package_description:parcel.description||null}).select("tracking_token").single();if(error)throw error;if(!createdDelivery?.tracking_token)throw new Error("No se pudo generar el enlace de seguimiento.");setTrackingUrl(window.location.origin+"/seguimiento/"+createdDelivery.tracking_token);setParcel(v=>({...v,recipient:"",recipientPhone:"",pickup:"",destination:"",kind:"paquete",description:""}));setQuote(null);setMessage("¡Paquete solicitado! Guarda este enlace para seguir la entrega cuando se asigne un conductor.");}}catch(err){setMessage(err instanceof Error?err.message:"No se pudo enviar la solicitud. Intenta de nuevo.");}finally{setBusy(false)}}
- return <main className="min-h-screen bg-[#f4f6f3] text-slate-900">
-  <header className="sticky top-0 z-30 border-b border-white/10 bg-[#101b15]/95 text-white backdrop-blur-xl"><div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3"><Link href="/" onClick={handleLogoTap} aria-label="Cotuí Go" className="flex items-center gap-2.5"><span className="grid h-10 w-10 place-items-center rounded-2xl bg-lime-400 text-[#14251d] shadow-sm"><Navigation size={21}/></span><span className="text-xl font-black tracking-tight text-white">Cotuí <span className="text-lime-400">Go</span><small className="block text-[9px] font-bold uppercase tracking-[.2em] text-white/50">Tu ciudad en movimiento</small></span></Link><div className="flex items-center gap-2"><Link href={authUser?"/mi-cuenta":"/acceso"} className="flex items-center gap-1.5 rounded-full border border-white/20 px-3 py-2.5 text-xs font-bold text-white"><UserRound size={15}/>{authUser?"Mi cuenta":"Entrar"}</Link><Link href="/conductores" className="hidden items-center gap-2 rounded-full bg-lime-400 px-4 py-2.5 text-xs font-black text-[#14251d] shadow-sm transition hover:bg-lime-300 sm:flex"><Bike size={15}/> Portal conductor <ArrowRight size={14}/></Link></div></div></header>
-  <section className="mx-auto max-w-6xl px-3 pb-12 pt-4 sm:px-5 sm:pt-7">
-   
-   <div className="relative -mx-3 h-[76svh] min-h-[570px] overflow-hidden bg-[#e9eee8] shadow-inner sm:mx-0 sm:h-[780px] sm:min-h-[680px] sm:rounded-[30px] sm:border sm:border-white sm:shadow-[0_18px_55px_rgba(15,35,25,.14)]"><CotuiGoMap initial={mapTarget==="pickup"?point:(destinationPoint||center)} onPick={pickPoint}/><div className="absolute left-4 top-4 z-[500] rounded-full border border-white/80 bg-white/95 px-3 py-2 text-[10px] font-bold text-slate-700 shadow-lg backdrop-blur"><MapPin size={13} className="mr-1 inline text-lime-700"/> Mueve el mapa para ajustar el pin</div><div className="absolute bottom-3 left-3 right-3 z-[650] mx-auto w-auto max-w-[460px] rounded-[26px] border border-white/90 bg-white/95 p-4 pb-[max(16px,env(safe-area-inset-bottom))] shadow-[0_-10px_40px_rgba(10,25,16,.22)] backdrop-blur-xl sm:bottom-5 sm:left-5 sm:right-auto sm:w-[440px] sm:rounded-[28px] sm:p-5">
-    <div className="mb-3 flex items-center justify-between"><div><p className="text-[9px] font-black uppercase tracking-[.18em] text-lime-700">COTUÍ GO · A TU SERVICIO</p><p className="text-lg font-black leading-tight tracking-tight text-slate-950">¿A dónde vamos?</p></div><span className="flex items-center gap-1 rounded-full bg-lime-50 px-2.5 py-1.5 text-[9px] font-extrabold text-lime-900"><span className="h-1.5 w-1.5 rounded-full bg-lime-500"/> En Cotuí</span></div>
-    <div className="mb-3 grid grid-cols-2 gap-2 rounded-2xl bg-slate-100 p-1"><button type="button" onClick={()=>{setService("moto");setQuote(null);setMessage("");setTrackingUrl("");setPickupPin("");}} className={service==="moto"?"flex items-center justify-center gap-2 rounded-xl bg-[#14251d] px-3 py-3 text-xs font-black text-white shadow-sm":"flex items-center justify-center gap-2 rounded-xl bg-transparent px-3 py-3 text-xs font-bold text-slate-600"}><Bike size={16}/> Moto</button><button type="button" onClick={()=>{setService("package");setQuote(null);setMessage("");setTrackingUrl("");setPickupPin("");}} className={service==="package"?"flex items-center justify-center gap-2 rounded-xl bg-[#14251d] px-3 py-3 text-xs font-black text-white shadow-sm":"flex items-center justify-center gap-2 rounded-xl bg-transparent px-3 py-3 text-xs font-bold text-slate-600"}><Package size={16}/> Paquetes</button></div>
-    <div className="space-y-2.5">
-     <div className="flex items-center gap-2"><span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-lime-100 text-lime-800"><MapPin size={15}/></span><div className="min-w-0 flex-1"><div className="mb-1 flex items-center justify-between"><label className="text-[9px] font-black uppercase tracking-wider text-slate-500">Punto de recogida</label><button type="button" onClick={()=>setMapTarget("pickup")} className={mapTarget==="pickup"?"text-[9px] font-black text-lime-800 underline":"text-[9px] font-bold text-slate-400"}>Elegir en mapa</button></div><input aria-label="Punto de recogida" required className="w-full rounded-xl border border-slate-200 bg-[#f8faf8] px-3 py-3 text-[13px] font-semibold text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-lime-500 focus:bg-white focus:ring-4 focus:ring-lime-100" placeholder="¿Dónde te recogemos?" value={service==="moto"?ride.pickup:parcel.pickup} onChange={e=>{setQuote(null);if(service==="moto")setRide(v=>({...v,pickup:e.target.value}));else setParcel(v=>({...v,pickup:e.target.value}));}}/></div></div>
-     <div className="ml-3 h-3 border-l-2 border-dashed border-slate-300"></div>
-     <div className="flex items-center gap-2"><span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-slate-900 text-lime-300"><Navigation size={15}/></span><div className="min-w-0 flex-1"><div className="mb-1 flex items-center justify-between"><label className="text-[9px] font-black uppercase tracking-wider text-slate-500">{service==="moto"?"¿A dónde vas?":"Dirección de entrega"}</label><button type="button" onClick={()=>setMapTarget("destination")} className={mapTarget==="destination"?"text-[9px] font-black text-lime-800 underline":"text-[9px] font-bold text-slate-400"}>Elegir en mapa</button></div><input aria-label="Destino" required className="w-full rounded-xl border border-slate-200 bg-[#f8faf8] px-3 py-3 text-[13px] font-semibold text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-lime-500 focus:bg-white focus:ring-4 focus:ring-lime-100" placeholder="Selecciona tu destino" value={service==="moto"?ride.destination:parcel.destination} onChange={e=>{setQuote(null);setDestinationPoint(null);if(service==="moto")setRide(v=>({...v,destination:e.target.value}));else setParcel(v=>({...v,destination:e.target.value}));}}/></div></div>
-    </div>
-    <div className="mt-3 flex items-center justify-between gap-2"><p className="text-[9px] leading-4 text-slate-500">Marca los puntos en el mapa o escribe la dirección.</p><button type="button" onClick={locate} disabled={locating} className="flex shrink-0 items-center gap-1.5 rounded-full bg-lime-100 px-3 py-2 text-[10px] font-extrabold text-lime-900 disabled:opacity-60"><MapPin size={12}/>{locating?"Buscando…":"Mi ubicación"}</button></div>
-   </div></div>
-   <div className="relative z-10 mx-auto mt-5 max-w-2xl rounded-[28px] border border-white/80 bg-white p-5 shadow-[0_12px_40px_rgba(10,25,16,.12)] sm:mt-7 sm:rounded-[30px] sm:p-7">
-    <div className="mb-5"><p className="text-[10px] font-black uppercase tracking-[.2em] text-lime-700">Solicita en segundos</p><h2 className="mt-1 text-xl font-black">Completa tu solicitud</h2>{authReady&&<p className="mt-1 text-xs text-slate-500">{authUser?`Conectado como ${profile?.full_name||authUser.email}`:"Para pedir un viaje o envío necesitas iniciar sesión."}</p>}</div>
-    {service==="moto"?<form onSubmit={submit} className="space-y-3"><h3 className="font-extrabold">Tus datos para el viaje</h3>
-     <div className="grid gap-3 sm:grid-cols-2"><label><span className={label}>Tu nombre</span><input required className={input} placeholder="Nombre y apellido" value={ride.name} onChange={e=>setRide({...ride,name:e.target.value})}/></label><label><span className={label}>Teléfono</span><input required type="tel" className={input} placeholder="809-000-0000" value={ride.phone} onChange={e=>setRide({...ride,phone:e.target.value})}/></label></div>
-     <label className="block"><span className={label}>Nota (opcional)</span><input className={input} placeholder="Referencia para el motorista" value={ride.note} onChange={e=>setRide({...ride,note:e.target.value})}/></label>
-     <div className="rounded-xl border border-lime-200 bg-lime-50 px-4 py-3 text-center text-xs font-bold text-[#14251d]">{quoting?"Calculando automáticamente la distancia y el precio…":quote?"Precio actualizado automáticamente al cambiar la ruta.":"Introduce la recogida y el destino para calcular el precio automáticamente."}</div>{quote&&<div className="rounded-2xl border border-slate-200 bg-[#f7faf5] p-4"><div className="flex items-end justify-between"><div><p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Precio del viaje</p><p className="text-3xl font-black text-[#14251d]">RD$ {Number(quote.fare_dop).toFixed(0)}</p></div><div className="text-right"><p className="text-[10px] text-slate-500">Distancia estimada</p><b className="text-sm">{quote.distance_km} km</b></div></div><p className="mt-2 text-[10px] text-slate-500">Tarifa calculada por distancia. El conductor recibe el 85% y Cotuí Go retiene el 15% de comisión.</p></div>}<button disabled={busy||quoting||!quote} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#14251d] px-5 py-4 text-sm font-extrabold text-white shadow-lg transition hover:bg-lime-800 disabled:opacity-50">{busy?"Enviando solicitud…":quoting?"Calculando precio…":!quote?"Completa recogida y destino":<><Bike size={18}/> Confirmar solicitud de moto</>}</button>
-    </form>:<form onSubmit={submit} className="space-y-3"><h3 className="font-extrabold">Enviar un paquete</h3>
-     <div className="grid gap-3 sm:grid-cols-2"><label><span className={label}>Quién envía</span><input required className={input} placeholder="Nombre del remitente" value={parcel.sender} onChange={e=>setParcel({...parcel,sender:e.target.value})}/></label><label><span className={label}>Teléfono</span><input required type="tel" className={input} placeholder="Teléfono de contacto" value={parcel.phone} onChange={e=>setParcel({...parcel,phone:e.target.value})}/></label><label><span className={label}>Quién recibe</span><input required className={input} placeholder="Nombre del destinatario" value={parcel.recipient} onChange={e=>setParcel({...parcel,recipient:e.target.value})}/></label><label><span className={label}>Teléfono destinatario</span><input required type="tel" className={input} placeholder="Teléfono de quien recibe" value={parcel.recipientPhone} onChange={e=>setParcel({...parcel,recipientPhone:e.target.value})}/></label></div>
-     <h3 className="font-extrabold">Datos del remitente y destinatario</h3>
-     <div className="grid gap-3 sm:grid-cols-2"><label><span className={label}>Tipo de paquete</span><select className={input} value={parcel.kind} onChange={e=>setParcel({...parcel,kind:e.target.value})}>{["paquete","documento","comida","compra","farmacia","otro"].map(k=><option key={k} value={k}>{k[0].toUpperCase()+k.slice(1)}</option>)}</select></label><label><span className={label}>Descripción (opcional)</span><input className={input} placeholder="¿Qué vamos a transportar?" value={parcel.description} onChange={e=>setParcel({...parcel,description:e.target.value})}/></label></div>
-     <div className="rounded-xl border border-lime-200 bg-lime-50 px-4 py-3 text-center text-xs font-bold text-[#14251d]">{quoting?"Calculando automáticamente la distancia y el precio…":quote?"Precio actualizado automáticamente al cambiar la ruta.":"Introduce la recogida y el destino para calcular el precio automáticamente."}</div>{quote&&<div className="rounded-2xl border border-slate-200 bg-[#f7faf5] p-4"><div className="flex items-end justify-between"><div><p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Precio del viaje</p><p className="text-3xl font-black text-[#14251d]">RD$ {Number(quote.fare_dop).toFixed(0)}</p></div><div className="text-right"><p className="text-[10px] text-slate-500">Distancia estimada</p><b className="text-sm">{quote.distance_km} km</b></div></div><p className="mt-2 text-[10px] text-slate-500">Tarifa calculada por distancia. El conductor recibe el 85% y Cotuí Go retiene el 15% de comisión.</p></div>}<button disabled={busy||quoting||!quote} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#14251d] px-5 py-4 text-sm font-extrabold text-white shadow-lg disabled:opacity-50">{busy?"Enviando solicitud…":<><Package size={18}/> Solicitar recogida</>}</button>
-    </form>}
-    {message&&<div role="status" className="mt-4 rounded-xl border border-lime-200 bg-lime-50 p-3 text-sm font-semibold text-lime-900">{message}{pickupPin&&<div className="mt-3 rounded-xl border border-lime-300 bg-white p-4 text-center"><p className="text-[10px] font-black uppercase tracking-widest text-slate-500">PIN para iniciar tu viaje</p><p className="mt-1 text-3xl font-black tracking-[.35em] text-[#14251d]">{pickupPin}</p><p className="mt-1 text-[10px] font-medium text-slate-500">Compártelo únicamente cuando estés con el conductor.</p></div>}{trackingUrl&&<div className="mt-3 grid grid-cols-2 gap-2"><a href={trackingUrl} className="flex items-center justify-center rounded-xl bg-[#14251d] px-3 py-3 text-xs font-extrabold text-white">Abrir seguimiento</a><button type="button" onClick={()=>navigator.clipboard.writeText(trackingUrl).then(()=>setMessage("Enlace de seguimiento copiado."))} className="rounded-xl border border-lime-300 bg-white px-3 py-3 text-xs font-extrabold text-lime-900">Copiar enlace</button></div>}</div>}
-    {!authUser&&<Link href="/acceso" className="mt-4 block rounded-xl bg-lime-100 px-4 py-3 text-center text-xs font-extrabold text-[#14251d]">Inicia sesión o crea tu cuenta para continuar <ArrowRight size={14} className="ml-1 inline"/></Link>}<div className="mt-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 border-t border-slate-100 pt-4 text-[10px] font-semibold text-slate-400"><span className="flex items-center gap-1"><ShieldCheck size={13}/> Solicitud segura</span><span className="flex items-center gap-1"><Clock3 size={13}/> Confirmación por teléfono</span><span className="flex items-center gap-1"><MapPin size={13}/> Servicio en Cotuí</span></div>
-   </div>
-   <p className="mt-6 text-center text-[11px] text-slate-400">Cotuí Go · Movilidad y entregas locales</p>
-  </section>
- </main>;
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { getSupabase } from "@/lib/supabase/client";
+import CotuiGoMap from "@/components/cotui-go-map";
+import { ArrowRight, Bike, CheckCircle2, Clock3, MapPin, Package, Store, Utensils, UserRound, Navigation, LocateFixed, Loader2 } from "lucide-react";
+
+type Service = "food" | "package";
+type Point = { lat: number; lng: number };
+type Quote = { distance_km: number; fare_dop: number; commission_pct?: number; driver_payout_dop?: number };
+const center: Point = { lat: 19.0527, lng: -70.1494 };
+const field = "w-full rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-sm font-medium text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-lime-500 focus:ring-4 focus:ring-lime-100";
+const label = "mb-1.5 block text-[10px] font-black uppercase tracking-[.16em] text-slate-500";
+
+async function geocode(address: string): Promise<Point | null> {
+  try {
+    const response = await fetch("https://photon.komoot.io/api/?q=" + encodeURIComponent(address + ", Cotuí, Dominican Republic") + "&lat=19.0527&lon=-70.1494&limit=1");
+    if (!response.ok) return null;
+    const data = await response.json();
+    const coords = data?.features?.[0]?.geometry?.coordinates;
+    return Array.isArray(coords) ? { lng: Number(coords[0]), lat: Number(coords[1]) } : null;
+  } catch { return null; }
+}
+
+export default function Home() {
+  const router = useRouter();
+  const [service, setService] = useState<Service>("food");
+  const [user, setUser] = useState<any>(null);
+  const [profile, setProfile] = useState<any>(null);
+  const [authReady, setAuthReady] = useState(false);
+  const [pickup, setPickup] = useState("");
+  const [destination, setDestination] = useState("");
+  const [sender, setSender] = useState("");
+  const [senderPhone, setSenderPhone] = useState("");
+  const [recipient, setRecipient] = useState("");
+  const [recipientPhone, setRecipientPhone] = useState("");
+  const [merchant, setMerchant] = useState("");
+  const [items, setItems] = useState("");
+  const [description, setDescription] = useState("");
+  const [note, setNote] = useState("");
+  const [point, setPoint] = useState<Point>(center);
+  const [destinationPoint, setDestinationPoint] = useState<Point | null>(null);
+  const [mapTarget, setMapTarget] = useState<"pickup" | "destination">("pickup");
+  const [quote, setQuote] = useState<Quote | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [locating, setLocating] = useState(false);
+  const [notice, setNotice] = useState("");
+  const [trackingUrl, setTrackingUrl] = useState("");
+
+  useEffect(() => {
+    const supabase = getSupabase();
+    let active = true;
+    const load = async () => {
+      const { data: { user: current } } = await supabase.auth.getUser();
+      if (!active) return;
+      setUser(current);
+      if (current) {
+        const { data } = await supabase.from("profiles").select("full_name,phone").eq("id", current.id).maybeSingle();
+        if (!active) return;
+        setProfile(data || null);
+        if (data) { setSender(data.full_name || ""); setSenderPhone(data.phone || ""); setRecipient(data.full_name || ""); recipientPhone || setRecipientPhone(data.phone || ""); }
+      }
+      setAuthReady(true);
+    };
+    void load();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!active) return;
+      setUser(session?.user || null);
+      if (!session?.user) { setProfile(null); setAuthReady(true); }
+    });
+    return () => { active = false; subscription.unsubscribe(); };
+  }, []);
+
+  const canQuote = useMemo(() => pickup.trim().length > 2 && destination.trim().length > 2, [pickup, destination]);
+
+  function pickPoint(p: Point) {
+    setQuote(null);
+    const value = "Punto del mapa: " + p.lat.toFixed(5) + ", " + p.lng.toFixed(5);
+    if (mapTarget === "pickup") { setPoint(p); setPickup(value); }
+    else { setDestinationPoint(p); setDestination(value); }
+  }
+
+  async function locate() {
+    setLocating(true); setNotice("");
+    try {
+      if (!navigator.geolocation) throw new Error("Tu navegador no permite compartir ubicación.");
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 18000, maximumAge: 60000 }));
+      const p = { lat: position.coords.latitude, lng: position.coords.longitude };
+      setPoint(p); setPickup("Punto del mapa: " + p.lat.toFixed(5) + ", " + p.lng.toFixed(5)); setMapTarget("pickup");
+      setNotice("Ubicación de recogida detectada.");
+    } catch (e: any) { setNotice(e?.code === 1 ? "Permite el acceso a tu ubicación o marca el punto directamente en el mapa." : e instanceof Error ? e.message : "No pudimos obtener tu ubicación."); }
+    finally { setLocating(false); }
+  }
+
+  async function calculateQuote(): Promise<{ pickupCoords: Point; destinationCoords: Point; data: Quote }> {
+    const pickupCoords = pickup.startsWith("Punto del mapa:") ? point : await geocode(pickup);
+    const destinationCoords = destinationPoint || (destination.startsWith("Punto del mapa:") ? null : await geocode(destination));
+    if (!pickupCoords || !destinationCoords) throw new Error("No pudimos ubicar ambas direcciones. Selecciona los dos puntos en el mapa.");
+    let routeDistance: number | null = null;
+    try {
+      const route = await fetch("https://router.project-osrm.org/route/v1/driving/" + pickupCoords.lng + "," + pickupCoords.lat + ";" + destinationCoords.lng + "," + destinationCoords.lat + "?overview=false");
+      const data = await route.json();
+      const meters = data?.routes?.[0]?.distance;
+      if (route.ok && typeof meters === "number" && meters > 0) routeDistance = meters / 1000;
+    } catch {}
+    const { data, error } = await getSupabase().rpc("cg_quote_fare", {
+      p_service: "package", p_pickup_lat: pickupCoords.lat, p_pickup_lng: pickupCoords.lng,
+      p_destination_lat: destinationCoords.lat, p_destination_lng: destinationCoords.lng, p_route_distance_km: routeDistance
+    });
+    if (error) throw error;
+    setQuote(data);
+    return { pickupCoords, destinationCoords, data };
+  }
+
+  useEffect(() => {
+    if (!canQuote) { setQuote(null); return; }
+    const timer = window.setTimeout(() => { void calculateQuote().catch(() => setQuote(null)); }, 700);
+    return () => window.clearTimeout(timer);
+  }, [canQuote, pickup, destination, point.lat, point.lng, destinationPoint?.lat, destinationPoint?.lng]);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault(); setNotice(""); setTrackingUrl("");
+    if (!user) { router.push("/acceso?next=/"); return; }
+    if (service === "food" && (!merchant.trim() || !items.trim())) { setNotice("Indica el restaurante y lo que deseas recibir."); return; }
+    setBusy(true);
+    try {
+      const route = await calculateQuote();
+      const fullDescription = service === "food"
+        ? "Restaurante: " + merchant.trim() + "\nPedido: " + items.trim() + (note.trim() ? "\nNota: " + note.trim() : "")
+        : description.trim() + (note.trim() ? "\nNota: " + note.trim() : "");
+      const { data, error } = await getSupabase().from("cg_delivery_requests").insert({
+        service_kind: service,
+        distance_km: route.data.distance_km,
+        pickup_lat: route.pickupCoords.lat, pickup_lng: route.pickupCoords.lng,
+        destination_lat: route.destinationCoords.lat, destination_lng: route.destinationCoords.lng,
+        sender_name: sender.trim(), sender_phone: senderPhone.trim(),
+        recipient_name: recipient.trim(), recipient_phone: recipientPhone.trim(),
+        pickup_address: pickup.trim(), delivery_address: destination.trim(),
+        package_type: service === "food" ? "comida" : "paquete",
+        package_description: fullDescription || null
+      }).select("tracking_token").single();
+      if (error) throw error;
+      if (!data?.tracking_token) throw new Error("La solicitud se creó, pero no se generó el enlace de seguimiento.");
+      setTrackingUrl(window.location.origin + "/seguimiento/" + data.tracking_token);
+      setNotice("¡Solicitud enviada! Estamos buscando un repartidor disponible.");
+    } catch (e) { setNotice(e instanceof Error ? e.message : "No se pudo enviar la solicitud. Intenta nuevamente."); }
+    finally { setBusy(false); }
+  }
+
+  return <main className="min-h-screen bg-[#f4f6f3] text-slate-900">
+    <header className="sticky top-0 z-[700] border-b border-white/10 bg-[#101b15]/95 text-white backdrop-blur-xl">
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3.5">
+        <Link href="/" className="flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-2xl bg-lime-400 text-[#14251d]"><Navigation size={21}/></span><span className="text-xl font-black tracking-tight">Cotuí <span className="text-lime-400">Go</span><small className="block text-[9px] font-bold uppercase tracking-[.22em] text-white/50">Entregas en tu ciudad</small></span></Link>
+        <div className="flex items-center gap-2"><Link href={user ? "/mi-cuenta" : "/acceso"} className="flex items-center gap-2 rounded-full border border-white/20 px-3.5 py-2.5 text-xs font-bold"><UserRound size={15}/>{user ? "Mi cuenta" : "Entrar"}</Link><Link href="/conductores" className="hidden rounded-full bg-lime-400 px-4 py-2.5 text-xs font-black text-[#14251d] sm:inline-flex"><Bike size={15} className="mr-2"/> Soy repartidor</Link><Link href="/admin/movilidad" className="hidden rounded-full border border-white/20 px-3 py-2.5 text-xs font-bold sm:inline-flex">Administración</Link></div>
+      </div>
+    </header>
+
+    <section className="mx-auto grid max-w-7xl gap-5 px-3 pb-12 pt-4 sm:px-5 sm:pt-7 lg:grid-cols-[minmax(0,1fr)_430px]">
+      <div className="relative min-h-[560px] overflow-hidden rounded-[30px] border border-white bg-[#e9eee8] shadow-[0_18px_55px_rgba(15,35,25,.14)] lg:sticky lg:top-24 lg:h-[calc(100vh-120px)]">
+        <CotuiGoMap initial={mapTarget === "pickup" ? point : (destinationPoint || center)} onPick={pickPoint}/>
+        <div className="absolute left-4 top-4 z-[500] rounded-full border border-white bg-white/95 px-3 py-2 text-[10px] font-extrabold text-slate-700 shadow-lg"><MapPin size={13} className="mr-1 inline text-lime-700"/> Selecciona recogida y destino</div>
+        <div className="absolute bottom-4 left-4 right-4 z-[500] flex flex-wrap gap-2">
+          <button type="button" onClick={() => setMapTarget("pickup")} className={"rounded-full px-4 py-3 text-xs font-black shadow-lg " + (mapTarget === "pickup" ? "bg-[#14251d] text-white" : "bg-white text-slate-700")}>Marcar recogida</button>
+          <button type="button" onClick={() => setMapTarget("destination")} className={"rounded-full px-4 py-3 text-xs font-black shadow-lg " + (mapTarget === "destination" ? "bg-[#14251d] text-white" : "bg-white text-slate-700")}>Marcar entrega</button>
+          <button type="button" onClick={locate} disabled={locating} className="ml-auto flex items-center gap-2 rounded-full bg-lime-400 px-4 py-3 text-xs font-black text-[#14251d] shadow-lg disabled:opacity-60">{locating ? <Loader2 size={14} className="animate-spin"/> : <LocateFixed size={14}/>} Mi ubicación</button>
+        </div>
+      </div>
+
+      <aside className="rounded-[30px] border border-white bg-white p-5 shadow-[0_12px_40px_rgba(10,25,16,.10)] sm:p-6">
+        <div className="mb-5"><p className="text-[10px] font-black uppercase tracking-[.2em] text-lime-700">COTUÍ GO · DELIVERY</p><h1 className="mt-1 text-2xl font-black tracking-tight">¿Qué enviamos hoy?</h1><p className="mt-1 text-sm text-slate-500">Pide comida o envía un paquete con seguimiento en tiempo real.</p></div>
+        <div className="mb-5 grid grid-cols-2 gap-2 rounded-2xl bg-slate-100 p-1">
+          <button type="button" onClick={() => { setService("food"); setQuote(null); setNotice(""); }} className={"flex items-center justify-center gap-2 rounded-xl px-3 py-3.5 text-xs font-black " + (service === "food" ? "bg-[#14251d] text-white shadow" : "text-slate-600")}><Utensils size={16}/> Comida</button>
+          <button type="button" onClick={() => { setService("package"); setQuote(null); setNotice(""); }} className={"flex items-center justify-center gap-2 rounded-xl px-3 py-3.5 text-xs font-black " + (service === "package" ? "bg-[#14251d] text-white shadow" : "text-slate-600")}><Package size={16}/> Paquetes</button>
+        </div>
+        <form onSubmit={submit} className="space-y-3.5">
+          {service === "food" ? <><label className="block"><span className={label}>Restaurante o comercio</span><input required className={field} placeholder="Ej. XiiAO Kitchen" value={merchant} onChange={e => setMerchant(e.target.value)}/></label><label className="block"><span className={label}>¿Qué deseas pedir?</span><textarea required rows={3} className={field} placeholder="Escribe los platos, cantidades y detalles" value={items} onChange={e => setItems(e.target.value)}/></label></> : <label className="block"><span className={label}>¿Qué vamos a transportar?</span><textarea rows={2} className={field} placeholder="Describe el paquete o artículo" value={description} onChange={e => setDescription(e.target.value)}/></label>}
+          <div className="grid grid-cols-2 gap-2"><label><span className={label}>Recogida</span><input required className={field} placeholder="Dirección del comercio" value={pickup} onChange={e => { setPickup(e.target.value); setQuote(null); }}/></label><label><span className={label}>Entrega</span><input required className={field} placeholder="Dirección del cliente" value={destination} onChange={e => { setDestination(e.target.value); setDestinationPoint(null); setQuote(null); }}/></label></div>
+          <div className="rounded-2xl bg-[#f6f8f5] p-3.5"><div className="mb-2 flex items-center gap-2 text-xs font-black text-slate-700"><Store size={15} className="text-lime-700"/> Datos de contacto</div><div className="grid grid-cols-2 gap-2"><label><span className={label}>Remitente</span><input required className={field} value={sender} onChange={e => setSender(e.target.value)} placeholder="Nombre"/></label><label><span className={label}>Teléfono</span><input required type="tel" className={field} value={senderPhone} onChange={e => setSenderPhone(e.target.value)} placeholder="809..."/></label><label><span className={label}>Recibe</span><input required className={field} value={recipient} onChange={e => setRecipient(e.target.value)} placeholder="Nombre"/></label><label><span className={label}>Teléfono</span><input required type="tel" className={field} value={recipientPhone} onChange={e => setRecipientPhone(e.target.value)} placeholder="809..."/></label></div></div>
+          <label className="block"><span className={label}>Instrucciones adicionales</span><input className={field} value={note} onChange={e => setNote(e.target.value)} placeholder="Referencia, apartamento, indicaciones…"/></label>
+          <div className="rounded-2xl border border-lime-200 bg-lime-50 p-4"><div className="flex items-center justify-between"><span className="text-xs font-bold text-lime-950">Costo estimado de entrega</span><span className="text-[10px] font-bold text-lime-800">{quote ? quote.distance_km.toFixed(1) + " km" : "Calculando ruta…"}</span></div><div className="mt-1 text-3xl font-black text-[#14251d]">{quote ? "RD$ " + Number(quote.fare_dop).toLocaleString("es-DO") : "—"}</div><p className="mt-1 text-[10px] leading-4 text-lime-900/70">La tarifa corresponde al servicio de entrega. El costo de la comida se paga al comercio.</p></div>
+          {notice && <div role="status" className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs font-semibold text-slate-700">{notice}</div>}
+          {trackingUrl && <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-3"><p className="flex items-center gap-2 text-xs font-black text-emerald-900"><CheckCircle2 size={16}/> Solicitud registrada</p><Link href={trackingUrl.replace(window.location.origin, "")} className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-emerald-800 underline">Ver seguimiento <ArrowRight size={13}/></Link></div>}
+          <button disabled={busy || !quote || !canQuote} className="flex w-full items-center justify-center gap-2 rounded-2xl bg-lime-400 px-5 py-4 text-sm font-black text-[#14251d] shadow-lg shadow-lime-100 transition hover:bg-lime-300 disabled:cursor-not-allowed disabled:opacity-50">{busy ? <Loader2 size={17} className="animate-spin"/> : <ArrowRight size={17}/>} {busy ? "Enviando solicitud…" : "Solicitar repartidor"}</button>
+          {!authReady ? <p className="text-center text-[10px] text-slate-400">Verificando tu cuenta…</p> : !user ? <p className="text-center text-[10px] text-slate-500">Necesitas iniciar sesión para solicitar una entrega.</p> : <p className="flex items-center justify-center gap-1 text-center text-[10px] text-slate-500"><Clock3 size={12}/> Seguimiento disponible después de asignar repartidor</p>}
+        </form>
+      </aside>
+    </section>
+    <footer className="border-t border-slate-200 bg-white px-4 py-6 text-center text-[10px] font-semibold text-slate-400">Cotuí Go · Entregas locales de comida y paquetes · Cotuí, República Dominicana</footer>
+  </main>;
 }
