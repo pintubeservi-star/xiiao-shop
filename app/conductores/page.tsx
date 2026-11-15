@@ -34,7 +34,7 @@ export default function DriverPortal(){
  const availableRides:Job[]=[];const availableDeliveries=deliveries.filter(j=>j.status==="requested");
  const hasActiveService=deliveries.some(j=>["accepted","picked_up","on_the_way"].includes(j.status));
  useEffect(()=>{
-  if(!profile||profile.status!=="approved"||!hasActiveService||!navigator.geolocation)return;
+  if(!profile||profile.status!=="approved"||(!profile.is_available&&!hasActiveService)||!navigator.geolocation)return;
   let lastSent=0;
   const watch=navigator.geolocation.watchPosition(async pos=>{
    const now=Date.now();if(now-lastSent<4500)return;lastSent=now;
@@ -43,7 +43,7 @@ export default function DriverPortal(){
    if(!error&&data)setProfile(v=>v?({...v,...coords}):v);
   },err=>setNotice("Activa el permiso de ubicación para compartir el recorrido con el cliente."),{enableHighAccuracy:true,maximumAge:3000,timeout:15000});
   return()=>navigator.geolocation.clearWatch(watch);
- },[profile?.id,profile?.status,hasActiveService]);
+ },[profile?.id,profile?.status,profile?.is_available,hasActiveService]);
 
  const mineRides=rides.filter(j=>j.status!=="requested"&&j.status!=="completed"&&j.status!=="cancelled"),mineDeliveries=deliveries.filter(j=>j.status!=="requested"&&j.status!=="delivered"&&j.status!=="cancelled");
  const statusLabel:Record<string,string>={accepted:"Aceptado",driver_arriving:"En camino a recogida",in_progress:"Viaje en curso",completed:"Completado",picked_up:"Paquete recogido",on_the_way:"En camino",delivered:"Entregado"};
