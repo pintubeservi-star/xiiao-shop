@@ -1,0 +1,48 @@
+{
+  "expo": {
+    "name": "Cotuí Go",
+    "slug": "cotui-go",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "scheme": "cotuigo",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "do.cotuigo.app",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Cotuí Go usa tu ubicación para mostrar recogidas y entregas cercanas."
+      }
+    },
+    "android": {
+      "package": "do.cotuigo.app",
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "VIBRATE"
+      ],
+      "adaptiveIcon": {
+        "backgroundColor": "#F4F7F5"
+      }
+    },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Permite a Cotuí Go usar tu ubicación para solicitar y seguir servicios."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#16A36A"
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "REPLACE_WITH_EAS_PROJECT_ID"
+      }
+    }
+  }
+}
