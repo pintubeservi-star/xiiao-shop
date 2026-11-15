@@ -51,7 +51,7 @@ jobs:
           if "debuggableVariants = []" not in source:
               if "react {" not in source:
                   raise SystemExit("No se encontró el bloque react {} en build.gradle")
-              source = source.replace("react {", "react {\\n    debuggableVariants = []", 1)
+              source = source.replace("react {", "react {" + chr(10) + "    debuggableVariants = []", 1)
               path.write_text(source)
           PY
       - name: Build debug APK
