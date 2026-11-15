@@ -1,0 +1,22 @@
+name: Cotuí Go native validation
+on:
+  push:
+    branches: [cotui-go-native]
+    paths: ["mobile/**", ".github/workflows/cotui-go-mobile.yml"]
+  pull_request:
+    branches: [cotui-go-native]
+    paths: ["mobile/**"]
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install --no-audit --no-fund
+      - run: npx tsc --noEmit
+      - run: npx expo export --platform android

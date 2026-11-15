@@ -1,19 +1,26 @@
-# Cotuí Go — aplicación nativa Android/iOS
+# Cotuí Go Native
 
-Aplicación React Native con Expo (no PWA ni WebView). Incluye experiencia de cliente, repartidor y panel administrativo por roles, mapa, selección de destino, cálculo de tarifa por distancia, solicitudes, asignación, PIN de inicio, estados y lectura en tiempo real cuando Supabase está configurado.
+Aplicación Android/iOS con Expo + React Native. Se conecta al backend existente de Cotuí Go; no crea tablas duplicadas.
 
-## Configurar backend
-1. Crea un proyecto Supabase.
-2. Ejecuta todo el archivo `supabase/schema.sql` en SQL Editor.
-3. Copia `.env.example` a `.env` y coloca URL y anon key.
-4. Crea usuarios en Supabase Auth y sus perfiles en `public.profiles`. Para repartidores y administradores, asigna los roles desde el panel seguro de Supabase; nunca desde la app del usuario.
-5. Ejecuta `npm install`, `npx expo install --fix` y `npx expo start`.
+## Backend existente
+Utiliza las tablas y RPC del proyecto Cotuí Go: `cg_ride_requests`, `cg_delivery_requests`, `cg_driver_profiles`, `cg_driver_wallets`, `cg_wallet_topups`, `cg_wallet_ledger`, `cg_quote_fare`, `cg_driver_accept_ride`, `cg_driver_accept_delivery`, `cg_driver_start_ride`, `cg_driver_update_ride_status`, `cg_driver_update_delivery_status`, `cg_get_public_trip` y `cg_admin_review_wallet_topup`.
 
-## Tarifas iniciales editables
-`src/lib/pricing.ts` define RD$100 de base + RD$25 por km (mínimo RD$100). La función SQL aplica la misma regla. Confirma y ajusta estos valores antes de operar comercialmente. Comisión: 15%.
+No ejecutes `mobile/supabase/schema.sql`: el esquema de producción ya está en las migraciones Supabase existentes del repositorio.
 
-## APK Android
-Instala EAS CLI, ejecuta `eas login`, luego `eas build:configure` y finalmente `eas build --platform android --profile preview`. El perfil preview produce APK instalable. Para compilar hace falta vincular el proyecto EAS y tener credenciales.
+## Configuración
+1. Copia `.env.example` a `.env`.
+2. Configura URL y anon key del mismo proyecto Supabase usado por Cotuí Go web.
+3. Configura `EXPO_PUBLIC_GOOGLE_MAPS_API_KEY` y habilita Maps SDK for Android en Google Cloud.
+4. En `mobile`: `npm install`, `npx expo install --fix`, `npx expo start`.
 
-## Alcance y pendientes antes de producción
-La interfaz nativa y el flujo principal están implementados. El esquema SQL proporciona creación segura de solicitudes, asignación exclusiva, PIN de inicio y panel de métricas. Aún hay que configurar el proyecto Supabase real, permisos/roles, credenciales de mapas, notificaciones push, pasarela de recargas, tracking GPS persistente en segundo plano, y el proceso de cobro/liquidación. No se ha generado un APK en este commit.
+## Compilar APK
+`npm install -g eas-cli`, `eas login`, `eas build:configure`, `eas build --platform android --profile preview`.
+
+## Incluido
+Cliente: solicitud de moto/paquetes, selección de destino en mapa, cotización por el RPC real de tarifas, seguimiento por token y Realtime.
+Repartidor: disponibilidad GPS en primer plano, ofertas, aceptación, estados y PIN de inicio de moto.
+Administración: resumen, lista de servicios y revisión de recargas.
+La aprobación documental de conductores y configuración avanzada de tarifas permanecen en el panel administrativo web existente.
+
+## Antes de producción
+Hay que configurar las credenciales de Supabase/Google Maps, habilitar Realtime en las tablas/canales correspondientes, verificar permisos y compilar APK. El GPS de esta versión se actualiza mientras la app está abierta; el seguimiento en segundo plano y las notificaciones push requieren el módulo nativo adicional. El APK aún no se ha compilado.
