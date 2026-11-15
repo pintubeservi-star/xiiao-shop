@@ -4,13 +4,13 @@ import {LocateFixed,Layers,MapPin} from "lucide-react";
 
 declare global { interface Window { L?: any } }
 type Point={lat:number;lng:number};
-type Props={onPick?:(point:Point)=>void; initial?:Point };
+type Props={onPick?:(point:Point)=>void; initial?:Point; pickup?:Point|null; destination?:Point|null; target?:"pickup"|"destination" };
 const cotui={lat:19.0527,lng:-70.1494};
 
-export default function CotuiGoMap({onPick,initial=cotui}:Props){
- const host=useRef<HTMLDivElement>(null), map=useRef<any>(null), marker=useRef<any>(null), layers=useRef<any>({}), onPickRef=useRef(onPick);
+export default function CotuiGoMap({onPick,initial=cotui,pickup=null,destination=null,target="pickup"}:Props){
+ const host=useRef<HTMLDivElement>(null), map=useRef<any>(null), marker=useRef<any>(null), pickupMarker=useRef<any>(null), destinationMarker=useRef<any>(null), layers=useRef<any>({}), onPickRef=useRef(onPick), targetRef=useRef(target);
  const [ready,setReady]=useState(false),[style,setStyle]=useState<"street"|"light">("light"),[locating,setLocating]=useState(false),[locationMessage,setLocationMessage]=useState("");
- useEffect(()=>{onPickRef.current=onPick;},[onPick]);
+ useEffect(()=>{onPickRef.current=onPick;targetRef.current=target;},[onPick,target]);
  useEffect(()=>{
   let cancelled=false;
   const addCss=()=>{if(!document.querySelector('link[data-cg-leaflet]')){const link=document.createElement("link");link.rel="stylesheet";link.href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";link.dataset.cgLeaflet="1";document.head.appendChild(link);}};
@@ -25,7 +25,7 @@ export default function CotuiGoMap({onPick,initial=cotui}:Props){
    const pin=L.divIcon({className:"cg-map-pin-wrap",html:'<div class="cg-map-pin"><span></span></div>',iconSize:[34,42],iconAnchor:[17,38]});
    marker.current=L.marker([initial.lat,initial.lng],{icon:pin,draggable:true}).addTo(m);
    marker.current.on("dragend",()=>{const p=marker.current.getLatLng();onPickRef.current?.({lat:p.lat,lng:p.lng});});
-   m.on("click",(e:any)=>{marker.current.setLatLng(e.latlng);onPickRef.current?.({lat:e.latlng.lat,lng:e.latlng.lng});});
+   m.on("click",(e:any)=>{const active=targetRef.current==="pickup"?pickupMarker.current:destinationMarker.current;if(active)active.setLatLng(e.latlng);else marker.current?.setLatLng(e.latlng);onPickRef.current?.({lat:e.latlng.lat,lng:e.latlng.lng});});
    map.current=m;setReady(true);setTimeout(()=>m.invalidateSize(),250);
   };
   addCss();
@@ -36,6 +36,17 @@ export default function CotuiGoMap({onPick,initial=cotui}:Props){
   }
   return()=>{cancelled=true;if(map.current){map.current.remove();map.current=null;}};
  },[]);
+ useEffect(()=>{
+  if(!map.current||!ready||!window.L)return;
+  const L=window.L;
+  const makeIcon=(kind:"pickup"|"destination")=>L.divIcon({className:"cg-map-pin-wrap",html:'<div class="cg-map-pin cg-map-pin-'+kind+'"><span></span></div>',iconSize:[34,42],iconAnchor:[17,38]});
+  const sync=(point:Point|null,ref:any,kind:"pickup"|"destination")=>{
+   if(point){if(!ref.current){ref.current=L.marker([point.lat,point.lng],{icon:makeIcon(kind),draggable:true}).addTo(map.current);ref.current.on("dragend",()=>{const p=ref.current.getLatLng();onPickRef.current?.({lat:p.lat,lng:p.lng});});}else ref.current.setLatLng([point.lat,point.lng]);}
+   else if(ref.current){map.current.removeLayer(ref.current);ref.current=null;}
+  };
+  sync(pickup,pickupMarker,"pickup");sync(destination,destinationMarker,"destination");
+  if(pickup||destination){if(marker.current){map.current.removeLayer(marker.current);marker.current=null;}}
+ },[pickup?.lat,pickup?.lng,destination?.lat,destination?.lng,ready]);
  useEffect(()=>{if(map.current&&marker.current){map.current.setView([initial.lat,initial.lng],16);marker.current.setLatLng([initial.lat,initial.lng]);}},[initial.lat,initial.lng]);
  useEffect(()=>{if(!map.current)return;const L=window.L;Object.values(layers.current).forEach((layer:any)=>map.current.removeLayer(layer));layers.current[style].addTo(map.current);},[style,ready]);
  const locate=async()=>{
@@ -57,7 +68,7 @@ export default function CotuiGoMap({onPick,initial=cotui}:Props){
  };
  return <div className="relative h-full min-h-[330px] w-full overflow-hidden rounded-[26px] bg-[#e9efe9]">
   <div ref={host} className="absolute inset-0 z-0"/>
-  <style jsx global>{`.cg-map-pin-wrap{background:transparent;border:0}.cg-map-pin{width:30px;height:30px;border-radius:50% 50% 50% 0;background:#a3e635;border:4px solid white;transform:rotate(-45deg);box-shadow:0 5px 18px #10251d55;display:grid;place-items:center}.cg-map-pin span{width:8px;height:8px;background:#14251d;border-radius:50%;transform:rotate(45deg)}.leaflet-control-zoom{border:0!important;box-shadow:0 3px 14px #10251d22!important;border-radius:12px!important;overflow:hidden}.leaflet-control-zoom a{color:#14251d!important;width:34px!important;height:34px!important;line-height:34px!important}`}</style>
+  <style jsx global>{`.cg-map-pin-wrap{background:transparent;border:0}.cg-map-pin{width:30px;height:30px;border-radius:50% 50% 50% 0;background:#a3e635;border:4px solid white;transform:rotate(-45deg);box-shadow:0 5px 18px #10251d55;display:grid;place-items:center}.cg-map-pin span{width:8px;height:8px;background:#14251d;border-radius:50%;transform:rotate(45deg)}.cg-map-pin-pickup{background:#111}.cg-map-pin-destination{background:#a3e635}.leaflet-control-zoom{border:0!important;box-shadow:0 3px 14px #10251d22!important;border-radius:12px!important;overflow:hidden}.leaflet-control-zoom a{color:#14251d!important;width:34px!important;height:34px!important;line-height:34px!important}`}</style>
   
   <div className="absolute right-4 top-4 z-[400] flex flex-col gap-2">
    <button type="button" onClick={()=>setStyle(v=>v==="street"?"light":"street")} aria-label="Cambiar estilo del mapa" className="grid h-11 w-11 place-items-center rounded-2xl border border-white bg-white text-slate-700 shadow-lg"><Layers size={18}/></button>
