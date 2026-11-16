@@ -108,3 +108,9 @@ revoke all on function public.cg_market_record_receivable_payment(uuid,numeric,t
 revoke all on function public.cg_market_record_payable_payment(uuid,numeric,text,text) from public,anon;
 grant execute on function public.cg_market_record_receivable_payment(uuid,numeric,text,text) to authenticated;
 grant execute on function public.cg_market_record_payable_payment(uuid,numeric,text,text) to authenticated;
+
+-- Payment ledgers are append-only from the client perspective; the RPCs write them.
+drop policy if exists cg_market_receivable_payments_access on public.cg_market_receivable_payments;
+create policy cg_market_receivable_payments_read on public.cg_market_receivable_payments for select to authenticated using(public.cg_market_can_access(merchant_id));
+drop policy if exists cg_market_payable_payments_access on public.cg_market_payable_payments;
+create policy cg_market_payable_payments_read on public.cg_market_payable_payments for select to authenticated using(public.cg_market_can_access(merchant_id));
