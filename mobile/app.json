@@ -32,7 +32,16 @@
         }
       ],
       "expo-notifications",
-      "@maplibre/maplibre-react-native"
+      "@maplibre/maplibre-react-native",
+      [
+        "expo-share-intent",
+        {
+          "disableIOS": true,
+          "androidIntentFilters": [
+            "text/*"
+          ]
+        }
+      ]
     ],
     "newArchEnabled": true
   }
