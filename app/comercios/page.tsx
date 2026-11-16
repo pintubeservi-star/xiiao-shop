@@ -1,2 +1,1 @@
-import PartnerPortal from "@/components/partner-portal";
-export default function MerchantPage(){return <PartnerPortal kind="merchant"/>;}
+import MerchantERP from "@/components/merchant-erp"; export default function MerchantPortalPage(){return <MerchantERP/>;}

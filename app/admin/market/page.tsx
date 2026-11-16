@@ -1,0 +1,1 @@
+import MarketAdmin from "@/components/market-admin"; export default function MarketAdminPage(){return <MarketAdmin/>;}
