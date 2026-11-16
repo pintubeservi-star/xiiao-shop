@@ -2,7 +2,7 @@ name: Cotuí Go Android APK
 on:
   workflow_dispatch:
   push:
-    branches: [cotui-go-native]
+    branches: [cotui-go-native, cotui-go-packages]
     paths:
       - "mobile/**"
       - ".github/workflows/cotui-go-native-apk.yml"
