@@ -16,6 +16,12 @@ No ejecutes `mobile/supabase/schema.sql`: el esquema de producción ya está en 
 ## Compilar APK
 `npm install -g eas-cli`, `eas login`, `eas build:configure`, `eas build --platform android --profile preview`.
 
+## Cotuí Go Negocios · compartir desde WhatsApp
+
+La app Android acepta contenido de texto y enlaces compartidos desde otras aplicaciones. En WhatsApp, el comercio puede usar **Compartir → Cotuí Go** para enviar la ubicación o el mensaje al formulario de nuevo paquete. La app reconoce coordenadas en enlaces comunes de Google Maps (`q=`, `ll=`, `@lat,lng`, `geo:` y `!3d...!4d...`), además de intentar extraer nombre y teléfono cuando aparecen etiquetados en el texto. Si WhatsApp comparte un enlace corto sin coordenadas, el negocio debe confirmar el punto manualmente en el mapa; nunca se inventa una ubicación.
+
+Para recibir datos desde WhatsApp se requiere instalar una APK recompilada con el plugin nativo `expo-share-intent`; Expo Go no admite esta función.
+
 ## Incluido
 Cliente: solicitud de moto/paquetes, selección de destino en mapa, cotización por el RPC real de tarifas, seguimiento por token y Realtime.
 Repartidor: disponibilidad GPS en primer plano, ofertas, aceptación, estados y PIN de inicio de moto.
