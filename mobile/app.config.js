@@ -6,8 +6,11 @@ const variants = {
 export default ({config})=>{
  const key=process.env.APP_VARIANT||"all";
  const selected=variants[key]||variants.all;
+ const plugins=(config.plugins||[]).filter(plugin=>(Array.isArray(plugin)?plugin[0]:plugin)!=="expo-share-intent");
+ if(key==="business") plugins.push(["expo-share-intent",{disableIOS:true,androidIntentFilters:["text/*"]}]);
  return {
   ...config,
+  plugins,
   name:selected.name,
   slug:selected.slug,
   scheme:selected.scheme,
