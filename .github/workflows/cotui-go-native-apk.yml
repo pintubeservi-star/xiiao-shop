@@ -8,6 +8,9 @@ on:
       - ".github/workflows/cotui-go-native-apk.yml"
 permissions:
   contents: read
+concurrency:
+  group: cotui-go-apk-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   build-apk:
     strategy:
