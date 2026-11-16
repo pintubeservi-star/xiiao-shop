@@ -1,0 +1,1 @@
+import MerchantERP from "@/components/merchant-erp"; export default function BusinessManagementPage(){return <MerchantERP/>;}
