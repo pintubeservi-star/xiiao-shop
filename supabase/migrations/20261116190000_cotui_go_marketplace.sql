@@ -163,12 +163,14 @@ alter table public.cg_market_inventory_movements enable row level security;
 alter table public.cg_market_invoices enable row level security;
 
 create policy "cg market active categories are public" on public.cg_market_categories
-for select to anon, authenticated using (is_active or public.cg_is_admin());
+for select to anon, authenticated using (is_active);
 
 create policy "cg market approved merchants are public" on public.cg_market_merchants
-for select to anon, authenticated using (
-  status = 'approved' or owner_user_id = (select auth.uid()) or public.cg_is_admin()
-);
+for select to anon, authenticated using (status = 'approved');
+create policy "cg market owners read their merchant profile" on public.cg_market_merchants
+for select to authenticated using (owner_user_id = (select auth.uid()));
+create policy "cg market admins read all merchants" on public.cg_market_merchants
+for select to authenticated using (public.cg_is_admin());
 create policy "cg market owners submit applications" on public.cg_market_merchants
 for insert to authenticated with check (owner_user_id = (select auth.uid()) and status = 'pending');
 create policy "cg market owners update their profile" on public.cg_market_merchants
@@ -177,13 +179,16 @@ with check (owner_user_id = (select auth.uid()) or public.cg_is_admin());
 create policy "cg market admins manage merchants" on public.cg_market_merchants
 for all to authenticated using (public.cg_is_admin()) with check (public.cg_is_admin());
 
-create policy "cg market products public or owner read" on public.cg_market_products
+create policy "cg market active products are public" on public.cg_market_products
 for select to anon, authenticated using (
-  (status = 'active' and exists (
+  status = 'active' and exists (
     select 1 from public.cg_market_merchants m where m.id = merchant_id and m.status = 'approved'
-  ))
-  or public.cg_market_is_owner(merchant_id) or public.cg_is_admin()
+  )
 );
+create policy "cg market owners read their products" on public.cg_market_products
+for select to authenticated using (public.cg_market_is_owner(merchant_id));
+create policy "cg market admins read all products" on public.cg_market_products
+for select to authenticated using (public.cg_is_admin());
 create policy "cg market owners insert products" on public.cg_market_products
 for insert to authenticated with check (
   public.cg_market_is_owner(merchant_id) and exists (
