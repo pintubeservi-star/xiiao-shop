@@ -89,6 +89,8 @@ create table if not exists public.cg_market_orders (
   marketplace_commission_dop numeric(12,2) not null default 0,
   platform_fee_status text not null default 'pending' check (platform_fee_status in ('pending','paid','waived')),
   delivery_request_id uuid references public.cg_delivery_requests(id) on delete set null,
+  delivery_tracking_token text,
+  delivery_tracking_code text,
   cancelled_at timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -220,7 +222,9 @@ for select to authenticated using (
 grant select on public.cg_market_categories, public.cg_market_merchants, public.cg_market_products to anon, authenticated;
 grant insert (owner_user_id,category_id,store_name,slug,description,phone,whatsapp,address,pickup_lat,pickup_lng,payment_instructions)
   on public.cg_market_merchants to authenticated;
-grant select, update on public.cg_market_merchants to authenticated;
+grant select on public.cg_market_merchants to authenticated;
+revoke update on public.cg_market_merchants from authenticated;
+grant update (category_id,store_name,slug,description,phone,whatsapp,address,pickup_lat,pickup_lng,logo_url,cover_url,payment_instructions,legal_name,rnc) on public.cg_market_merchants to authenticated;
 grant select, insert, update, delete on public.cg_market_products to authenticated;
 grant select on public.cg_market_orders, public.cg_market_order_items, public.cg_market_inventory_movements, public.cg_market_invoices to authenticated;
 grant usage, select on all sequences in schema public to authenticated;
@@ -268,7 +272,7 @@ begin
   if p_source = 'pos' and v_merchant.owner_user_id <> v_user then raise exception 'No autorizado para registrar ventas en este comercio.'; end if;
   if p_source = 'marketplace' and p_delivery_mode not in ('delivery','pickup') then raise exception 'Selecciona entrega o recogida.'; end if;
   if p_source = 'pos' and p_delivery_mode <> 'pickup' then raise exception 'Una venta de mostrador no puede solicitar delivery.'; end if;
-  if p_payment_method not in ('cash','transfer','card') then raise exception 'Método de pago no válido.'; end if;
+  if p_payment_method not in ('cash','transfer') then raise exception 'Método de pago no válido.'; end if;
   if coalesce(p_discount_dop,0) < 0 then raise exception 'Descuento no válido.'; end if;
   if p_source = 'marketplace' and (nullif(trim(p_customer_name),'') is null or nullif(trim(p_customer_phone),'') is null) then
     raise exception 'Completa tu nombre y teléfono.';
@@ -425,7 +429,7 @@ begin
     v_merchant.pickup_lat,v_merchant.pickup_lng,v_order.customer_lat,v_order.customer_lng,
     null,case when v_category.slug='restaurantes' or v_category.slug='reposteria' then 'food' else 'package' end
   ) returning * into v_delivery;
-  update public.cg_market_orders set delivery_request_id=v_delivery.id,status='courier_requested',delivery_fee_dop=coalesce(v_delivery.estimated_fee_dop,delivery_fee_dop),updated_at=now() where id=v_order.id;
+  update public.cg_market_orders set delivery_request_id=v_delivery.id,delivery_tracking_token=v_delivery.tracking_token,delivery_tracking_code=v_delivery.tracking_code,status='courier_requested',delivery_fee_dop=coalesce(v_delivery.estimated_fee_dop,delivery_fee_dop),total_dop=subtotal_dop-discount_dop+coalesce(v_delivery.estimated_fee_dop,delivery_fee_dop),updated_at=now() where id=v_order.id;
   return jsonb_build_object('delivery_id',v_delivery.id,'tracking_token',v_delivery.tracking_token,'tracking_code',v_delivery.tracking_code,'status',v_delivery.status);
 end;
 $$;
