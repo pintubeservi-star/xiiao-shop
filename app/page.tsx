@@ -68,7 +68,7 @@ export default function Home(){
     <span className="grid h-9 w-9 place-items-center rounded-xl bg-teal-700 text-white"><Navigation size={19}/></span>
     <span className="text-[17px] font-black tracking-tight text-slate-950">Cotuí <span className="text-teal-700">Go</span><small className="block text-[8px] font-bold uppercase tracking-[.16em] text-slate-500">Muévete a tu manera</small></span>
    </Link>
-   <div className="pointer-events-auto flex gap-2">
+   <div className="pointer-events-auto flex gap-2"><Link href="/mercado" className="hidden items-center rounded-full border border-white bg-white/95 px-3.5 py-3 text-xs font-extrabold text-slate-800 shadow-lg sm:flex">Market</Link>
     <Link href="/conductores" className="hidden items-center gap-1.5 rounded-full border border-white bg-white/95 px-3.5 py-3 text-xs font-extrabold text-slate-800 shadow-lg sm:flex"><Bike size={15}/> Conducir</Link>
     <Link href={authUser?"/mi-cuenta":"/acceso"} aria-label={authUser?"Mi cuenta":"Iniciar sesión"} className="flex h-12 items-center justify-center gap-2 rounded-full border border-white bg-white/95 px-4 text-xs font-extrabold text-slate-800 shadow-lg"><UserRound size={18}/><span>{authUser?"Mi cuenta":"Iniciar sesión"}</span></Link>
    </div>
