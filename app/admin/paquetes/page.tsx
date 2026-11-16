@@ -8,8 +8,8 @@ import {Package,RefreshCw,LogOut,MapPin,Phone,Clock,Truck,CheckCircle2,Navigatio
 type Delivery={id:string;tracking_token:string;tracking_code:string;sender_name:string;sender_phone:string;recipient_name:string;recipient_phone:string;pickup_address:string;delivery_address:string;package_type:string;package_description?:string|null;status:string;created_at:string;courier_id:string|null;pickup_lat:number|null;pickup_lng:number|null;destination_lat:number|null;destination_lng:number|null;distance_km:number|null;estimated_fee_dop:number|null;agreed_fee_dop:number|null;platform_commission_dop:number|null;driver_payout_dop:number|null};
 type Driver={id:string;full_name:string;phone:string;status:string;is_available:boolean;current_lat:number|null;current_lng:number|null;last_location_at:string|null};
 const money=(v:number)=>"RD$ "+Math.round(Number(v||0)).toLocaleString("es-DO");
-const labels:Record<string,string>={requested:"Buscando repartidor",accepted:"Repartidor asignado",picked_up:"Paquete recogido",on_the_way:"En camino",delivered:"Entregado",cancelled:"Cancelado"};
-const states=["requested","accepted","picked_up","on_the_way","delivered","cancelled"];
+const labels:Record<string,string>={requested:"Buscando repartidor",accepted:"Repartidor asignado",courier_arriving:"Repartidor llegando",picked_up:"Paquete recogido",on_the_way:"En camino",delivered:"Entregado",cancelled:"Cancelado"};
+const states=["requested","accepted","courier_arriving","picked_up","on_the_way","delivered","cancelled"];
 export default function PackageDispatch(){
  const [allowed,setAllowed]=useState(false),[ready,setReady]=useState(false),[deliveries,setDeliveries]=useState<Delivery[]>([]),[drivers,setDrivers]=useState<Driver[]>([]);
  const [selectedId,setSelectedId]=useState(""),[filter,setFilter]=useState("active"),[driverChoice,setDriverChoice]=useState(""),[busy,setBusy]=useState(false),[notice,setNotice]=useState("");
