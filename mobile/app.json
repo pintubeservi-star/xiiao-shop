@@ -18,7 +18,10 @@
       "permissions": [
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION",
-        "VIBRATE"
+        "VIBRATE",
+        "ACCESS_BACKGROUND_LOCATION",
+        "FOREGROUND_SERVICE",
+        "FOREGROUND_SERVICE_LOCATION"
       ],
       "adaptiveIcon": {
         "backgroundColor": "#F4F7F5"
@@ -28,7 +31,10 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "Permite a Cotuí Go usar tu ubicación para solicitar y seguir servicios."
+          "locationWhenInUsePermission": "Permite a Cotuí Go usar tu ubicación para solicitar y seguir servicios.",
+          "isAndroidBackgroundLocationEnabled": true,
+          "isAndroidForegroundServiceEnabled": true,
+          "locationAlwaysAndWhenInUsePermission": "Permite a Cotuí Go compartir la ubicación del repartidor mientras esté disponible para entregas."
         }
       ],
       "expo-notifications",
