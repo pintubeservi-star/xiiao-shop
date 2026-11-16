@@ -18,7 +18,7 @@ const GREEN="#E52B45",INK="#25252B",MUTED="#777780",BG="#F7F7F9",LINE="#E9E9ED";
 const COTUI={latitude:19.0527,longitude:-70.1494};
 const INITIAL:Region={...COTUI,latitudeDelta:.025,longitudeDelta:.025};
 const money=(v:number)=>"RD$"+Math.round(v||0).toLocaleString("es-DO");
-const statusText=(s:string)=>({requested:"Buscando repartidor",accepted:"Repartidor asignado",driver_arriving:"Conductor en camino",in_progress:"Servicio en curso",picked_up:"Paquete recogido",on_the_way:"Paquete en camino",completed:"Servicio completado",delivered:"Entrega completada",cancelled:"Cancelado"} as Record<string,string>)[s]||s;
+const statusText=(s:string)=>({requested:"Buscando repartidor",accepted:"Repartidor asignado",courier_arriving:"Repartidor llegando",driver_arriving:"Conductor en camino",in_progress:"Servicio en curso",picked_up:"Paquete recogido",on_the_way:"Paquete en camino",completed:"Servicio completado",delivered:"Entrega completada",cancelled:"Cancelado"} as Record<string,string>)[s]||s;
 function parseSharedDeliveryText(raw:string){
  let value=raw;try{value=decodeURIComponent(raw.replace(/&amp;/g,"&"));}catch{}
  const patterns=[/[?&](?:q|query|ll|center)=(-?\d{1,2}(?:\.\d+)?)[,%20+\s]+(-?\d{1,3}(?:\.\d+)?)/i,/geo:(-?\d{1,2}(?:\.\d+)?),(-?\d{1,3}(?:\.\d+)?)/i,/@(-?\d{1,2}(?:\.\d+)?),(-?\d{1,3}(?:\.\d+)?)/i,/!3d(-?\d{1,2}(?:\.\d+)?)!4d(-?\d{1,3}(?:\.\d+)?)/i];
