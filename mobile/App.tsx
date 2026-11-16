@@ -35,7 +35,7 @@ TaskManager.defineTask(DRIVER_LOCATION_TASK,async({data,error})=>{
  const storageKey="cotui-go-notified-offers:"+session.user.id;
  let seen:string[]=[];try{seen=JSON.parse((await AsyncStorage.getItem(storageKey))||"[]");}catch{}
  const known=new Set(seen);
- const notificationPermission=await Notifications.getPermissionsAsync();if(!notificationPermission.granted)return;for(const offer of (offers||[]).slice(0,3)){if(known.has(offer.id))continue;await Notifications.scheduleNotificationAsync({content:{title:"Nuevo paquete disponible",body:(offer.sender_name||"Un comercio")+" · "+(offer.pickup_address||"Nueva recogida"),data:{deliveryId:offer.id},sound:"default"},trigger:{seconds:1,channelId:"delivery-offers"}});known.add(offer.id);}
+ const notificationPermission=await Notifications.getPermissionsAsync();if(!notificationPermission.granted)return;let notified=0;for(const offer of offers||[]){if(known.has(offer.id))continue;if(notified>=3)break;await Notifications.scheduleNotificationAsync({content:{title:"Nuevo paquete disponible",body:(offer.sender_name||"Un comercio")+" · "+(offer.pickup_address||"Nueva recogida"),data:{deliveryId:offer.id},sound:"default"},trigger:{seconds:1,channelId:"delivery-offers"}});known.add(offer.id);notified++;}
  await AsyncStorage.setItem(storageKey,JSON.stringify(Array.from(known).slice(-60)));
 });
 const COTUI={latitude:19.0527,longitude:-70.1494};
