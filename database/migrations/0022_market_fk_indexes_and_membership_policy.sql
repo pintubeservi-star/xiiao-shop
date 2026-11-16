@@ -45,3 +45,5 @@ create index if not exists cg_market_receivables_order_idx on public.cg_market_r
 create index if not exists cg_market_storefront_events_merchant_idx on public.cg_market_storefront_events(merchant_id);
 create index if not exists cg_market_storefront_events_product_idx on public.cg_market_storefront_events(product_id);
 create index if not exists cg_market_suppliers_merchant_fk_idx on public.cg_market_suppliers(merchant_id);
+
+create index if not exists cg_market_merchants_category_idx on public.cg_market_merchants(category_id);
