@@ -23,7 +23,8 @@
     "react-native-url-polyfill": "^2.0.0",
     "@maplibre/maplibre-react-native": "^11.5.1",
     "expo-linking": "~8.0.8",
-    "expo-share-intent": "^5.0.0"
+    "expo-share-intent": "^5.0.0",
+    "expo-constants": "~18.0.10"
   },
   "devDependencies": {
     "@types/react": "~19.1.10",
