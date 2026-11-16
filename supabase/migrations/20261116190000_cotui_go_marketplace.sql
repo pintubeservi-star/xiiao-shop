@@ -227,7 +227,6 @@ revoke update on public.cg_market_merchants from authenticated;
 grant update (category_id,store_name,slug,description,phone,whatsapp,address,pickup_lat,pickup_lng,logo_url,cover_url,payment_instructions,legal_name,rnc) on public.cg_market_merchants to authenticated;
 grant select, insert, update, delete on public.cg_market_products to authenticated;
 grant select on public.cg_market_orders, public.cg_market_order_items, public.cg_market_inventory_movements, public.cg_market_invoices to authenticated;
-grant usage, select on all sequences in schema public to authenticated;
 
 create or replace function public.cg_market_create_order(
   p_merchant_id uuid,
@@ -271,6 +270,8 @@ begin
   if p_source not in ('marketplace','pos') then raise exception 'Origen de venta no válido.'; end if;
   if p_source = 'pos' and v_merchant.owner_user_id <> v_user then raise exception 'No autorizado para registrar ventas en este comercio.'; end if;
   if p_source = 'marketplace' and p_delivery_mode not in ('delivery','pickup') then raise exception 'Selecciona entrega o recogida.'; end if;
+  if p_source='marketplace' and p_delivery_mode='delivery' and not v_merchant.delivery_enabled then raise exception 'Este comercio no tiene delivery habilitado.'; end if;
+  if p_source='marketplace' and coalesce(p_discount_dop,0) <> 0 then raise exception 'Los descuentos del marketplace deben ser autorizados por el comercio.'; end if;
   if p_source = 'pos' and p_delivery_mode <> 'pickup' then raise exception 'Una venta de mostrador no puede solicitar delivery.'; end if;
   if p_payment_method not in ('cash','transfer') then raise exception 'Método de pago no válido.'; end if;
   if coalesce(p_discount_dop,0) < 0 then raise exception 'Descuento no válido.'; end if;
@@ -281,6 +282,7 @@ begin
     if v_merchant.pickup_lat is null or v_merchant.pickup_lng is null or p_lat is null or p_lng is null or nullif(trim(p_address),'') is null then
       raise exception 'El comercio o la dirección de entrega no tienen ubicación confirmada.';
     end if;
+    if p_lat < 18.5 or p_lat > 19.5 or p_lng < -70.8 or p_lng > -69.5 then raise exception 'Por ahora el delivery está disponible dentro de la zona de Cotuí.'; end if;
     v_quote := public.cg_quote_fare('package',v_merchant.pickup_lat,v_merchant.pickup_lng,p_lat,p_lng);
     v_delivery := coalesce((v_quote->>'fare_dop')::numeric,0);
   end if;
@@ -414,6 +416,7 @@ begin
   if v_order.delivery_request_id is not null then raise exception 'Este pedido ya tiene un repartidor solicitado.'; end if;
   select * into v_merchant from public.cg_market_merchants where id=v_order.merchant_id;
   select * into v_category from public.cg_market_categories where id=v_merchant.category_id;
+  if not v_merchant.delivery_enabled then raise exception 'Este comercio no tiene delivery habilitado.'; end if;
   if v_merchant.pickup_lat is null or v_merchant.pickup_lng is null or v_order.customer_lat is null or v_order.customer_lng is null then
     raise exception 'Falta la ubicación GPS del comercio o del cliente.';
   end if;
