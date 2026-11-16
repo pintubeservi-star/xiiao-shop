@@ -139,7 +139,7 @@ begin
     case when v_category.slug in ('restaurantes','reposteria') then 'comida' else 'compra' end,
     'Pedido Cotuí Go Market #'||v_order.order_number,'requested',
     v_merchant.pickup_lat,v_merchant.pickup_lng,v_order.customer_lat,v_order.customer_lng,
-    null,case when v_category.slug in ('restaurantes','reposteria') then 'food' else 'package' end
+    null,'package'
   ) returning * into v_delivery;
 
   update public.cg_market_orders
