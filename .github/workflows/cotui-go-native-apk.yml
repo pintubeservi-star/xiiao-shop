@@ -10,6 +10,14 @@ permissions:
   contents: read
 jobs:
   build-apk:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - variant: business
+            artifact: cotui-go-negocios-apk
+          - variant: delivery
+            artifact: cotui-go-delivery-apk
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
@@ -37,6 +45,7 @@ jobs:
       - name: Generate native Android project
         working-directory: mobile
         env:
+          APP_VARIANT: ${{ matrix.variant }}
           EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
           EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
         run: npx expo prebuild --platform android --non-interactive
@@ -56,6 +65,7 @@ jobs:
       - name: Build debug APK
         working-directory: mobile/android
         env:
+          APP_VARIANT: ${{ matrix.variant }}
           EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
           EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
         run: |
@@ -63,7 +73,7 @@ jobs:
           ./gradlew --no-daemon assembleDebug
       - uses: actions/upload-artifact@v4
         with:
-          name: cotui-go-native-debug-apk
+          name: ${{ matrix.artifact }}
           path: mobile/android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14
