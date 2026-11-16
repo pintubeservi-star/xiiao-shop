@@ -1,2 +1,2 @@
-import PartnerPortal from "@/components/partner-portal";
-export default function MerchantPage(){return <PartnerPortal kind="merchant"/>;}
+import CotuiGoMerchantPortal from "@/components/cg-market-merchant-portal";
+export default function MerchantPage(){return <CotuiGoMerchantPortal/>;}
