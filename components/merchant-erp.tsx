@@ -44,7 +44,10 @@ export default function MerchantERP(){
     supabase.from("cg_market_invoices").select("*").eq("merchant_id",active.id).order("created_at",{ascending:false}).limit(100),
     supabase.from("cg_market_cash_registers").select("*").eq("merchant_id",active.id).order("created_at"),
     supabase.from("cg_market_cash_sessions").select("*").eq("merchant_id",active.id).order("opened_at",{ascending:false}).limit(30),
-    supabase.from("cg_market_purchase_orders").select("*,cg_market_suppliers(name)").eq("merchant_id",active.id).order("created_at",{ascending:false}).limit(50)
+    supabase.from("cg_market_purchase_orders").select("*,cg_market_suppliers(name)").eq("merchant_id",active.id).order("created_at",{ascending:false}).limit(50),
+    supabase.from("cg_market_receivables").select("*").eq("merchant_id",active.id).order("created_at",{ascending:false}),
+    supabase.from("cg_market_payables").select("*").eq("merchant_id",active.id).order("created_at",{ascending:false}),
+    supabase.from("cg_market_locations").select("*").eq("merchant_id",active.id).order("created_at")
    ]);
    for(const x of [p,o,c,s,e,i,r,ss,po,ar,ap,loc])if(x.error)throw x.error;
    setProducts((p.data||[]) as Product[]);setOrders((o.data||[]) as Order[]);setCustomers(c.data||[]);setSuppliers(s.data||[]);setExpenses(e.data||[]);setInvoices(i.data||[]);setRegisters(r.data||[]);setSessions(ss.data||[]);setPurchases(po.data||[]);setReceivables(ar.data||[]);setPayables(ap.data||[]);setLocations(loc.data||[]);if((o.data||[]).length){const {data:oi,error:oe}=await supabase.from("cg_market_order_items").select("order_id,quantity,unit_cost_dop,line_total_dop").in("order_id",(o.data||[]).map((x:any)=>x.id));if(oe)throw oe;setOrderItems(oi||[]);}else setOrderItems([]);
