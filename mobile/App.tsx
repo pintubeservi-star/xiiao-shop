@@ -1,4 +1,4 @@
-import React, {useEffect,useMemo,useState} from "react";
+import React, {useEffect,useMemo,useRef,useState} from "react";
 import {ActivityIndicator,Alert,KeyboardAvoidingView,Linking,Platform,Pressable,ScrollView,StyleSheet,Text,TextInput,View} from "react-native";
 import {Map,Camera,Marker as MapMarker,GeoJSONSource,Layer} from "@maplibre/maplibre-react-native";
 import * as Location from "expo-location";
@@ -94,9 +94,11 @@ type MapCoordinate={latitude:number;longitude:number};
 type MapMarkerData={coordinate:MapCoordinate;title:string;color:string};
 function MapCanvas({style,center,markers,route,onLongPress}:{style:any;center:Region;markers:MapMarkerData[];route?:MapCoordinate[];onLongPress?:(coordinate:MapCoordinate)=>void}){
  const zoom=Math.max(10,Math.min(18,Math.log2(360/Math.max(center.latitudeDelta,center.longitudeDelta))));
+ const cameraRef=useRef<any>(null);
+ useEffect(()=>{cameraRef.current?.easeTo({center:[center.longitude,center.latitude],zoom,duration:350});},[center.latitude,center.longitude,zoom]);
  const routeData=route&&route.length>1?{type:"Feature" as const,properties:{},geometry:{type:"LineString" as const,coordinates:route.map(p=>[p.longitude,p.latitude])}}:null;
  return <Map style={style} mapStyle={MAP_STYLE} attribution compass scaleBar onLongPress={onLongPress?e=>{const point=e.nativeEvent.lngLat;if(point?.length===2)onLongPress({longitude:point[0],latitude:point[1]});}:undefined}>
-  <Camera initialViewState={{center:[center.longitude,center.latitude],zoom}}/>
+  <Camera ref={cameraRef} initialViewState={{center:[center.longitude,center.latitude],zoom}}/>
   {routeData&&<GeoJSONSource id="cotui-go-route" data={routeData}><Layer id="cotui-go-route-line" type="line" paint={{"line-color":GREEN,"line-width":4,"line-opacity":0.9}}/></GeoJSONSource>}
   {markers.map((item,index)=><MapMarker key={item.title+index} lngLat={[item.coordinate.longitude,item.coordinate.latitude]} anchor="center"><View style={{alignItems:"center"}}><View style={{width:19,height:19,borderRadius:10,backgroundColor:item.color,borderWidth:3,borderColor:"#FFFFFF",elevation:4}}/><View style={{backgroundColor:"#FFFFFFEE",paddingHorizontal:7,paddingVertical:3,borderRadius:7,marginTop:3}}><Text style={{fontSize:9,fontWeight:"800",color:INK}}>{item.title}</Text></View></View></MapMarker>)}
  </Map>;
