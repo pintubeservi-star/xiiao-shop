@@ -3,7 +3,8 @@ import {useCallback,useEffect,useState} from "react";
 import Link from "next/link";
 import {getSupabase} from "@/lib/supabase/client";
 import {Store,CheckCircle2,XCircle,RefreshCw,ShieldCheck,MapPin,Phone,Percent,LogOut} from "lucide-react";
-type Merchant={id:string;store_name:string;slug:string;phone:string;address:string;description:string|null;status:string;plan:string;commission_pct:number;created_at:string;legal_name:string|null;rnc:string|null;category_id:string|null;cg_market_categories?:any};\ntype MarketOrder={id:string;order_number:number;status:string;created_at:string;total_dop:number;subtotal_dop:number;marketplace_commission_dop:number;platform_fee_status:string;payment_status:string;source:string;cg_market_merchants?:{store_name:string}|null};
+type Merchant={id:string;store_name:string;slug:string;phone:string;address:string;description:string|null;status:string;plan:string;commission_pct:number;created_at:string;legal_name:string|null;rnc:string|null;category_id:string|null;cg_market_categories?:any};
+type MarketOrder={id:string;order_number:number;status:string;created_at:string;total_dop:number;subtotal_dop:number;marketplace_commission_dop:number;platform_fee_status:string;payment_status:string;source:string;cg_market_merchants?:{store_name:string}|null};
 const moneyDate=(s:string)=>new Date(s).toLocaleDateString("es-DO",{day:"2-digit",month:"short",year:"numeric"});
 export default function CotuiGoMerchantAdmin(){
  const [allowed,setAllowed]=useState(false),[ready,setReady]=useState(false),[rows,setRows]=useState<Merchant[]>([]),[orders,setOrders]=useState<MarketOrder[]>([]),[notice,setNotice]=useState(""),[busy,setBusy]=useState(false),[filter,setFilter]=useState("pending"),[view,setView]=useState<"merchants"|"orders">("merchants");
