@@ -15,7 +15,7 @@ Marketplace multi-comercio conectado al proyecto Cotuí Go existente. La aplicac
 - Cotuí Go no custodia ni liquida el dinero de la mercancía.
 - La tarifa de delivery se calcula aparte con el motor de precios existente de Cotuí Go.
 - La solicitud de repartidor se crea cuando el comercio marca el pedido como listo y pulsa “Solicitar repartidor”.
-- El driver recibe el trabajo en la cola existente de `cg_delivery_requests`; el campo `service_kind` utiliza los valores existentes `food` o `package`.
+- El driver recibe el trabajo en la cola existente de `cg_delivery_requests`; el campo `service_kind` utiliza el valor existente `package`; `package_type` distingue comida de compras de tienda.
 - El pedido de Market se sincroniza con los estados del delivery mediante trigger. El repartidor pasa por `accepted` → `courier_arriving` → `picked_up` → `on_the_way` → `delivered`.
 - El PIN de recogida se genera automáticamente en el trigger existente de Cotuí Go; el comercio lo consulta con `cg_market_get_pickup_pin` y el repartidor lo valida con `cg_driver_start_delivery`. No se solicita PIN al finalizar la entrega.
 - Comisión marketplace de referencia: Inicial 5%, Negocio 3%, Premium 2%. Se registra como cuenta por cobrar al comercio; no se descuenta del pago recibido directamente por el comercio.
