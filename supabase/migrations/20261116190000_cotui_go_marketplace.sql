@@ -435,7 +435,7 @@ begin
     case when v_category.slug='restaurantes' or v_category.slug='reposteria' then 'comida' else 'compra' end,
     'Pedido Cotuí Go Market #'||v_order.order_number,'requested',
     v_merchant.pickup_lat,v_merchant.pickup_lng,v_order.customer_lat,v_order.customer_lng,
-    null,case when v_category.slug='restaurantes' or v_category.slug='reposteria' then 'food' else 'package' end
+    null,'package'
   ) returning * into v_delivery;
   update public.cg_market_orders set delivery_request_id=v_delivery.id,delivery_tracking_token=v_delivery.tracking_token,delivery_tracking_code=v_delivery.tracking_code,status='courier_requested',delivery_fee_dop=coalesce(v_delivery.estimated_fee_dop,delivery_fee_dop),total_dop=subtotal_dop-discount_dop+coalesce(v_delivery.estimated_fee_dop,delivery_fee_dop),updated_at=now() where id=v_order.id;
   return jsonb_build_object('delivery_id',v_delivery.id,'tracking_token',v_delivery.tracking_token,'tracking_code',v_delivery.tracking_code,'status',v_delivery.status);
