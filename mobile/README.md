@@ -1,32 +1,40 @@
-# Cotuí Go Native
+# Cotuí Go · Apps nativas de paquetería
 
-Aplicación Android/iOS con Expo + React Native. Se conecta al backend existente de Cotuí Go; no crea tablas duplicadas.
+Este módulo compila dos aplicaciones Android independientes conectadas al proyecto Supabase real de Cotuí Go:
 
-## Backend existente
-Utiliza las tablas y RPC del proyecto Cotuí Go: `cg_ride_requests`, `cg_delivery_requests`, `cg_driver_profiles`, `cg_driver_wallets`, `cg_wallet_topups`, `cg_wallet_ledger`, `cg_quote_fare`, `cg_driver_accept_ride`, `cg_driver_accept_delivery`, `cg_driver_start_ride`, `cg_driver_update_ride_status`, `cg_driver_update_delivery_status`, `cg_get_public_trip` y `cg_admin_review_wallet_topup`.
+- **Cotuí Go Negocios**: recibe contenido compartido desde WhatsApp, prepara la dirección, calcula la tarifa, crea el envío y muestra el PIN de recogida y el seguimiento.
+- **Cotuí Go Delivery**: recibe solicitudes en tiempo real, acepta paquetes, comparte GPS en primer plano y segundo plano mientras está disponible, navega a recogida/entrega, verifica el PIN de recogida y administra su billetera.
 
-No ejecutes `mobile/supabase/schema.sql`: el esquema de producción ya está en las migraciones Supabase existentes del repositorio.
+La administración opera desde el panel web `/admin/paquetes`, con despacho, mapa en vivo, asignación de repartidores, seguimiento y revisión de recargas.
 
-## Configuración
-1. Copia `.env.example` a `.env`.
-2. Configura URL y anon key del mismo proyecto Supabase usado por Cotuí Go web.
-3. Configura `EXPO_PUBLIC_GOOGLE_MAPS_API_KEY` y habilita Maps SDK for Android en Google Cloud.
-4. En `mobile`: `npm install`, `npx expo install --fix`, `npx expo start`.
+## Backend real
 
-## Compilar APK
-`npm install -g eas-cli`, `eas login`, `eas build:configure`, `eas build --platform android --profile preview`.
+Se usa el mismo proyecto Supabase que el sitio Cotuí Go. No se crea un backend de demostración ni tablas duplicadas. La app usa autenticación Supabase persistente, RLS y RPC seguras.
 
-## Cotuí Go Negocios · compartir desde WhatsApp
+Flujos conectados:
+- Cotización de paquetería mediante `cg_quote_fare` y reglas de tarifas activas.
+- Creación de solicitudes en `cg_delivery_requests`.
+- Actualizaciones de estado y tracking con Realtime y consulta de respaldo.
+- Asignación administrativa mediante `cg_admin_assign_delivery`.
+- Billetera de repartidor: recargas manuales, aprobación administrativa, reserva del 15% al aceptar y captura/liberación al finalizar o cancelar.
+- PIN de 4 dígitos en la recogida, validado por `cg_driver_start_delivery`, con máximo de cinco intentos.
 
-La app Android acepta contenido de texto y enlaces compartidos desde otras aplicaciones. En WhatsApp, el comercio puede usar **Compartir → Cotuí Go** para enviar la ubicación o el mensaje al formulario de nuevo paquete. La app reconoce coordenadas en enlaces comunes de Google Maps (`q=`, `ll=`, `@lat,lng`, `geo:` y `!3d...!4d...`), además de intentar extraer nombre y teléfono cuando aparecen etiquetados en el texto. Si WhatsApp comparte un enlace corto sin coordenadas, el negocio debe confirmar el punto manualmente en el mapa; nunca se inventa una ubicación.
+## Compartir desde WhatsApp
 
-Para recibir datos desde WhatsApp se requiere instalar una APK recompilada con el plugin nativo `expo-share-intent`; Expo Go no admite esta función.
+En WhatsApp, el comercio toca **Compartir → Cotuí Go Negocios**. La app interpreta texto y enlaces de ubicación de Google Maps. Si WhatsApp comparte un enlace corto sin coordenadas o manda el nombre/teléfono por separado, el comercio confirma el punto en el mapa y completa únicamente los datos que falten. La app no puede leer conversaciones privadas que no se compartan explícitamente.
 
-## Incluido
-Cliente: solicitud de moto/paquetes, selección de destino en mapa, cotización por el RPC real de tarifas, seguimiento por token y Realtime.
-Repartidor: disponibilidad GPS en primer plano, ofertas, aceptación, estados y PIN de inicio de moto.
-Administración: resumen, lista de servicios y revisión de recargas.
-La aprobación documental de conductores y configuración avanzada de tarifas permanecen en el panel administrativo web existente.
+## Mapas y navegación
 
-## Antes de producción
-Hay que configurar las credenciales de Supabase/Google Maps, habilitar Realtime en las tablas/canales correspondientes, verificar permisos y compilar APK. El GPS de esta versión se actualiza mientras la app está abierta; el seguimiento en segundo plano y las notificaciones push requieren el módulo nativo adicional. El APK aún no se ha compilado.
+El mapa dentro de la app usa MapLibre con OpenFreeMap/OpenStreetMap; no necesita Google Maps API key. El repartidor puede abrir Google Maps como navegación externa.
+
+## Compilación Android
+
+El workflow `.github/workflows/cotui-go-native-apk.yml` crea dos APK independientes:
+- `cotui-go-negocios-apk`
+- `cotui-go-delivery-apk`
+
+Usa Expo prebuild y Gradle, e incluye el bundle JavaScript dentro del APK. La rama de trabajo es `cotui-go-packages`; no se modifica `main`.
+
+## Permisos Android
+
+La app de Delivery solicita ubicación precisa y en segundo plano. Android muestra una notificación persistente mientras el repartidor está disponible y comparte ubicación. Si el usuario deniega el permiso de segundo plano, el envío sigue disponible, pero el seguimiento GPS puede interrumpirse al dejar la app en segundo plano.
