@@ -1,9 +1,9 @@
--- Let administrators assign an available approved courier to a package.
--- This project now runs delivery-only without driver wallet reservations.
+-- Rebuild admin package assignment as SECURITY INVOKER.
+-- Admin-only RLS policies on deliveries and driver profiles enforce row access.
 create or replace function public.cg_admin_assign_delivery(p_delivery_id uuid,p_driver_id uuid)
 returns jsonb
 language plpgsql
-security definer
+security invoker
 set search_path=''
 as $$
 declare
