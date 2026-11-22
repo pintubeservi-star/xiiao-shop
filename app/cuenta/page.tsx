@@ -37,7 +37,7 @@ export default function AccountPage(){
  }
  async function logout(){await getSupabase().auth.signOut();setUser(null);setOrders([]);setReturns([]);setNotice("Sesión cerrada.");}
  const delivered=orders.filter(o=>o.status==="delivered"&&!returns.some(r=>r.order_id===o.id));
- return <main className="min-h-screen bg-[#f7f7f5] text-[#191a17]"><header className="border-b bg-white px-5 py-4"><div className="mx-auto flex max-w-5xl items-center justify-between"><Link href="/" className="text-lg font-black">XiiAO Shop</Link><Link href="/" className="text-sm underline text-black/50">Volver a la tienda</Link></div></header>
+ return <main className="min-h-screen bg-[#f7f7f5] text-[#191a17]"><header className="border-b bg-white px-5 py-4"><div className="mx-auto flex max-w-5xl items-center justify-between"><Link href="/" className="text-lg font-black">XiiAO</Link><Link href="/" className="text-sm underline text-black/50">Volver a la tienda</Link></div></header>
  <div className="mx-auto max-w-5xl px-5 py-10"><h1 className="text-4xl font-black">Mi cuenta</h1><p className="mt-2 text-sm text-black/50">Consulta tus pedidos y solicita una devolución cuando corresponda.</p>{notice&&<p className="mt-5 rounded-xl bg-white p-4 text-sm">{notice}</p>}
  {loading?<div className="mt-8 rounded-2xl bg-white p-8">Cargando…</div>:!user?
  <div className="mt-8 grid gap-8 md:grid-cols-[1fr_420px]"><div className="rounded-3xl bg-[#c8f169] p-8"><h2 className="text-2xl font-black">Tus compras, en un solo lugar</h2><p className="mt-3 text-sm leading-6 text-black/60">Crea una cuenta para consultar tus pedidos y gestionar solicitudes de devolución. También puedes comprar como invitado.</p></div>
