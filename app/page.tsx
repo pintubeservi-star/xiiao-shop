@@ -2,7 +2,7 @@
 import { useEffect,useMemo,useState } from "react";
 import Link from "next/link";
 import { getSupabase } from "@/lib/supabase/client";
-import { MetaPixel, trackMetaEvent } from "@/components/meta-pixel";
+import { MetaPixel, trackMetaEvent } from "./components/meta-pixel";
 
 type Product={id:string;name:string;slug:string;description:string|null;category:string;price_dop:number;compare_at_price_dop:number|null;stock:number;image_urls:string[];tags?:string[];specifications?:Record<string,string>;is_featured?:boolean;video_url?:string|null;wholesale_price_dop?:number|null;wholesale_min_qty?:number};
 type Line={product:Product;quantity:number};
