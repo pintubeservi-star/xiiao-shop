@@ -6,7 +6,7 @@ export function trackMetaEvent(name:string,data?:Record<string,unknown>){if(type
 export function MetaPixel(){
  const [show,setShow]=useState(false);
  useEffect(()=>{const id=process.env.NEXT_PUBLIC_META_PIXEL_ID;if(!id)return;const consent=window.localStorage.getItem(CONSENT_KEY);if(consent==="accepted"){initialize(id);return;}if(consent!=="declined")setShow(true);},[]);
- function initialize(id:string){if(window.fbq)return;const fbq=function(this:Window,...args:any[]){(fbq as any).callMethod?(fbq as any).callMethod.apply(fbq,args):(fbq as any).queue.push(args);};(fbq as any).queue=[];(fbq as any).loaded=true;(fbq as any).version="2.0";window.fbq=fbq as any;window._fbq=fbq as any;const script=document.createElement("script");script.async=true;script.src="https://connect.facebook.net/en_US/fbevents.js";document.head.appendChild(script);window.fbq("init",id);window.fbq("track","PageView");}
+ function initialize(id:string){if(window.fbq)return;const fbq=function(this:Window,...args:any[]){(fbq as any).callMethod?(fbq as any).callMethod.apply(fbq,args):(fbq as any).queue.push(args);};(fbq as any).queue=[];(fbq as any).loaded=true;(fbq as any).version="2.0";window.fbq=fbq as any;window._fbq=fbq as any;const script=document.createElement("script");script.async=true;script.src="https://connect.facebook.net/en_US/fbevents.js";document.head.appendChild(script);const pixel=window.fbq;if(pixel){pixel("init",id);pixel("track","PageView");}}
  const accept=()=>{const id=process.env.NEXT_PUBLIC_META_PIXEL_ID;window.localStorage.setItem(CONSENT_KEY,"accepted");setShow(false);if(id)initialize(id);};
  const decline=()=>{window.localStorage.setItem(CONSENT_KEY,"declined");setShow(false);};
  if(!show)return null;
