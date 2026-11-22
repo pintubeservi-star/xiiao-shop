@@ -80,7 +80,7 @@ export default function PartnerAdmin(){
 
  const tabs=[["overview","Resumen"],["applications","Solicitudes"],["affiliates","Afiliados"],["merchants","Comercios"],["commissions","Comisiones"],["payouts","Retiros"],["returns","Devoluciones"],["customers","Clientes"],["settings","Configuración"],["reviews","Opiniones"],["coupons","Cupones"]] as const;
  return <main className="min-h-screen bg-[#f5f6f1] text-[#191a17]">
-  <header className="flex flex-wrap items-center justify-between gap-3 border-b bg-white px-5 py-4"><Link href="/admin" className="text-lg font-black">XiiAO Shop / Administración</Link><div className="flex items-center gap-3 text-xs text-black/50">{email}<button onClick={()=>void load()} className="rounded-full border px-3 py-2">Actualizar</button></div></header>
+  <header className="flex flex-wrap items-center justify-between gap-3 border-b bg-white px-5 py-4"><Link href="/admin" className="text-lg font-black">XiiAO / Administración</Link><div className="flex items-center gap-3 text-xs text-black/50">{email}<button onClick={()=>void load()} className="rounded-full border px-3 py-2">Actualizar</button></div></header>
   <div className="mx-auto max-w-7xl p-4 md:p-8"><p className="text-xs font-bold uppercase tracking-widest text-gray-500">Operaciones y socios</p><h1 className="mt-1 text-3xl font-black">Centro de socios y finanzas</h1>
    {notice&&<p className="mt-5 rounded-xl bg-white p-3 text-sm">{notice}</p>}
    <div className="my-6 flex gap-2 overflow-x-auto pb-2">{tabs.map(([id,label])=><button key={id} onClick={()=>setTab(id)} className={tab===id?"shrink-0 rounded-full bg-black px-4 py-2 text-sm font-bold text-white":"shrink-0 rounded-full border bg-white px-4 py-2 text-sm"}>{label}</button>)}</div>
