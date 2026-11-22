@@ -3,11 +3,11 @@ import "./globals.css";
 import { PwaRegister } from "@/components/pwa-register";
 
 export const metadata: Metadata = {
-  title: "XiiAO Shop | Compra, comparte y gana",
-  description: "Descubre productos, comparte lo que te gusta y gana comisiones por tus recomendaciones.",
-  applicationName: "XiiAO Shop",
+  title: "XiiAO | Compra fácil, recibe rápido",
+  description: "Compra productos disponibles en República Dominicana, recibe rápido y paga al recibir.",
+  applicationName: "XiiAO",
   manifest: "/manifest.json",
-  appleWebApp: { capable: true, statusBarStyle: "default", title: "XiiAO Shop" }
+  appleWebApp: { capable: true, statusBarStyle: "default", title: "XiiAO" }
 };
 export const viewport: Viewport = { themeColor: "#c8f169", width: "device-width", initialScale: 1 };
 
